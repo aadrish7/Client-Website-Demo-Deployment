@@ -1,25 +1,21 @@
-## AWS Amplify Next.js (App Router) Starter Template
+## CulTRUE Survey Assessment and Analytics Dashboard
 
-This repository provides a starter template for creating applications using Next.js (App Router) and AWS Amplify, emphasizing easy setup for authentication, API, and database capabilities.
+CulTRUE Survey Assessment and Analytics Dashboard is a proprietary tool designed to streamline the assessment process for organizations by automating survey delivery, result aggregation, and report generation. This tool enables CulTRUE to take ownership of their data, ensure privacy, and offer dynamic insights to clients, thus supporting their product-led growth strategy.
 
 ## Overview
 
-This template equips you with a foundational Next.js application integrated with AWS Amplify, streamlined for scalability and performance. It is ideal for developers looking to jumpstart their project with pre-configured AWS services like Cognito, AppSync, and DynamoDB.
+CulTRUE aims to enhance its service offerings by transitioning from a third-party survey platform to a custom-built solution that better aligns with their goals. This application provides a seamless experience for three key stakeholders: employees, company admins, and super admins. It allows for data-driven decision-making through an analytics dashboard that aggregates and displays survey results.
 
 ## Features
 
-- **Authentication**: Setup with Amazon Cognito for secure user authentication.
-- **API**: Ready-to-use GraphQL endpoint with AWS AppSync.
-- **Database**: Real-time database powered by Amazon DynamoDB.
+- **Custom Survey UI**: A user-friendly interface for delivering and capturing survey responses.
+- **Automated Reporting**: Generates individual reports and aggregates results into an analytics dashboard.
+- **Anonymization**: Ensures employee anonymity in the admin portal while allowing names to be captured with reports.
+- **User Management**: Tailored access levels for employees, admins, and super admins.
+- **Aggregated Analytics Dashboard**: Provides company-wide insights with various filters, including gender, department, and job level.
 
-## Deploying to AWS
+## Technical Overview
 
-For detailed instructions on deploying your application, refer to the [deployment section](https://docs.amplify.aws/nextjs/start/quickstart/nextjs-app-router-client-components/#deploy-a-fullstack-app-to-aws) of our documentation.
-
-## Security
-
-See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
-
-## License
-
-This library is licensed under the MIT-0 License. See the LICENSE file.
+- **Frontend**: Built with Next.js for a responsive and dynamic user experience.
+- **Backend**: Powered by AWS Amplify, utilizing DynamoDB for data storage and Cognito for user authentication.
+- **Deployment**: Hosted on AWS Amplify with a continuous integration pipeline.
