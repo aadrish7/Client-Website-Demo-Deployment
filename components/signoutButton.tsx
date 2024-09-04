@@ -20,7 +20,6 @@ export default function SignOutButton() {
       setLogoutState();
       router.push("/auth/signin"); 
     } catch (error) {
-      console.error('Error signing out:', error);
       setError('Failed to sign out. Please try again.');
     } finally {
       setLoading(false);

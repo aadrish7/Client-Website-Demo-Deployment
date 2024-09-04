@@ -33,7 +33,6 @@ export default function ConfirmSignUpPage() {
       }
     } catch (error) {
       setError('Error confirming sign up. Please try again.');
-      console.error('Confirmation error:', error);
     }
   }
 

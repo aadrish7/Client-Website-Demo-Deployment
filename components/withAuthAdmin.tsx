@@ -5,14 +5,12 @@ import useUserStore from '@/store/userStore';
 
 // This is a higher-order component that checks if the user is logged in and if the user is an admin
 const withAuth = (WrappedComponent: React.ComponentType) => {
-  return function WithAuth(props: any) {
+  return function WithAuth(props: React.ComponentProps<typeof WrappedComponent>) {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(true);
     const isLoggedIn = useUserStore((state) => state.isLoggedIn);
     const role = useUserStore((state) => state.userRole);
-
     useEffect(() => {
-      console.log(isLoggedIn, role)
       if (!isLoggedIn && role !== 'admin' && role!=null) {
         router.push('/auth/signin');
       } else {

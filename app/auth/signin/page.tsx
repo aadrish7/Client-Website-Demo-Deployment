@@ -36,7 +36,7 @@ export default function SignInPage() {
         username: form.elements.email.value,
         password: form.elements.password.value,
       });
-      console.log(result);
+
       //if the user hasn't code the code confirmaation part for mail, redirect to the code confirmation page
       if (result.nextStep.signInStep === "CONFIRM_SIGN_UP"){
         router.push("/auth/codeconfirmation")
@@ -44,7 +44,6 @@ export default function SignInPage() {
       // if the user is signed in, fetch the user attributes about the user and set the login state
       else if (result.isSignedIn){
         const userattributes = await fetchUserAttributes();
-        console.log("User attributes:", userattributes["custom:role"] ?? "");
         //set the login state with the user attributes
         setLoginState(form.elements.email.value, userattributes["custom:role"] ?? "");
         router.push("/");
@@ -53,7 +52,6 @@ export default function SignInPage() {
         setErrorMessage("Error signing in");
       }
     } catch (error: any) {
-      console.error("Sign-in error:", error);
       if (error.message) {
         setErrorMessage(error.message);
       } else {

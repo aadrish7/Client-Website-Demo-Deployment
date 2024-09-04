@@ -43,7 +43,6 @@ export default function SignUpPage() {
       // Pass email as a query parameter to the code confirmation page
       router.push(`/auth/codeconfirmation?email=${encodeURIComponent(email)}`);
     } catch (error: any) {
-      console.error("Sign-up error:", error);
       if (error.message) {
         setErrorMessage(error.message);
       } else {

@@ -27,16 +27,14 @@ export default function App() {
       try {
         const userDetails = await getCurrentUser();
         setUserDetails(userDetails);
-        console.log(userDetails);
       } catch (error) {
-        console.error("Error fetching user details:", error);
+        
       }
     
       try {
         const userAttribute = await fetchUserAttributes();
         setUserAttributes(userAttribute);
       } catch (error) {
-        console.error("Error fetching user attributes:", error);
       }
     }
     
