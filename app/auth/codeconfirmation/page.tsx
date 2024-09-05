@@ -1,10 +1,10 @@
 "use client";
 
-import { FormEvent, useState, useEffect } from 'react';
+import { FormEvent, useState, useEffect, Suspense } from 'react';
 import { confirmSignUp } from 'aws-amplify/auth'; 
 import { useRouter, useSearchParams } from 'next/navigation';  
 
-export default function ConfirmSignUpPage() {
+function ConfirmSignUpContent() {
   const [email, setEmail] = useState<string>('');
   const [code, setCode] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
@@ -12,14 +12,12 @@ export default function ConfirmSignUpPage() {
   const searchParams = useSearchParams();
   
   useEffect(() => {
-    //get the email from the query parameters that was passed from the signup page
     const emailFromQuery = searchParams.get('email');
     if (emailFromQuery) {
       setEmail(emailFromQuery);
     }
   }, [searchParams]);
 
-  //function to handle the code confirmation form submission
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     try {
@@ -85,5 +83,13 @@ export default function ConfirmSignUpPage() {
       </p>
     )}
   </div>
+  );
+}
+
+export default function ConfirmSignUpPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ConfirmSignUpContent />
+    </Suspense>
   );
 }
