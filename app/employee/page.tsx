@@ -18,7 +18,7 @@ interface Question {
 type QuestionsByFactor = Record<string, Question[]>;
 type UserSelections = Record<string, number[]>;
 
-const YourComponent: React.FC = () => {
+const QuestionsComponent: React.FC = () => {
   const [questionsByFactor, setQuestionsByFactor] = useState<QuestionsByFactor>({});
   const [currentFactor, setCurrentFactor] = useState<string | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
@@ -206,4 +206,4 @@ const YourComponent: React.FC = () => {
   );
 };
 
-export default YourComponent;
+export default QuestionsComponent;
