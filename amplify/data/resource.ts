@@ -8,8 +8,8 @@ specifies that any user authenticated via an API key can "create", "read",
 =========================================================================*/
 const schema = a.schema({
   Question: a.model({
-    questionId: a.id().required(),
-    factor: a.enum(['Psychological_Safety', 'Growth_Satisfaction', 'Other_Factors']),
+    questionNumber: a.integer().required(),
+    factor: a.string().required(),
     questionText: a.string().required(),
     options: a.string().array(),
     collectionId: a.id(),
@@ -17,7 +17,7 @@ const schema = a.schema({
   }) .authorization(allow => [allow.publicApiKey()]),
 
   Collection: a.model({
-    name: a.string().required(),
+    userId: a.string().required(),
     questions: a.hasMany('Question', 'collectionId'),
   }) .authorization(allow => [allow.publicApiKey()]),
 });

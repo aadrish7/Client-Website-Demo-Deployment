@@ -5,6 +5,7 @@ import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '@/amplify/data/resource';
 import { Amplify } from 'aws-amplify';
 import outputs from '@/amplify_outputs.json';
+import { getCurrentUser } from 'aws-amplify/auth';
 
 const client = generateClient<Schema>();
 Amplify.configure(outputs);
@@ -40,29 +41,23 @@ const CsvQuestionParser: React.FC = () => {
     return groupedData;
   };
 
-  useEffect(() => {
-    console.log('Question Data:', questionData);
-  }, [questionData]);
-
   const createCollection = async () => {
     try {
-      // Create the collection
+      const { username, userId, signInDetails } = await getCurrentUser();
       const { data: collection } = await client.models.Collection.create({
-        name: 'CSV COLLECTION',
+        userId,
       });
-      console.log('Collection created:', collection);
-
       // Loop through the questionData Map and create each question
       questionData.forEach((questions, factor) => {
+        let questionNumber = 1;
         questions.forEach(async (questionText) => {
           const { data: questionData } = await client.models.Question.create({
-            questionId: `${factor}-${questionText}`,
-            factor: factor as 'Psychological_Safety' | 'Growth_Satisfaction' | 'Other_Factors',
+            questionNumber: questionNumber++,
+            factor,
             questionText,
             options: ['1', '2', '3', '4', '5'],
             collectionId: collection?.id,
           });
-          console.log('Question created:', questionData);
         });
       });
     } catch (error) {
