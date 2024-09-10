@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { fetchUserAttributes } from 'aws-amplify/auth';
 import '../app/globals.css'
 import useUserStore from "@/store/userStore";
+import Employee from './employee/page';
 
 Amplify.configure(outputs);
 
@@ -41,6 +42,7 @@ export default function App() {
     fetchUserDetails();
   }, []);
   return (
+    
     <main className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
     <h1 className="text-4xl font-bold text-blue-600 mb-8">Welcome to the Landing Page</h1>
     {isLoggedIn && userDetails &&(
@@ -54,6 +56,17 @@ export default function App() {
         )}
       </div>
     )}
+    <button 
+        onClick={() => router.push("/admin")}
+        className="m-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-300">
+        Admin's Page
+      </button>
+
+      <button 
+        onClick={() => router.push("/employee")}
+        className="m-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-300">
+        Employee's Page
+      </button>
     {isLoggedIn ? (
       <SignOutButton  />
     ) : (
