@@ -6,9 +6,6 @@ import outputs from '@/amplify_outputs.json';
 import { Amplify } from 'aws-amplify';
 import BarChart from '@/components/barChartEmployee';
 
-Amplify.configure(outputs);
-const client = generateClient<Schema>();
-
 interface Question {
   questionNumber: number;
   questionText: string;
@@ -17,7 +14,7 @@ interface Question {
 
 type QuestionsByFactor = Record<string, Question[]>;
 type UserSelections = Record<string, number[]>;
-
+// Ensure Amplify is only configured once the component is mounted in the browser
 const QuestionsComponent: React.FC = () => {
   const [questionsByFactor, setQuestionsByFactor] = useState<QuestionsByFactor>({});
   const [currentFactor, setCurrentFactor] = useState<string | null>(null);
@@ -27,52 +24,54 @@ const QuestionsComponent: React.FC = () => {
   const [showFactorIntro, setShowFactorIntro] = useState<boolean>(true);
   const [isFinished, setIsFinished] = useState<boolean>(false); 
 
-  const fetchCollections = async () => {
-    const { data: collectionList } = await client.models.Collection.list();
-    return collectionList[0];
-  };
+  useEffect(() => {
+    Amplify.configure(outputs);
+    const client = generateClient<Schema>();
 
-  const getQuestions = async () => {
-    try {
-      const collection = await fetchCollections();
-      const { data: questionList } = await client.models.Question.list({
-        filter: {
-          collectionId: { eq: collection.id },
-        },
-      });
+    const fetchCollections = async () => {
+      const { data: collectionList } = await client.models.Collection.list();
+      return collectionList[0];
+    };
 
-      // Grouping questions by factor
-      const questionsByFactor = questionList.reduce((acc, question) => {
-        const { factor } = question;
-        if (!acc[factor]) {
-          acc[factor] = [];
-        }
-        acc[factor].push({
-          questionNumber: question.questionNumber,
-          questionText: question.questionText,
-          options: question.options?.filter((option): option is string => option !== null) ?? ["1", "2", "3", "4"],
+    const getQuestions = async () => {
+      try {
+        const collection = await fetchCollections();
+        const { data: questionList } = await client.models.Question.list({
+          filter: {
+            collectionId: { eq: collection.id },
+          },
         });
-        return acc;
-      }, {} as Record<string, { questionNumber: number; questionText: string; options: string[] }[]>);
 
-      Object.keys(questionsByFactor).forEach((factor) => {
-        questionsByFactor[factor].sort((a, b) => a.questionNumber - b.questionNumber);
-      });
+        // Grouping questions by factor
+        const questionsByFactor = questionList.reduce((acc, question) => {
+          const { factor } = question;
+          if (!acc[factor]) {
+            acc[factor] = [];
+          }
+          acc[factor].push({
+            questionNumber: question.questionNumber,
+            questionText: question.questionText,
+            options: question.options?.filter((option): option is string => option !== null) ?? ["1", "2", "3", "4"],
+          });
+          return acc;
+        }, {} as Record<string, { questionNumber: number; questionText: string; options: string[] }[]>);
 
-      return questionsByFactor;
+        Object.keys(questionsByFactor).forEach((factor) => {
+          questionsByFactor[factor].sort((a, b) => a.questionNumber - b.questionNumber);
+        });
 
-    } catch (error) {
-      console.error("Error fetching questions:", error);
-      return {};
-    }
-  };
+        setQuestionsByFactor(questionsByFactor);
+        setCurrentFactor(Object.keys(questionsByFactor)[0]);
 
-  const loadQuestions = async () => {
-    const groupedQuestions = await getQuestions();
-    setQuestionsByFactor(groupedQuestions);
-    const firstFactor = Object.keys(groupedQuestions)[0];
-    setCurrentFactor(firstFactor);
-  };
+      } catch (error) {
+        console.error("Error fetching questions:", error);
+        return {};
+      }
+    };
+
+    getQuestions();
+
+  }, []);
 
   const handleOptionSelect = (option: number) => {
     setSelectedOption(option);
@@ -133,10 +132,6 @@ const QuestionsComponent: React.FC = () => {
   
     return averages;
   };
-
-  useEffect(() => {
-    loadQuestions();
-  }, []);
 
   if (!currentFactor) {
     return <div>Loading questions...</div>;
