@@ -4,7 +4,8 @@ import { generateClient } from 'aws-amplify/data';
 import { Schema } from '@/amplify/data/resource';
 import outputs from '@/amplify_outputs.json';
 import { Amplify } from 'aws-amplify';
-import BarChart from '@/components/barChartEmployee';
+import dynamic from 'next/dynamic';
+const BarChart = dynamic(() => import('@/components/barChartEmployee'), { ssr: false });
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
@@ -152,6 +153,7 @@ const QuestionsComponent: React.FC = () => {
       <h1 className="text-2xl font-bold">You have completed all the questions!</h1>
       <pre className="mt-4">{JSON.stringify(userSelections, null, 2)}</pre>
       <BarChart data={calculateAverages(userSelections)} />
+
     </div>;
   }
 
