@@ -62,6 +62,9 @@ const BarChart: React.FC<BarChartProps> = ({ data }) => {
           title: '',
         },
       }}
+      style={
+        { width: '100%', height: '100%' }
+      }
     />
   );
 };

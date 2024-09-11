@@ -5,7 +5,12 @@ import { Schema } from '@/amplify/data/resource';
 import outputs from '@/amplify_outputs.json';
 import { Amplify } from 'aws-amplify';
 import dynamic from 'next/dynamic';
-const BarChart = dynamic(() => import('@/components/barChartEmployee'), { ssr: false });
+import QuestionStepper from '@/components/questionStepper'
+import ProgressBar from './progressBar';
+const BarChart = dynamic(() => import('@/components/barChartEmployee'), {
+  ssr: false,
+  loading: () => <div>Loading Graph...</div>, // Show this while BarChart is loading
+});
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
@@ -27,7 +32,11 @@ const QuestionsComponent: React.FC = () => {
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [showFactorIntro, setShowFactorIntro] = useState<boolean>(true);
   const [isFinished, setIsFinished] = useState<boolean>(false); 
-
+  const [firstAttempt, setFirstAttempt] = useState<boolean>(true);
+  const [currentStep, setCurrentStep] = useState<number>(2);
+  const [totalQuestions, setTotalQuestions] = useState<number>(0)
+  const [currentQuestionNumber, setCurrentQuestionNumber] = useState<number>(0)
+  const steps = ['Create Account', 'Complete Profile', 'Assessment', 'Survey Results'];
   const fetchCollections = async () => {
     const { data: collectionList } = await client.models.Collection.list();
     return collectionList[0];
@@ -41,7 +50,7 @@ const QuestionsComponent: React.FC = () => {
           collectionId: { eq: collection.id },
         },
       });
-
+      setTotalQuestions(()=>questionList.length)
       // Grouping questions by factor
       const questionsByFactor = questionList.reduce((acc, question) => {
         const { factor } = question;
@@ -82,8 +91,9 @@ const QuestionsComponent: React.FC = () => {
   const handleNextQuestion = () => {
     if (!currentFactor) return;
 
+    if (!selectedOption) return;
+
     const factorQuestions = questionsByFactor[currentFactor];
-    
     // Save the selected option before moving to the next question
     if (selectedOption !== null) {
       setUserSelections((prevSelections) => {
@@ -91,8 +101,8 @@ const QuestionsComponent: React.FC = () => {
         if (!updatedSelections[currentFactor]) {
           updatedSelections[currentFactor] = [];
         }
-        updatedSelections[currentFactor][currentQuestionIndex] = selectedOption;
 
+        updatedSelections[currentFactor][currentQuestionIndex] = selectedOption;
         return updatedSelections;
       });
     }
@@ -101,6 +111,7 @@ const QuestionsComponent: React.FC = () => {
     if (currentQuestionIndex < factorQuestions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
       setSelectedOption(null);
+      setCurrentQuestionNumber(()=>currentQuestionNumber+1)
     } else {
       // Move to the next factor if there are no more questions in the current factor
       const factorKeys = Object.keys(questionsByFactor);
@@ -111,8 +122,11 @@ const QuestionsComponent: React.FC = () => {
         setCurrentQuestionIndex(0);
         setSelectedOption(null); 
         setShowFactorIntro(true);  
+        setCurrentQuestionNumber(()=>currentQuestionNumber+1)
       } else {
-        setIsFinished(true);
+        setIsFinished(()=>true);
+        setCurrentQuestionNumber(()=>currentQuestionNumber+1)
+        setCurrentStep(currentStep => currentStep + 1)
       }
     }
   };
@@ -136,7 +150,6 @@ const QuestionsComponent: React.FC = () => {
   };
 
   useEffect(() => {
-
     loadQuestions();
     
   }, []);
@@ -149,64 +162,128 @@ const QuestionsComponent: React.FC = () => {
   const currentQuestion = currentQuestions[currentQuestionIndex];
 
   if (isFinished) {
-    return <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
+    return ( 
+    <div className="bg-gray-100 min-h-screen">
+    <header className=" bg-white flex justify-between items-center mb-10 px-7 py-3">
+           <img src="/api/placeholder/40/40" alt="Logo" className="w-10 h-10"/>
+           <div className="text-right">
+               <h2 className="text-lg font-semibold">Neil Sims</h2>
+               <p className="text-sm text-gray-600">neilsims@example.com</p>
+           </div>
+     </header>
+
+     <div className='m-4'>
+    <QuestionStepper steps={steps} currentStep={currentStep} />
+    </div>
+    <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
       <h1 className="text-2xl font-bold">You have completed all the questions!</h1>
-      <pre className="mt-4">{JSON.stringify(userSelections, null, 2)}</pre>
-      <BarChart data={calculateAverages(userSelections)} />
+      {/* <pre className="mt-4">{JSON.stringify(userSelections, null, 2)}</pre> */}
+      <div>
+          <BarChart data={calculateAverages(userSelections)} />
+      </div>
 
     </div>;
+    </div>)
+  }
+
+  if (firstAttempt){
+
+    return ( 
+    <div className="bg-gray-100 min-h-screen">
+      
+     <header className=" bg-white flex justify-between items-center mb-10 px-7 py-3">
+            <img src="/api/placeholder/40/40" alt="Logo" className="w-10 h-10"/>
+            <div className="text-right">
+                <h2 className="text-lg font-semibold">Neil Sims</h2>
+                <p className="text-sm text-gray-600">neilsims@example.com</p>
+            </div>
+      </header>
+    <div className='m-4'>
+    <QuestionStepper steps={steps} currentStep={currentStep} />
+    </div>
+    <main className="mx-auto w-3/5 bg-white rounded-lg shadow-md p-8">
+    <h1 className="text-2xl font-bold mb-4">Welcome to the CulTRUE assessment!</h1>
+      
+      <section className="mb-6">
+          <h2 className="font-semibold mb-2">Introduction:</h2>
+          <p className="text-gray-700">This assessment is not a measure of competence, it's a measure of <strong>engagement</strong> -- the more honest you are, the more the results will can be applied to improve the culture around you.</p>
+      </section>
+      
+      <section className="mb-6">
+          <h2 className="font-semibold mb-2">Guidelines:</h2>
+          <ul className="list-disc list-inside text-gray-700">
+              <li>Do your best to answer the prompts based off of a quick <strong>gut reaction</strong></li>
+              <li>If you agree with one part of a statement, but not another, please answer based on how you feel about the <strong>full statement</strong></li>
+          </ul>
+      </section>
+      
+      <section className="mb-6">
+          <p>Total Number of Prompts: 100</p>
+          <p>Estimated Time Required: 10-15 minutes</p>
+      </section>
+      
+      <button onClick={()=> setFirstAttempt(()=>false)} className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300">Start Survey</button>
+  </main>
+  </div>)
   }
 
   return (
-    <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
-      {showFactorIntro ? (
-        <div>
-          <h1 className="text-2xl font-bold mb-4">Questions for the '{currentFactor}' factor are starting!</h1>
-          <button
-            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-            onClick={() => setShowFactorIntro(false)}
-          >
-            Start Questions
-          </button>
-        </div>
-      ) : (
-        <div>
-          <h2 className="text-xl font-semibold">Question {currentQuestion.questionNumber}:</h2>
-          <p>{currentQuestion.questionText}</p>
-          
-          <div className="mt-4">
-            {currentQuestion.options.map((option, index) => (
-              <div key={index} className="mb-2">
-                <input
-                  type="radio"
-                  name="option"
-                  value={index + 1}
-                  checked={selectedOption === index + 1}
-                  onChange={() => handleOptionSelect(index + 1)}
-                  className="mr-2"
-                />
-                {option}
-              </div>
-            ))}
-          </div>
-          
-          <button
-            className="mt-4 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
-            onClick={handleNextQuestion}
-          >
-            {currentFactor && currentQuestionIndex === currentQuestions.length - 1 && Object.keys(questionsByFactor).indexOf(currentFactor) === Object.keys(questionsByFactor).length - 1
-              ? "Finish" : "Next"}
-          </button>
-        </div>
-      )}
+    <div className="bg-gray-100 min-h-screen">
+    <header className=" bg-white flex justify-between items-center mb-10 px-7 py-3">
+           <img src="/api/placeholder/40/40" alt="Logo" className="w-10 h-10"/>
+           <div className="text-right">
+               <h2 className="text-lg font-semibold">Neil Sims</h2>
+               <p className="text-sm text-gray-600">neilsims@example.com</p>
+           </div>
+     </header>
 
-      {/* For Debugging: Displaying the selected options */}
-      <div className="mt-8">
-        <h3 className="text-lg font-semibold">User Selections</h3>
-        <pre>{JSON.stringify(userSelections, null, 2)}</pre>
-      </div>
-     
+     <div className='m-4'>
+    <QuestionStepper steps={steps} currentStep={currentStep} />
     </div>
+   
+
+      <div className="mx-auto w-3/5 bg-white rounded-lg shadow-md p-8">
+       <ProgressBar currentQuestion={currentQuestionNumber} totalQuestions={totalQuestions} /> 
+        <h2 className="text-xl font-semibold mb-2">
+          Question {currentQuestionNumber+1} of {totalQuestions}:
+        </h2>
+        <p className="text-gray-700 mb-6">{currentQuestion.questionText}</p>
+        
+        <div className="space-y-3">
+          {currentQuestion.options.map((option, index) => (
+            <div key={index} className="flex items-center">
+              <input
+                type="radio"
+                id={`option-${index}`}
+                name="option"
+                value={index + 1}
+                checked={selectedOption === index + 1}
+                onChange={() => handleOptionSelect(index + 1)}
+                className="mr-3 h-4 w-4 text-blue-500 focus:ring-blue-400"
+              />
+              <label htmlFor={`option-${index}`} className="text-gray-700">
+                {option}
+              </label>
+            </div>
+          ))}
+        </div>
+      </div>
+
+<div className="flex justify-end">
+      <button
+          className="mt-8 mr-[260px] px-2 py-2 bg-blue-600 text-white rounded hover:bg-blue-600 transition duration-300"
+          onClick={handleNextQuestion}
+        >
+          {currentFactor && 
+           currentQuestionIndex === currentQuestions.length - 1 && 
+           Object.keys(questionsByFactor).indexOf(currentFactor) === Object.keys(questionsByFactor).length - 1
+            ? "Finish" 
+            : "Next Question"}
+        </button>
+
+  </div>
+    
+  </div>
   );
 };
 
