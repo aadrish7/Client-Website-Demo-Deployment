@@ -8,7 +8,6 @@ import outputs from '@/amplify_outputs.json';
 import { Amplify } from 'aws-amplify';
 import { useRouter } from 'next/navigation';
 import { Suspense } from 'react';
-import { identifyUser } from 'aws-amplify/analytics';
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();

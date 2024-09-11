@@ -63,7 +63,6 @@ const Table: React.FC<TableProps> = ({ headers, data }) => {
   const router = useRouter();
 
   const handleIdClick = (id: string) => {
-    console.log("id", id)
     router.push(`admin/collectiondetails?id=${id}`);
   };
 
@@ -125,7 +124,6 @@ useEffect(() => {
           userId: { eq: userId },
         },
       });
-      console.log(collectionList);
       setTableHeaders(()=>["name", "createdAt", "updatedAt"]);
       setTableData(collectionList.map((collection) => ({
         name: collection.name,

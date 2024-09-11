@@ -25,7 +25,7 @@ const CreateCollection: React.FC = () => {
   const [questionFactor, setQuestionFactor] = useState<Question['factor']>(""); 
   const [questionOptions, setQuestionOptions] = useState<string[]>([]);
   const [optionText, setOptionText] = useState<string>('');
-  const [collectionName, setCollectionName] = useState<string>(''); // New state for collection name
+  const [collectionName, setCollectionName] = useState<string>(''); 
   const [loading, setLoading] = useState<boolean>(false); 
 
   const router = useRouter();
@@ -63,7 +63,7 @@ const CreateCollection: React.FC = () => {
       const { userId } = await getCurrentUser();
       const { data: collection } = await client.models.Collection.create({
         userId,
-        name: collectionName, // Pass the collection name here
+        name: collectionName, 
       });
 
       for (const question of questions) {
@@ -81,7 +81,7 @@ const CreateCollection: React.FC = () => {
     } catch (error) {
       console.error("Error creating collection:", error);
     } finally {
-      setLoading(false); // Stop loading
+      setLoading(false); 
     }
   };
 
@@ -94,7 +94,7 @@ const CreateCollection: React.FC = () => {
         <input
           type="text"
           value={collectionName}
-          onChange={(e) => setCollectionName(e.target.value)} // Set the collection name
+          onChange={(e) => setCollectionName(e.target.value)} 
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="Enter a collection name"
         />
