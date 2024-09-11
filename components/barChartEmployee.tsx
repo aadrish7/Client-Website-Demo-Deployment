@@ -10,14 +10,12 @@ type BarChartProps = {
 };
 
 const BarChart: React.FC<BarChartProps> = ({ data }) => {
-  // Transform the data into the format required by Plotly
   const sortedNames = Object.keys(data).sort((a, b) => data[b] - data[a]);
   const scores = sortedNames.map(name => data[name]);
   const remainingScores = sortedNames.map(name => 5 - data[name]);
   const colors = ['#FF7F7F', '#4D9FFF', '#90EE90', '#40E0D0', '#FFD700'];
   const lightColors = ['#FFE5E5', '#E5F2FF', '#E5FFE5', '#E5FFFF', '#FFFDE5'];
 
-  // Ensure colors and lightColors arrays match the number of categories
   const colorMap = sortedNames.reduce((acc, name, index) => {
     acc[name] = colors[index % colors.length];
     return acc;
@@ -42,7 +40,7 @@ const BarChart: React.FC<BarChartProps> = ({ data }) => {
           marker: { color: chartColors },
           text: scores.map(score => score.toFixed(2)),
           textposition: 'auto',
-          showlegend: false,  // Hide legend for this trace
+          showlegend: false,  
         },
         {
           x: sortedNames,
@@ -51,7 +49,7 @@ const BarChart: React.FC<BarChartProps> = ({ data }) => {
           name: 'Remaining',
           marker: { color: chartLightColors },
           hoverinfo: 'none',
-          showlegend: false,  // Hide legend for this trace
+          showlegend: false,  
         },
       ]}
       layout={{
@@ -63,12 +61,12 @@ const BarChart: React.FC<BarChartProps> = ({ data }) => {
         },
         xaxis: {
           title: 'Factors',
-          automargin: true,  // Prevents title overlap with tick labels
+          automargin: true,  
         },
         margin: {
-          b: 100, // Increase bottom margin to prevent collision
+          b: 100, 
         },
-        showlegend: false, // Hide the entire legend
+        showlegend: false, 
       }}
       style={{ width: '100%', height: '100%' }}
     />

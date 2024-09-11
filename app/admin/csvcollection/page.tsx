@@ -6,12 +6,15 @@ import type { Schema } from '@/amplify/data/resource';
 import { Amplify } from 'aws-amplify';
 import outputs from '@/amplify_outputs.json';
 import { getCurrentUser } from 'aws-amplify/auth';
+import { useRouter } from 'next/navigation'; 
 
 const client = generateClient<Schema>();
 Amplify.configure(outputs);
 
 const CsvQuestionParser: React.FC = () => {
   const [questionData, setQuestionData] = useState<Map<string, string[]>>(new Map());
+  const [isCreating, setIsCreating] = useState(false); 
+  const router = useRouter(); 
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -42,6 +45,7 @@ const CsvQuestionParser: React.FC = () => {
   };
 
   const createCollection = async () => {
+    setIsCreating(true); 
     try {
       const { username, userId, signInDetails } = await getCurrentUser();
       const { data: collection } = await client.models.Collection.create({
@@ -51,7 +55,7 @@ const CsvQuestionParser: React.FC = () => {
       questionData.forEach((questions, factor) => {
         let questionNumber = 1;
         questions.forEach(async (questionText) => {
-          const { data: questionData } = await client.models.Question.create({
+          await client.models.Question.create({
             questionNumber: questionNumber++,
             factor,
             questionText,
@@ -60,8 +64,13 @@ const CsvQuestionParser: React.FC = () => {
           });
         });
       });
+
+      // Once the collection is created, redirect to /admin
+      router.push('/admin');
     } catch (error) {
       console.error('Error creating collection:', error);
+    } finally {
+      setIsCreating(false); // Reset loading state after creation or if an error occurs
     }
   };
 
@@ -93,9 +102,10 @@ const CsvQuestionParser: React.FC = () => {
       {questionData.size > 0 && (
         <button
           onClick={createCollection}
-          className="mt-8 w-full px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          disabled={isCreating} 
+          className={`mt-8 w-full px-4 py-2 rounded-md text-white ${isCreating ? 'bg-gray-400' : 'bg-indigo-500 hover:bg-indigo-600'} focus:outline-none focus:ring-2 focus:ring-indigo-500`}
         >
-          Create Collection
+          {isCreating ? 'Creating Collection...' : 'Create Collection'}
         </button>
       )}
     </div>

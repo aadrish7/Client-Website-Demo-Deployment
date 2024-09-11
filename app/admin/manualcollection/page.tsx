@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { Amplify } from "aws-amplify";
+import { useRouter } from "next/navigation";
 import outputs from '@/amplify_outputs.json';
 import type { Schema } from "@/amplify/data/resource";
 import { generateClient } from 'aws-amplify/data';
@@ -21,9 +22,12 @@ interface Question {
 const CreateCollection: React.FC = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [questionText, setQuestionText] = useState<string>('');
-  const [questionFactor, setQuestionFactor] = useState<Question['factor']>(""); // Changed to string input
+  const [questionFactor, setQuestionFactor] = useState<Question['factor']>(""); 
   const [questionOptions, setQuestionOptions] = useState<string[]>([]);
   const [optionText, setOptionText] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false); 
+
+  const router = useRouter();
 
   const addOption = () => {
     if (optionText) {
@@ -48,23 +52,29 @@ const CreateCollection: React.FC = () => {
   };
 
   const createCollection = async () => {
+    setLoading(true); 
     try {
-      const { username, userId, signInDetails } = await getCurrentUser();
+      const { userId } = await getCurrentUser();
       const { data: collection } = await client.models.Collection.create({
         userId,
       });
 
       for (const question of questions) {
-        const { data: questionData } = await client.models.Question.create({
+        await client.models.Question.create({
           questionNumber: question.questionNumber,
           factor: question.factor,
           questionText: question.questionText,
           options: question.options,
           collectionId: collection?.id,
         });
-        setQuestions([])
       }
+
+      setQuestions([]); 
+      router.push('/admin'); 
     } catch (error) {
+      console.error("Error creating collection:", error);
+    } finally {
+      setLoading(false); // Stop loading
     }
   };
 
@@ -141,9 +151,10 @@ const CreateCollection: React.FC = () => {
 
       <button
         onClick={createCollection}
-        className="mt-8 w-full px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        className={`mt-8 w-full px-4 py-2 ${loading ? "bg-gray-400" : "bg-indigo-500"} text-white rounded-md hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500`}
+        disabled={loading} 
       >
-        Create Collection
+        {loading ? "Creating Collection..." : "Create Collection"}
       </button>
     </div>
   );
