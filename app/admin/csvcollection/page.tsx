@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Papa from 'papaparse';
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '@/amplify/data/resource';
@@ -13,7 +13,8 @@ Amplify.configure(outputs);
 
 const CsvQuestionParser: React.FC = () => {
   const [questionData, setQuestionData] = useState<Map<string, string[]>>(new Map());
-  const [isCreating, setIsCreating] = useState(false); 
+  const [collectionName, setCollectionName] = useState(''); // New state for collection name
+  const [isCreating, setIsCreating] = useState(false);
   const router = useRouter(); 
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -45,12 +46,19 @@ const CsvQuestionParser: React.FC = () => {
   };
 
   const createCollection = async () => {
-    setIsCreating(true); 
+    if (!collectionName) {
+      alert('Please enter a collection name.');
+      return;
+    }
+
+    setIsCreating(true);
     try {
-      const { username, userId, signInDetails } = await getCurrentUser();
+      const { userId } = await getCurrentUser();
       const { data: collection } = await client.models.Collection.create({
         userId,
+        name: collectionName, // Pass the collection name
       });
+
       // Loop through the questionData Map and create each question
       questionData.forEach((questions, factor) => {
         let questionNumber = 1;
@@ -65,12 +73,12 @@ const CsvQuestionParser: React.FC = () => {
         });
       });
 
-      // Once the collection is created, redirect to /admin
+      // Redirect to /admin after collection creation
       router.push('/admin');
     } catch (error) {
       console.error('Error creating collection:', error);
     } finally {
-      setIsCreating(false); // Reset loading state after creation or if an error occurs
+      setIsCreating(false);
     }
   };
 
@@ -89,6 +97,20 @@ const CsvQuestionParser: React.FC = () => {
           className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
         />
       </div>
+
+      <div className="mb-8">
+        <label htmlFor="collection-name" className="block text-sm font-medium text-gray-700 mb-2">
+          Enter Collection Name
+        </label>
+        <input
+          id="collection-name"
+          type="text"
+          value={collectionName}
+          onChange={(e) => setCollectionName(e.target.value)}
+          className="block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+        />
+      </div>
+
       {Array.from(questionData.entries()).map(([factor, questions], index) => (
         <div key={index} className="mb-6 last:mb-0">
           <h2 className="text-xl font-semibold mb-3 text-gray-700">{factor}</h2>
@@ -99,10 +121,11 @@ const CsvQuestionParser: React.FC = () => {
           </ul>
         </div>
       ))}
+
       {questionData.size > 0 && (
         <button
           onClick={createCollection}
-          disabled={isCreating} 
+          disabled={isCreating}
           className={`mt-8 w-full px-4 py-2 rounded-md text-white ${isCreating ? 'bg-gray-400' : 'bg-indigo-500 hover:bg-indigo-600'} focus:outline-none focus:ring-2 focus:ring-indigo-500`}
         >
           {isCreating ? 'Creating Collection...' : 'Create Collection'}

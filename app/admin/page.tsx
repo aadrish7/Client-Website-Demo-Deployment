@@ -63,6 +63,7 @@ const Table: React.FC<TableProps> = ({ headers, data }) => {
   const router = useRouter();
 
   const handleIdClick = (id: string) => {
+    console.log("id", id)
     router.push(`admin/collectiondetails?id=${id}`);
   };
 
@@ -88,15 +89,15 @@ const Table: React.FC<TableProps> = ({ headers, data }) => {
                 <td
                   key={colIndex}
                   className={`px-6 py-4 whitespace-nowrap text-sm text-gray-900 ${
-                    header.toLowerCase() === 'id' ? 'underline cursor-pointer' : ''
+                    header.toLowerCase() === 'name' ? 'underline cursor-pointer' : ''
                   }`}
                   onClick={() => {
-                    if (header.toLowerCase() === 'id') {
-                      handleIdClick(row[header].replace(/\s+/g, '_'));
+                    if (header.toLowerCase() === 'name') {
+                      handleIdClick(row[header]);
                     }
                   }}
                 >
-                  {row[header].replace(/\s+/g, '_')}
+                  {row[header]}
                 </td>
               ))}
             </tr>
@@ -125,9 +126,9 @@ useEffect(() => {
         },
       });
       console.log(collectionList);
-      setTableHeaders(()=>["ID", "createdAt", "updatedAt"]);
+      setTableHeaders(()=>["name", "createdAt", "updatedAt"]);
       setTableData(collectionList.map((collection) => ({
-        ID: collection.id,
+        name: collection.name,
         createdAt: collection.createdAt,
         updatedAt: collection.updatedAt,
         })));
@@ -142,11 +143,11 @@ useEffect(() => {
 , []);
 
   const navItems: NavItem[] = [
-    { label: 'Question Bank', active: false },
-    { label: 'Collections', active: true },
-    { label: 'Company', active: false },
-    { label: 'Analytics', active: false },
-    { label: 'Help', active: false },
+    { label: '📋 Question Bank', active: false },
+    { label: '📦 Collections', active: true },
+    { label: '🏢 Company', active: false },
+    { label: '📊 Analytics', active: false },
+    { label: '💬 Help', active: false },
   ];
   const goToManualCreation = () => {
     router.push('/admin/manualcollection');

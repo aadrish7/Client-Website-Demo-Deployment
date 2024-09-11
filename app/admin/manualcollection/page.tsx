@@ -25,6 +25,7 @@ const CreateCollection: React.FC = () => {
   const [questionFactor, setQuestionFactor] = useState<Question['factor']>(""); 
   const [questionOptions, setQuestionOptions] = useState<string[]>([]);
   const [optionText, setOptionText] = useState<string>('');
+  const [collectionName, setCollectionName] = useState<string>(''); // New state for collection name
   const [loading, setLoading] = useState<boolean>(false); 
 
   const router = useRouter();
@@ -52,11 +53,17 @@ const CreateCollection: React.FC = () => {
   };
 
   const createCollection = async () => {
+    if (!collectionName) {
+      alert('Please enter a collection name.');
+      return;
+    }
+
     setLoading(true); 
     try {
       const { userId } = await getCurrentUser();
       const { data: collection } = await client.models.Collection.create({
         userId,
+        name: collectionName, // Pass the collection name here
       });
 
       for (const question of questions) {
@@ -81,6 +88,17 @@ const CreateCollection: React.FC = () => {
   return (
     <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
       <h1 className="text-3xl font-bold mb-6">Create a New Collection</h1>
+
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">Collection Name:</label>
+        <input
+          type="text"
+          value={collectionName}
+          onChange={(e) => setCollectionName(e.target.value)} // Set the collection name
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Enter a collection name"
+        />
+      </div>
 
       <h2 className="text-2xl font-semibold mt-8 mb-4">Add Questions</h2>
       <div className="space-y-4">
