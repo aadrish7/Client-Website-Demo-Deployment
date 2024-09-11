@@ -88,15 +88,15 @@ const Table: React.FC<TableProps> = ({ headers, data }) => {
                 <td
                   key={colIndex}
                   className={`px-6 py-4 whitespace-nowrap text-sm text-gray-900 ${
-                    header.toLowerCase() === 'id' ? 'underline cursor-pointer' : ''
+                    header.toLowerCase() === 'name' ? 'underline cursor-pointer' : ''
                   }`}
                   onClick={() => {
-                    if (header.toLowerCase() === 'id') {
-                      handleIdClick(row[header].replace(/\s+/g, '_'));
+                    if (header.toLowerCase() === 'name') {
+                      handleIdClick(row[header]);
                     }
                   }}
                 >
-                  {row[header].replace(/\s+/g, '_')}
+                  {row[header]}
                 </td>
               ))}
             </tr>
@@ -113,26 +113,6 @@ const MainPage: React.FC = () => {
   const [tableHeaders, setTableHeaders] = useState<string[]>([]);
   const [tableData, setTableData] = useState<Record<string, string>[]>([]);
   const router = useRouter();
-  // const tableHeaders: string[] = ['Factor', 'Question', 'Manage'];
-  // const tableData: Record<string, string>[] = [
-  //   {
-  //     factor: 'SAFE',
-  //     question: 'I feel that I can fit in at work without having to change who I am.',
-  //     manage: 'Edit/Delete',
-  //   },
-  //   {
-  //     factor: 'SAFE',
-  //     question: 'When at work, I feel free to express my ideas even if they differ from others within the company.',
-  //     manage: 'Edit/Delete',
-  //   },
-  //   {
-  //     factor: 'GROWTH',
-  //     question: 'The amount of personal growth and development I get in doing my job.',
-  //     manage: 'Edit/Delete',
-  //   },
-  // ];
-
-  // Table Headers
 
 useEffect(() => {
   // Fetch collections only
@@ -144,10 +124,9 @@ useEffect(() => {
           userId: { eq: userId },
         },
       });
-      console.log(collectionList);
-      setTableHeaders(()=>["ID", "createdAt", "updatedAt"]);
+      setTableHeaders(()=>["name", "createdAt", "updatedAt"]);
       setTableData(collectionList.map((collection) => ({
-        ID: collection.id,
+        name: collection.name,
         createdAt: collection.createdAt,
         updatedAt: collection.updatedAt,
         })));
@@ -161,49 +140,12 @@ useEffect(() => {
 }
 , []);
 
-// const tableHeaders: string[] = ['ID', 'CreatedAt', 'UpdatedAT', 'Status'];
-
-// // Table Data (Dummy Data)
-// const tableData: Record<string, string>[] = [
-//   {
-//     name: 'Project Alphaa',
-//     create_time: '2024-09-01 10:00 AM',
-//     last_update: '2024-09-05 12:30 PM',
-//     status: 'In Progress',
-//   },
-//   {
-//     name: 'Project Beta',
-//     create_time: '2024-08-15 02:45 PM',
-//     last_update: '2024-09-03 04:20 PM',
-//     status: 'Completed',
-//   },
-//   {
-//     name: 'Project Gamma',
-//     create_time: '2024-07-20 11:15 AM',
-//     last_update: '2024-09-02 09:10 AM',
-//     status: 'On Hold',
-//   },
-//   {
-//     name: 'Project Delta',
-//     create_time: '2024-06-30 03:50 PM',
-//     last_update: '2024-08-25 07:40 PM',
-//     status: 'In Progress',
-//   },
-//   {
-//     name: 'Project Epsilon',
-//     create_time: '2024-09-01 05:30 PM',
-//     last_update: '2024-09-05 06:15 PM',
-//     status: 'Cancelled',
-//   },
-// ];
-
-
   const navItems: NavItem[] = [
-    { label: 'Question Bank', active: false },
-    { label: 'Collections', active: true },
-    { label: 'Company', active: false },
-    { label: 'Analytics', active: false },
-    { label: 'Help', active: false },
+    { label: '📋 Question Bank', active: false },
+    { label: '📦 Collections', active: true },
+    { label: '🏢 Company', active: false },
+    { label: '📊 Analytics', active: false },
+    { label: '💬 Help', active: false },
   ];
   const goToManualCreation = () => {
     router.push('/admin/manualcollection');

@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { Amplify } from "aws-amplify";
+import { useRouter } from "next/navigation";
 import outputs from '@/amplify_outputs.json';
 import type { Schema } from "@/amplify/data/resource";
 import { generateClient } from 'aws-amplify/data';
@@ -21,9 +22,13 @@ interface Question {
 const CreateCollection: React.FC = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [questionText, setQuestionText] = useState<string>('');
-  const [questionFactor, setQuestionFactor] = useState<Question['factor']>(""); // Changed to string input
+  const [questionFactor, setQuestionFactor] = useState<Question['factor']>(""); 
   const [questionOptions, setQuestionOptions] = useState<string[]>([]);
   const [optionText, setOptionText] = useState<string>('');
+  const [collectionName, setCollectionName] = useState<string>(''); 
+  const [loading, setLoading] = useState<boolean>(false); 
+
+  const router = useRouter();
 
   const addOption = () => {
     if (optionText) {
@@ -48,29 +53,52 @@ const CreateCollection: React.FC = () => {
   };
 
   const createCollection = async () => {
+    if (!collectionName) {
+      alert('Please enter a collection name.');
+      return;
+    }
+
+    setLoading(true); 
     try {
-      const { username, userId, signInDetails } = await getCurrentUser();
+      const { userId } = await getCurrentUser();
       const { data: collection } = await client.models.Collection.create({
         userId,
+        name: collectionName, 
       });
 
       for (const question of questions) {
-        const { data: questionData } = await client.models.Question.create({
+        await client.models.Question.create({
           questionNumber: question.questionNumber,
           factor: question.factor,
           questionText: question.questionText,
           options: question.options,
           collectionId: collection?.id,
         });
-        setQuestions([])
       }
+
+      setQuestions([]); 
+      router.push('/admin'); 
     } catch (error) {
+      console.error("Error creating collection:", error);
+    } finally {
+      setLoading(false); 
     }
   };
 
   return (
     <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
       <h1 className="text-3xl font-bold mb-6">Create a New Collection</h1>
+
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">Collection Name:</label>
+        <input
+          type="text"
+          value={collectionName}
+          onChange={(e) => setCollectionName(e.target.value)} 
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Enter a collection name"
+        />
+      </div>
 
       <h2 className="text-2xl font-semibold mt-8 mb-4">Add Questions</h2>
       <div className="space-y-4">
@@ -141,9 +169,10 @@ const CreateCollection: React.FC = () => {
 
       <button
         onClick={createCollection}
-        className="mt-8 w-full px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        className={`mt-8 w-full px-4 py-2 ${loading ? "bg-gray-400" : "bg-indigo-500"} text-white rounded-md hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500`}
+        disabled={loading} 
       >
-        Create Collection
+        {loading ? "Creating Collection..." : "Create Collection"}
       </button>
     </div>
   );
