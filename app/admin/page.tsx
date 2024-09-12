@@ -133,6 +133,7 @@ useEffect(() => {
 
     } catch (error) {
       console.error('Failed to fetch collections');
+      console.error("Error : ", error)
     }
   };
 
