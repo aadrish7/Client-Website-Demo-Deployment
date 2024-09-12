@@ -149,9 +149,9 @@ const QuestionsComponent: React.FC = () => {
   const handleNextQuestion = () => {
     if (!currentFactor) return;
     if (!selectedOption) return;
-  
+
     const factorQuestions = questionsByFactor[currentFactor];
-  
+
     // Save the selected option before moving to the next question
     if (selectedOption !== null) {
       setUserSelections((prevSelections) => {
@@ -159,19 +159,20 @@ const QuestionsComponent: React.FC = () => {
         if (!updatedSelections[currentFactor]) {
           updatedSelections[currentFactor] = [];
         }
-  
+
         updatedSelections[currentFactor][currentQuestionIndex] = selectedOption;
         return updatedSelections;
       });
     }
-  
+
     // Check if there are more questions in the current factor
     if (currentQuestionIndex < factorQuestions.length - 1) {
       const nextQuestionIndex = currentQuestionIndex + 1;
-  
+
       // Check if an option was already selected for the next question
-      const existingSelection = userSelections[currentFactor]?.[nextQuestionIndex] ?? null;
-  
+      const existingSelection =
+        userSelections[currentFactor]?.[nextQuestionIndex] ?? null;
+
       setCurrentQuestionIndex(nextQuestionIndex);
       setSelectedOption(existingSelection); // Set the previously selected option or null
       setCurrentQuestionNumber((prev) => prev + 1);
@@ -183,10 +184,10 @@ const QuestionsComponent: React.FC = () => {
         const nextFactor = factorKeys[currentFactorIndex + 1];
         setCurrentFactor(nextFactor);
         setCurrentQuestionIndex(0);
-  
+
         // Check if an option was already selected for the first question of the next factor
         const existingSelection = userSelections[nextFactor]?.[0] ?? null;
-  
+
         setSelectedOption(existingSelection); // Set the previously selected option or null
         setCurrentQuestionNumber((prev) => prev + 1);
       } else {
@@ -196,7 +197,6 @@ const QuestionsComponent: React.FC = () => {
       }
     }
   };
-  
 
   const calculateAverages = (
     userSelections: UserSelections
@@ -338,24 +338,26 @@ const QuestionsComponent: React.FC = () => {
         </h2>
         <p className="text-gray-700 mb-6">{currentQuestion.questionText}</p>
 
-        <div className="space-y-3">
-  {Object.entries(optionMapping).map(([value, text]) => (
-    <div key={value} className="flex items-center">
-      <input
-        type="radio"
-        id={`option-${value}`}
-        name="option"
-        value={value}
-        checked={selectedOption === Number(value)}
-        onChange={() => handleOptionSelect(Number(value))}
-        className="mr-3 h-4 w-4 text-blue-500 focus:ring-blue-400"
-      />
-      <label htmlFor={`option-${value}`} className="text-gray-700">
-        {text}
-      </label>
+        <div className="border border-gray-300 rounded-lg">
+      {Object.entries(optionMapping).map(([value, text], index, array) => (
+        <div
+          key={value}
+          className={`flex items-center p-3 cursor-pointer hover:bg-gray-100 ${
+            index !== array.length - 1 ? "border-b border-gray-300" : ""
+          } ${selectedOption === Number(value) ? "bg-blue-100" : ""}`}
+          onClick={() => handleOptionSelect(Number(value))}
+        >
+          <div className={`mr-3 h-4 w-4 rounded-full border ${
+            selectedOption === Number(value) 
+              ? "bg-blue-500 border-blue-500" 
+              : "border-gray-300"
+          }`} />
+          <label className="text-gray-700 flex-grow cursor-pointer">
+            {text}
+          </label>
+        </div>
+      ))}
     </div>
-  ))}
-</div>
       </div>
 
       <div className="flex justify-between">
