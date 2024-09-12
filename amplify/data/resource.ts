@@ -17,7 +17,7 @@ const schema = a.schema({
   }) .authorization(allow => [allow.publicApiKey()]),
 
   Collection: a.model({
-    name : a.string().required(),
+    name : a.string(),
     userId: a.string().required(),
     questions: a.hasMany('Question', 'collectionId'),
   }) .authorization(allow => [allow.publicApiKey()]),
