@@ -126,7 +126,7 @@ useEffect(() => {
       });
       setTableHeaders(()=>["name", "createdAt", "updatedAt"]);
       setTableData(collectionList.map((collection) => ({
-        name: collection.name,
+        name: collection.name || '',
         createdAt: collection.createdAt,
         updatedAt: collection.updatedAt,
         })));

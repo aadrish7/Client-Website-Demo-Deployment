@@ -45,6 +45,7 @@ const QuestionsComponent: React.FC = () => {
   const getQuestions = async () => {
     try {
       const collection = await fetchCollections();
+      console.log("collection", collection)
       const { data: questionList } = await client.models.Question.list({
         filter: {
           collectionId: { eq: collection.id },
@@ -52,6 +53,7 @@ const QuestionsComponent: React.FC = () => {
       });
       setTotalQuestions(()=>questionList.length)
       // Grouping questions by factor
+      console.log("question list", questionList)
       const questionsByFactor = questionList.reduce((acc, question) => {
         const { factor } = question;
         if (!acc[factor]) {
