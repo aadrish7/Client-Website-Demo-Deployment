@@ -23,6 +23,13 @@ interface Question {
 
 type QuestionsByFactor = Record<string, Question[]>;
 type UserSelections = Record<string, number[]>;
+const optionMapping: Record<number, string> = {
+  1: "Strongly Disagree",
+  2: "Mostly Disagree",
+  3: "Neutral",
+  4: "Mostly Agree",
+  5: "Strongly Agree",
+};
 
 const QuestionsComponent: React.FC = () => {
   const [questionsByFactor, setQuestionsByFactor] = useState<QuestionsByFactor>(
@@ -332,23 +339,23 @@ const QuestionsComponent: React.FC = () => {
         <p className="text-gray-700 mb-6">{currentQuestion.questionText}</p>
 
         <div className="space-y-3">
-          {currentQuestion.options.map((option, index) => (
-            <div key={index} className="flex items-center">
-              <input
-                type="radio"
-                id={`option-${index}`}
-                name="option"
-                value={index + 1}
-                checked={selectedOption === index + 1}
-                onChange={() => handleOptionSelect(index + 1)}
-                className="mr-3 h-4 w-4 text-blue-500 focus:ring-blue-400"
-              />
-              <label htmlFor={`option-${index}`} className="text-gray-700">
-                {option}
-              </label>
-            </div>
-          ))}
-        </div>
+  {Object.entries(optionMapping).map(([value, text]) => (
+    <div key={value} className="flex items-center">
+      <input
+        type="radio"
+        id={`option-${value}`}
+        name="option"
+        value={value}
+        checked={selectedOption === Number(value)}
+        onChange={() => handleOptionSelect(Number(value))}
+        className="mr-3 h-4 w-4 text-blue-500 focus:ring-blue-400"
+      />
+      <label htmlFor={`option-${value}`} className="text-gray-700">
+        {text}
+      </label>
+    </div>
+  ))}
+</div>
       </div>
 
       <div className="flex justify-between">
