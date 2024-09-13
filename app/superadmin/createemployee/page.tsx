@@ -7,6 +7,7 @@ import { Amplify } from "aws-amplify";
 import Papa from "papaparse";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from 'next/navigation';
+import { Suspense } from "react";
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
@@ -208,4 +209,10 @@ const EmployeesCsvUploader: React.FC = () => {
   );
 };
 
-export default EmployeesCsvUploader;
+export default function () {
+    return (
+      <Suspense fallback={<div>Loading...</div>}>
+        < EmployeesCsvUploader/>
+      </Suspense>
+    );
+  }
