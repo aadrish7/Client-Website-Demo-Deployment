@@ -50,6 +50,7 @@ const BarChart: React.FC<BarChartProps> = ({ data }) => {
           marker: { color: chartLightColors },
           hoverinfo: 'none',
           showlegend: false,  
+          
         },
       ]}
       layout={{
