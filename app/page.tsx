@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation";
 import { fetchUserAttributes } from "aws-amplify/auth";
 import "../app/globals.css";
 import useUserStore from "@/store/userStore";
-import Employee from "./employee/page";
+import CustomButton from "@/components/customButton"
 
 Amplify.configure(outputs);
 
@@ -71,34 +71,29 @@ export default function App() {
           )}
         </div>
       )}
-      <button
+            <CustomButton
         onClick={() => router.push("/superadmin")}
+        label="SuperAdmin's Page"
         className="m-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-300"
-      >
-        SuperAdmin's Page
-      </button>
-      <button
+      />
+      <CustomButton
         onClick={() => router.push("/admin")}
+        label="Admin's Page"
         className="m-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-300"
-      >
-        Admin's Page
-      </button>
-
-      <button
+      />
+      <CustomButton
         onClick={() => router.push("/employee")}
+        label="Employee's Page"
         className="m-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-300"
-      >
-        Employee's Page
-      </button>
+      />
       {isLoggedIn ? (
         <SignOutButton />
       ) : (
-        <button
+        <CustomButton
           onClick={() => router.push("/auth/signin")}
+          label="Sign In"
           className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-300"
-        >
-          Sign In
-        </button>
+        />
       )}
     </main>
   );
