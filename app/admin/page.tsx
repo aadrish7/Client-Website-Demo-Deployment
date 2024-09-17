@@ -6,7 +6,6 @@ import { getCurrentUser } from 'aws-amplify/auth';
 import outputs from '@/amplify_outputs.json';
 import { Amplify } from 'aws-amplify';
 import { useRouter } from 'next/navigation';
-import Link from 'next/navigation';
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
