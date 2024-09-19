@@ -50,12 +50,27 @@ const CreateTextSnippet: React.FC = () => {
   };
 
   const navItems = [
-    { label: '📋 Question Bank', active: false },
-    { label: '📦 Collections', active: false },
-    { label: '🏢 Company', active: false },
-    { label: '📊 Analytics', active: false },
-    { label: '💬 Help', active: false },
-  ];
+    {
+      label: '📦 Collections',
+      active: false,
+      subItems: [
+        { label: '📋 Question Bank', active: false, href: '/superadmin/collections/questionbank' },
+        { label: '📦 Collection', active: false, href: '/superadmin/collections/collection' }
+      ]
+    },
+    {
+      label: '📦 Snippets',
+      active: true,
+      subItems: [
+        { label: '📋 Snippet Bank', active: true, href: '/superadmin/snippets' },
+        { label: '📦 Snippet Set', active: false, href: '/superadmin/snippets' }
+      ]
+    },
+  
+    { label: '🏢 Company', active: false, href: '/superadmin' },
+    { label: '📊 Analytics', active: false, href: '/analytics' },
+    { label: '💬 Help', active: false, href: '/help' }
+  ].filter(item => item !== undefined); 
 
   return (
     <div className="h-screen flex flex-col">

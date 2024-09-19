@@ -125,19 +125,19 @@ const CollectionsPage: React.FC = () => {
 
   const navItems = [
     {
+        label: '📦 Collections',
+        active: true,
+        subItems: [
+          { label: '📋 Question Bank', active: false, href: '/superadmin/collections/questionbank' },
+          { label: '📦 Collection', active: true, href: '/superadmin/collections/collection' }
+        ]
+      },
+    {
       label: '📦 Snippets',
       active: false,
       subItems: [
         { label: '📋 Snippet Bank', active: false, href: '/superadmin/snippets' },
         { label: '📦 Snippet Set', active: false, href: '/superadmin/snippets' }
-      ]
-    },
-    {
-      label: '📦 Collections',
-      active: true,
-      subItems: [
-        { label: '📋 Question Bank', active: false, href: '/superadmin/collections/questionbank' },
-        { label: '📦 Collection', active: true, href: '/superadmin/collections/collection' }
       ]
     },
     { label: '🏢 Company', active: false, href: '/superadmin' },

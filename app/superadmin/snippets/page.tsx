@@ -43,14 +43,6 @@ const SuperAdminMainPage: React.FC = () => {
 
   const navItems = [
     {
-      label: '📦 Snippets',
-      active: true,
-      subItems: [
-        { label: '📋 Snippet Bank', active: true, href: '/superadmin/snippets' },
-        { label: '📦 Snippet Set', active: false, href: '/superadmin/snippets' }
-      ]
-    },
-    {
       label: '📦 Collections',
       active: false,
       subItems: [
@@ -58,6 +50,15 @@ const SuperAdminMainPage: React.FC = () => {
         { label: '📦 Collection', active: false, href: '/superadmin/collections/collection' }
       ]
     },
+    {
+      label: '📦 Snippets',
+      active: true,
+      subItems: [
+        { label: '📋 Snippet Bank', active: true, href: '/superadmin/snippets' },
+        { label: '📦 Snippet Set', active: false, href: '/superadmin/snippets' }
+      ]
+    },
+  
     { label: '🏢 Company', active: false, href: '/superadmin' },
     { label: '📊 Analytics', active: false, href: '/analytics' },
     { label: '💬 Help', active: false, href: '/help' }
