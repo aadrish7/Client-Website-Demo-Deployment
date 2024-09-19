@@ -227,19 +227,19 @@ const SurveysPage = () => {
 
   const navItems = [
     {
+        label: '📦 Collections',
+        active: false,
+        subItems: [
+          { label: '📋 Question Bank', active: false, href: '/superadmin/collections/questionbank' },
+          { label: '📦 Collection', active: false, href: '/superadmin/collections/collection' }
+        ]
+      },
+    {
       label: '📦 Snippets',
       active: false,
       subItems: [
         { label: '📋 Snippet Bank', active: false, href: '/superadmin/snippets' },
         { label: '📦 Snippet Set', active: false, href: '/superadmin/snippets' }
-      ]
-    },
-    {
-      label: '📦 Collections',
-      active: false,
-      subItems: [
-        { label: '📋 Question Bank', active: false, href: '/superadmin/collections/questionbank' },
-        { label: '📦 Collection', active: false, href: '/superadmin/collections/collection' }
       ]
     },
     { label: '🏢 Company', active: true, href: '/superadmin' },
@@ -311,7 +311,7 @@ const SurveysPage = () => {
                 </table>
               </div>
             ) : (
-              <p>Loading Surveys...</p>
+              <></>
             )}
           </div>
         </div>
