@@ -7,6 +7,7 @@ import { Amplify } from "aws-amplify";
 import dynamic from "next/dynamic";
 import QuestionStepper from "@/components/questionStepper";
 import ProgressBar from "./progressBar";
+import TextSnippetDisplay from "@/components/employeeTextSnippet"
 const BarChart = dynamic(() => import("@/components/barChartEmployee"), {
   ssr: false,
   loading: () => <div>Loading Graph...</div>,
@@ -16,7 +17,6 @@ Amplify.configure(outputs);
 const client = generateClient<Schema>();
 
 interface Question {
-  questionNumber: number;
   questionText: string;
   options: string[];
 }
@@ -61,34 +61,26 @@ const QuestionsComponent: React.FC = () => {
       console.log("collection", collection);
       const { data: questionList } = await client.models.Question.list({
         filter: {
-          collectionId: { eq: collection.id },
         },
       });
       setTotalQuestions(() => questionList.length);
       // Grouping questions by factor
-      console.log("question list", questionList);
+    
       const questionsByFactor = questionList.reduce((acc, question) => {
         const { factor } = question;
         if (!acc[factor]) {
           acc[factor] = [];
         }
         acc[factor].push({
-          questionNumber: question.questionNumber,
           questionText: question.questionText,
           options: question.options?.filter(
             (option): option is string => option !== null
           ) ?? ["1", "2", "3", "4"],
         });
         return acc;
-      }, {} as Record<string, { questionNumber: number; questionText: string; options: string[] }[]>);
-
-      Object.keys(questionsByFactor).forEach((factor) => {
-        questionsByFactor[factor].sort(
-          (a, b) => a.questionNumber - b.questionNumber
-        );
-      });
-
+      }, {} as Record<string, {  questionText: string; options: string[] }[]>);
       return questionsByFactor;
+
     } catch (error) {
       console.error("Error fetching questions:", error);
       return {};
@@ -249,6 +241,7 @@ const QuestionsComponent: React.FC = () => {
           {/* <pre className="mt-4">{JSON.stringify(userSelections, null, 2)}</pre> */}
           <div>
             <BarChart data={calculateAverages(userSelections)} />
+            <TextSnippetDisplay factors={calculateAverages(userSelections)}/>
           </div>
         </div>
         ;

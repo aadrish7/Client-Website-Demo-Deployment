@@ -23,23 +23,34 @@ const schema = a.schema({
     jobLevel: a.string(),
     department: a.string(),
     password: a.string(),
-    companyName: a.string().required(),
-    companyId: a.id().required(), 
+    companyId: a.id().required(),
+    surveyId : a.id().required(), 
   }).authorization(allow => [allow.publicApiKey()]),
 
+Survey: a.model({
+  surveyName: a.string().required(),
+  collectionId: a.string(),     
+  snippetSetId: a.string(),      
+  companyId: a.string(),              
+  start: a.boolean(),
+})
+.authorization(allow => [allow.publicApiKey()]),
+
+Snippet : a.model({
+  snippetName : a.string(),
+}).authorization(allow => [allow.publicApiKey()]),
+
+  
   Question: a.model({
-    questionNumber: a.integer().required(),
     factor: a.string().required(),
     questionText: a.string().required(),
     options: a.string().array(),
-    collectionId: a.id(),
-    collection: a.belongsTo('Collection', 'collectionId'),
   }) .authorization(allow => [allow.publicApiKey()]),
 
   Collection: a.model({
     name : a.string(),
-    userId: a.string().required(),
-    questions: a.hasMany('Question', 'collectionId'),
+    tags : a.string(),
+    questions: a.string().array(),
   }) .authorization(allow => [allow.publicApiKey()]),
 
   Company: a.model({
@@ -48,6 +59,12 @@ const schema = a.schema({
     adminFirstName: a.string().required(),
     adminLastName: a.string().required(),
     adminJobTitle: a.string().required(),
+  }).authorization(allow => [allow.publicApiKey()]),
+
+  TextSnippet: a.model({
+    factor: a.string().required(),
+    scoreRange: a.string().required(), 
+    snippetText: a.string().required(), 
   }).authorization(allow => [allow.publicApiKey()]),
 });
 
