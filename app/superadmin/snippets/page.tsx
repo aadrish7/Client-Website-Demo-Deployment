@@ -1,4 +1,4 @@
-'use client'
+'use client';
 import React, { useState, useEffect } from 'react';
 import { generateClient } from 'aws-amplify/data';
 import { Schema } from '@/amplify/data/resource';
@@ -12,42 +12,41 @@ import Table from '@/components/table';
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
 
-
 const SuperAdminMainPage: React.FC = () => {
   const [tableHeaders, setTableHeaders] = useState<string[]>([]);
   const [tableData, setTableData] = useState<Record<string, string>[]>([]);
-  const router = useRouter();
+  const router = useRouter()
 
   const handleIdClick = (id: string) => {
-    router.push(`superadmin/surveys?companyName=${id}`);
   };
 
   useEffect(() => {
-    const fetchCompanies = async () => {
+    const fetchTextSnippets = async () => {
       try {
-        const { data: companyList } = await client.models.Company.list({});
-        setTableHeaders(() => ['companyName', 'adminEmail']);
+        const { data: textSnippetList } = await client.models.TextSnippet.list({});
+        setTableHeaders(() => ['factor', 'scoreRange', 'snippetText']);
         setTableData(
-          companyList.map((collection: any) => ({
-            companyName: collection.companyName,
-            adminEmail: collection.adminEmail,
+          textSnippetList.map((snippet: any) => ({
+            factor: snippet.factor,
+            scoreRange: snippet.scoreRange,
+            snippetText: snippet.snippetText,
           }))
         );
       } catch (error) {
-        console.error('Failed to fetch collections');
+        console.error('Failed to fetch text snippets');
         console.error('Error:', error);
       }
     };
 
-    fetchCompanies();
+    fetchTextSnippets();
   }, []);
 
   const navItems = [
     {
       label: '📦 Snippets',
-      active: false,
+      active: true,
       subItems: [
-        { label: '📋 Snippet Bank', active: false, href: '/superadmin/snippets' },
+        { label: '📋 Snippet Bank', active: true, href: '/superadmin/snippets' },
         { label: '📦 Snippet Set', active: false, href: '/superadmin/snippets' }
       ]
     },
@@ -59,7 +58,7 @@ const SuperAdminMainPage: React.FC = () => {
         { label: '📦 Collection', active: false, href: '/superadmin/collections/collection' }
       ]
     },
-    { label: '🏢 Company', active: true, href: '/superadmin' },
+    { label: '🏢 Company', active: false, href: '/superadmin' },
     { label: '📊 Analytics', active: false, href: '/analytics' },
     { label: '💬 Help', active: false, href: '/help' }
   ].filter(item => item !== undefined); 
@@ -70,29 +69,24 @@ const SuperAdminMainPage: React.FC = () => {
       <div className="flex flex-1">
         <Sidebar navItems={navItems} />
         <div className="w-4/5 p-8">
-          <h1 className="text-2xl font-semibold mb-6">Companies</h1>
+          <h1 className="text-2xl font-semibold mb-6">Text Snippets</h1>
+
           <div className="border p-4">
             <div className="flex items-center mb-4 justify-end">
               <div className="flex space-x-4">
                 <button
-                  onClick={()=>{router.push("/superadmin/createcompany")}}
+                  onClick={() => { router.push("/superadmin/snippets/createsnippet") }}
                   className="bg-blue-600 text-white px-4 py-2 rounded-md flex items-center space-x-1"
                 >
-                  <span>Create Company Manually</span>
+                  <span>Create Text Snippet</span>
                   <span className="text-xl font-bold">+</span>
                 </button>
-                {/* <button
-                  onClick={goToCSVCreation}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md flex items-center space-x-1"
-                >
-                  Create Company CSV
-                </button> */}
               </div>
             </div>
 
             {/* Generalized Table */}
             {tableData && tableHeaders ? (
-              <Table headers={tableHeaders} data={tableData} handleClick={handleIdClick} underlineColumn='companyname' />
+              <Table headers={tableHeaders} data={tableData} handleClick={handleIdClick} underlineColumn='' />
             ) : (
               <p>Loading Table...</p>
             )}
