@@ -20,12 +20,19 @@ interface CreateSurveyModalProps {
   onClose: () => void;
   onCreate: () => void;
   collections: { id: string; name: string }[];
+  snippetSets: { id: string; name: string }[];
   companyId: string;
 }
+interface SnippetSet {
+    id: string;
+    name: string;
+  }
 
-const CreateSurveyModal: React.FC<CreateSurveyModalProps> = ({ onClose, onCreate, collections, companyId }) => {
+const CreateSurveyModal: React.FC<CreateSurveyModalProps> = ({ onClose, onCreate, collections, snippetSets, companyId }) => {
   const [surveyName, setSurveyName] = useState('');
   const [collectionId, setCollectionId] = useState('');
+  const [snippetSetId, setSnippetSetId] = useState('');
+  
   const [start, setStart] = useState(false);
 
   const handleSubmit = async () => {
@@ -33,6 +40,7 @@ const CreateSurveyModal: React.FC<CreateSurveyModalProps> = ({ onClose, onCreate
       const survey = {
         surveyName,
         collectionId,
+        snippetSetId,
         companyId,
         start,
       };
@@ -66,6 +74,20 @@ const CreateSurveyModal: React.FC<CreateSurveyModalProps> = ({ onClose, onCreate
             </option>
           ))}
         </select>
+
+        <select
+          className="border border-gray-300 rounded p-2 w-full mb-4"
+          value={snippetSetId}
+          onChange={(e) => setSnippetSetId(e.target.value)}
+        >
+          <option value="">Select a Snippet</option>
+          {snippetSets.map((snippetSet) => (
+            <option key={snippetSet.id} value={snippetSet.id}>
+              {snippetSet.name}
+            </option>
+          ))}
+        </select>
+
         <div className="flex items-center mb-4">
           <input
             type="checkbox"
@@ -159,6 +181,7 @@ const SurveysPage = () => {
   const [editingSurveyId, setEditingSurveyId] = useState<string>('');
   const [editingSurveyStatus, setEditingSurveyStatus] = useState<boolean>(false);
   const [collections, setCollections] = useState<{ id: string; name: string }[]>([]);
+  const [snippetSets, setSnippetSets] = useState<{ id: string; name: string }[]>([]);
   const [companyId, setCompanyId] = useState<string>('');
   const searchParams = useSearchParams();
   const companyName = searchParams.get('companyName');
@@ -192,7 +215,16 @@ const SurveysPage = () => {
         console.error('Failed to fetch collections', error);
       }
     };
+    const fetchSnippetSets = async () => {
+        try {
+          const { data: SnippetSets } = await client.models.SnippetSet.list();
+          setSnippetSets(SnippetSets.map((c) => ({ id: c.id, name: c.name || '' })));
+        } catch (error) {
+          console.error('Failed to fetch Snippets', error);
+        }
+      };
     fetchCollections();
+    fetchSnippetSets();
   }, []);
 
   const fetchSurveys = async () => {
@@ -239,7 +271,7 @@ const SurveysPage = () => {
       active: false,
       subItems: [
         { label: '📋 Snippet Bank', active: false, href: '/superadmin/snippets' },
-        { label: '📦 Snippet Set', active: false, href: '/superadmin/snippets' }
+        { label: '📦 Snippet Set', active: false, href: '/superadmin/snippets/snnippetset' }
       ]
     },
     { label: '🏢 Company', active: true, href: '/superadmin' },
@@ -284,8 +316,8 @@ const SurveysPage = () => {
                         {tableHeaders.map((header, colIndex) => (
                           <td
                             key={colIndex}
-                            className={`px-6 py-4 whitespace-nowrap text-sm text-gray-900 ${
-                              header.toLowerCase() === 'surveyname' ? 'underline cursor-pointer' : ''
+                            className={`px-6 py-4 whitespace-nowrap text-sm ${
+                              header.toLowerCase() === 'surveyname' ? 'text-blue-500 font-bold cursor-pointer' : ''
                             }`}
                             onClick={() => {
                               if (header.toLowerCase() === 'surveyname') {
@@ -321,6 +353,7 @@ const SurveysPage = () => {
           onClose={() => setIsCreateModalOpen(false)}
           onCreate={fetchSurveys}
           collections={collections}
+          snippetSets={snippetSets}
           companyId={companyId}
         />
       )}

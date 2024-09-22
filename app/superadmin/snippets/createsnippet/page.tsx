@@ -5,19 +5,22 @@ import { Schema } from '@/amplify/data/resource';
 import { Amplify } from 'aws-amplify';
 import { useRouter } from 'next/navigation';
 import outputs from '@/amplify_outputs.json';
-import Header from '@/components/superadminHeader'; 
+import Header from '@/components/superadminHeader';
 import Sidebar from '@/components/superadminSidebar';
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
 
 const CreateTextSnippet: React.FC = () => {
-  const [factor, setFactor] = useState<string>('');
-  const [scoreRange, setScoreRange] = useState<string>('');
+  const [factor, setFactor] = useState<string>(''); // Updated state to handle dropdown selection
+  const [score, setScore] = useState<string>(''); 
   const [snippetText, setSnippetText] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const router = useRouter();
+
+  // List of available factors
+  const factors = ['Advocacy', 'Psychological Safety', 'Flexibility', 'Growth Satisfaction', 'Purpose'];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,7 +29,7 @@ const CreateTextSnippet: React.FC = () => {
 
     try {
       // Validate that all fields are filled
-      if (!factor || !scoreRange || !snippetText) {
+      if (!factor || !score || !snippetText) {
         setErrorMessage('All fields are required.');
         return;
       }
@@ -34,13 +37,13 @@ const CreateTextSnippet: React.FC = () => {
       // Save the new snippet to the database
       await client.models.TextSnippet.create({
         factor,
-        scoreRange,
+        score : Number(score),
         snippetText,
       });
 
       // Reset form fields after successful creation
       setFactor('');
-      setScoreRange('');
+      setScore('');
       setSnippetText('');
       setSuccessMessage('Text Snippet created successfully!');
     } catch (error) {
@@ -81,28 +84,33 @@ const CreateTextSnippet: React.FC = () => {
           <h1 className="text-2xl font-semibold mb-6">Create Text Snippet</h1>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Input for Factor */}
+            {/* Dropdown for Factor */}
             <div>
               <label className="block text-lg font-medium">Factor</label>
-              <input
-                type="text"
+              <select
                 value={factor}
                 onChange={(e) => setFactor(e.target.value)}
                 className="w-full p-2 border rounded"
-                placeholder="Enter factor"
                 required
-              />
+              >
+                <option value="" disabled>Select a factor</option>
+                {factors.map((item, index) => (
+                  <option key={index} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
             </div>
 
-            {/* Input for Score Range */}
+            {/* Input for Score */}
             <div>
-              <label className="block text-lg font-medium">Score Range</label>
+              <label className="block text-lg font-medium">Score</label>
               <input
                 type="text"
-                value={scoreRange}
-                onChange={(e) => setScoreRange(e.target.value)}
+                value={score}
+                onChange={(e) => setScore(e.target.value)}
                 className="w-full p-2 border rounded"
-                placeholder="Enter score range (e.g., 1-2, 3-4)"
+                placeholder="Enter score"
                 required
               />
             </div>

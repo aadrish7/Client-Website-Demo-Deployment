@@ -63,9 +63,15 @@ Snippet : a.model({
 
   TextSnippet: a.model({
     factor: a.string().required(),
-    scoreRange: a.string().required(), 
+    score: a.integer().required(),
     snippetText: a.string().required(), 
   }).authorization(allow => [allow.publicApiKey()]),
+
+  SnippetSet: a.model({
+    name : a.string(),
+    tags : a.string(),
+    textSnippets: a.string().array(),
+  }) .authorization(allow => [allow.publicApiKey()]),
 });
 
 export type Schema = ClientSchema<typeof schema>;

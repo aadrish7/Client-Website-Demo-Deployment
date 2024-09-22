@@ -14,7 +14,7 @@ type Props = {
 
 type TextSnippet = {
   factor: string;
-  scoreRange: string;
+  score: Number;
   snippetText: string;
 };
 
@@ -22,11 +22,19 @@ const TextSnippetDisplay: React.FC<Props> = ({ factors }) => {
   const [snippets, setSnippets] = useState<TextSnippet[]>([]);
   const [matchingSnippets, setMatchingSnippets] = useState<TextSnippet[]>([]);
 
-  // Helper function to check if a score is within a range
-  const isScoreInRange = (score: number, range: string) => {
-    const [min, max] = range.split('-').map(Number);
+
+  const isScoreInRange = (score: number, range: Number): boolean => {
+    // Convert the Number object to a primitive number
+    const rangeValue = range.valueOf(); 
+    
+    // Calculate the min and max range based on the given range value
+    const min = rangeValue - 0.49; // The minimum should be 0.49 less than the range
+    const max = rangeValue + 0.5;  // The maximum should be 0.5 more than the range
+    
+    // Check if the score falls within the calculated min and max range
     return score >= min && score <= max;
   };
+  
 
   useEffect(() => {
     const fetchTextSnippets = async () => {
@@ -46,7 +54,7 @@ const TextSnippetDisplay: React.FC<Props> = ({ factors }) => {
       // Find matching snippets based on the factor and score
       const matchedSnippets = snippets.filter((snippet) => {
         const factorScore = factors[snippet.factor];
-        if (factorScore && isScoreInRange(factorScore, snippet.scoreRange)) {
+        if (factorScore && isScoreInRange(factorScore, snippet.score)) {
           return true;
         }
         return false;

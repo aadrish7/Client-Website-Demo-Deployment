@@ -29,8 +29,8 @@ const Table: React.FC<TableProps> = ({ headers, data, underlineColumn, handleCli
               {headers.map((header, colIndex) => (
                 <td
                   key={colIndex}
-                  className={`px-6 py-4 whitespace-nowrap text-sm text-gray-900 ${
-                    header.toLowerCase() === underlineColumn.toLowerCase() ? 'underline cursor-pointer' : ''
+                  className={`px-6 py-4 whitespace-nowrap text-sm  ${
+                    header.toLowerCase() === underlineColumn.toLowerCase() ? 'text-blue-500 font-bold cursor-pointer' : ''
                   }`}
                   onClick={() => {
                     if (header.toLowerCase() === underlineColumn.toLowerCase()) {
