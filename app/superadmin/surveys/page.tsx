@@ -271,7 +271,7 @@ const SurveysPage = () => {
       active: false,
       subItems: [
         { label: '📋 Snippet Bank', active: false, href: '/superadmin/snippets' },
-        { label: '📦 Snippet Set', active: false, href: '/superadmin/snippets' }
+        { label: '📦 Snippet Set', active: false, href: '/superadmin/snippets/snnippetset' }
       ]
     },
     { label: '🏢 Company', active: true, href: '/superadmin' },
@@ -316,8 +316,8 @@ const SurveysPage = () => {
                         {tableHeaders.map((header, colIndex) => (
                           <td
                             key={colIndex}
-                            className={`px-6 py-4 whitespace-nowrap text-sm text-gray-900 ${
-                              header.toLowerCase() === 'surveyname' ? 'underline cursor-pointer' : ''
+                            className={`px-6 py-4 whitespace-nowrap text-sm ${
+                              header.toLowerCase() === 'surveyname' ? 'text-blue-500 font-bold cursor-pointer' : ''
                             }`}
                             onClick={() => {
                               if (header.toLowerCase() === 'surveyname') {

@@ -237,7 +237,7 @@ const SurveyDetailsPage = () => {
       active: false,
       subItems: [
         { label: '📋 Snippet Bank', active: false, href: '/superadmin/snippets' },
-        { label: '📦 Snippet Set', active: false, href: '/superadmin/snippets' }
+        { label: '📦 Snippet Set', active: false, href: '/superadmin/snippets/snippetset' }
       ]
     },
     { label: '🏢 Company', active: true, href: '/superadmin' },
