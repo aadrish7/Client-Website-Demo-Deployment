@@ -156,7 +156,7 @@ const SurveyDetailsPage = () => {
   const [surveyId, setSurveyId] = useState<string>("")
 
   const collectionTableHeaders = ['name', 'id']; 
-  const snippetTableHeaders = ['id', 'snippetName']
+  const snippetTableHeaders = ['name', 'id']
   const employeeHeaders = ['name', 'department', 'jobTitle', 'email'];
 
   const fetchData = async () => {
@@ -185,13 +185,14 @@ const SurveyDetailsPage = () => {
           }
 
           if (snippetSetId) {
-            const { data: snippets } = await client.models.Snippet.list({
+            const { data: snippets } = await client.models.SnippetSet.list({
               filter: { id: { eq: snippetSetId } }
             });
 
             if (snippets && snippets.length > 0) {
               const snippet = snippets[0];
-              setSnippetData([{ id: snippetSetId, name: snippet.snippetName || '' }]);
+              setSnippetData([{ id: snippetSetId, name: snippet.name || '' }]);
+              console.log("snippet", snippet)
             }
           }
 
@@ -245,7 +246,7 @@ const SurveyDetailsPage = () => {
   ];
 
   const handleEmployeesCreated = () => {
-    fetchData(); // Re-fetch employee data to refresh the table
+    fetchData();
   };
 
   return (
@@ -262,7 +263,7 @@ const SurveyDetailsPage = () => {
             </div>
             <div className="border p-4 w-1/2">
               <h1 className='mb-4'>Snippets</h1>
-              <Table headers={snippetTableHeaders} data={snippetData} handleClick={handleIdClick} underlineColumn='ID' />
+              <Table headers={snippetTableHeaders} data={snippetData} handleClick={handleIdClick} underlineColumn='naME' />
             </div>
           </div>
 
