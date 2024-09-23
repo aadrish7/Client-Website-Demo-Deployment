@@ -7,13 +7,15 @@ import { useRouter } from 'next/navigation';
 import outputs from '@/amplify_outputs.json';
 import Header from '@/components/superadminHeader'; 
 import Sidebar from '@/components/superadminSidebar';
-import Table from '@/components/table';    
+import Table from '@/components/table';   
+import CreatCompanyComponent from './createcompany/page' 
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
 
 
 const SuperAdminMainPage: React.FC = () => {
+  const [popUp, setPopUp] = useState<boolean>(false)
   const [tableHeaders, setTableHeaders] = useState<string[]>([]);
   const [tableData, setTableData] = useState<Record<string, string>[]>([]);
   const router = useRouter();
@@ -22,23 +24,23 @@ const SuperAdminMainPage: React.FC = () => {
     router.push(`superadmin/surveys?companyName=${id}`);
   };
 
-  useEffect(() => {
-    const fetchCompanies = async () => {
-      try {
-        const { data: companyList } = await client.models.Company.list({});
-        setTableHeaders(() => ['companyName', 'adminEmail']);
-        setTableData(
-          companyList.map((collection: any) => ({
-            companyName: collection.companyName,
-            adminEmail: collection.adminEmail,
-          }))
-        );
-      } catch (error) {
-        console.error('Failed to fetch collections');
-        console.error('Error:', error);
-      }
-    };
+  const fetchCompanies = async () => {
+    try {
+      const { data: companyList } = await client.models.Company.list({});
+      setTableHeaders(() => ['companyName', 'adminEmail']);
+      setTableData(
+        companyList.map((collection: any) => ({
+          companyName: collection.companyName,
+          adminEmail: collection.adminEmail,
+        }))
+      );
+    } catch (error) {
+      console.error('Failed to fetch collections');
+      console.error('Error:', error);
+    }
+  };
 
+  useEffect(() => {
     fetchCompanies();
   }, []);
 
@@ -65,6 +67,11 @@ const SuperAdminMainPage: React.FC = () => {
     { label: '💬 Help', active: false, href: '/help' }
   ].filter(item => item !== undefined); 
 
+  const handleClosePopUp = () => {
+    setPopUp(false)
+    fetchCompanies();
+  }
+
   return (
     <div className="h-screen flex flex-col">
       <Header userName="Neil Sims" userEmail="neilsimsemail@example.com" />
@@ -76,7 +83,7 @@ const SuperAdminMainPage: React.FC = () => {
             <div className="flex items-center mb-4 justify-end">
               <div className="flex space-x-4">
                 <button
-                  onClick={()=>{router.push("/superadmin/createcompany")}}
+                  onClick={()=>{setPopUp(true)}}
                   className="bg-blue-600 text-white px-4 py-2 rounded-md flex items-center space-x-1"
                 >
                   <span>Create Company Manually</span>
@@ -100,6 +107,7 @@ const SuperAdminMainPage: React.FC = () => {
           </div>
         </div>
       </div>
+      {popUp && (<CreatCompanyComponent onClose={handleClosePopUp}/>)}
     </div>
   );
 };

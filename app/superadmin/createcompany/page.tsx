@@ -18,7 +18,11 @@ interface CompanyForm {
   adminJobTitle: string;
 }
 
-const CreateCompanyPage: React.FC = () => {
+interface CreateCompanyPageProps {
+  onClose: () => void; // Define onClose prop type
+}
+
+const CreateCompanyPage: React.FC<CreateCompanyPageProps> = ({ onClose }) => {
   const [formData, setFormData] = useState<CompanyForm>({
     companyName: '',
     adminEmail: '',
@@ -29,7 +33,7 @@ const CreateCompanyPage: React.FC = () => {
 
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [successMessage, setSuccessMessage] = useState<string>('');
-  const [loading, setLoading] = useState<boolean>(false); 
+  const [loading, setLoading] = useState<boolean>(false);
   const router = useRouter();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -39,7 +43,7 @@ const CreateCompanyPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const { companyName, adminEmail, adminFirstName, adminLastName, adminJobTitle } = formData;
     if (!companyName || !adminEmail || !adminFirstName || !adminLastName || !adminJobTitle) {
       setErrorMessage('All fields are required.');
@@ -61,6 +65,7 @@ const CreateCompanyPage: React.FC = () => {
       setErrorMessage('');
       clearForm();
       router.push('/superadmin');
+      onClose(); // Close the modal after successful creation
     } catch (error) {
       setErrorMessage('An error occurred while creating the company.');
       console.error(error);
@@ -79,76 +84,86 @@ const CreateCompanyPage: React.FC = () => {
     });
   };
 
+
   return (
-    <div className="flex justify-center items-center h-screen bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-        <h2 className="text-2xl font-bold mb-6 text-center">Create a New Company</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block font-medium mb-1">Company Name:</label>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-10">
+      <div className="bg-white p-6 rounded-md shadow-lg w-full max-w-md">
+        <h2 className="text-lg font-semibold mb-7">Create a New Company</h2>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="mb-6 mt-4">
+            <label className="text-sm block font-medium mb-2">Company Name</label>
             <input
               type="text"
               name="companyName"
               value={formData.companyName}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring focus:ring-indigo-200"
+              className="border border-gray-300 rounded p-2 w-full bg-gray-100 text-sm text-black"
               required
             />
           </div>
-          <div>
-            <label className="block font-medium mb-1">Admin Email:</label>
+          <div className="mb-6 mt-4">
+            <label className="text-sm block font-medium mb-2">Admin Email</label>
             <input
               type="email"
               name="adminEmail"
               value={formData.adminEmail}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring focus:ring-indigo-200"
+              className="border border-gray-300 rounded p-2 w-full bg-gray-100 text-sm text-black"
               required
             />
           </div>
-          <div>
-            <label className="block font-medium mb-1">Admin First Name:</label>
+          <div className="mb-6 mt-4">
+            <label className="text-sm block font-medium mb-2">Admin First Name</label>
             <input
               type="text"
               name="adminFirstName"
               value={formData.adminFirstName}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring focus:ring-indigo-200"
+              className="border border-gray-300 rounded p-2 w-full bg-gray-100 text-sm text-black"
               required
             />
           </div>
-          <div>
-            <label className="block font-medium mb-1">Admin Last Name:</label>
+          <div className="mb-6 mt-4">
+            <label className="text-sm block font-medium mb-2">Admin Last Name</label>
             <input
               type="text"
               name="adminLastName"
               value={formData.adminLastName}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring focus:ring-indigo-200"
+              className="border border-gray-300 rounded p-2 w-full bg-gray-100 text-sm text-black"
               required
             />
           </div>
-          <div>
-            <label className="block font-medium mb-1">Admin Job Title:</label>
+          <div className="mb-6 mt-4">
+            <label className="text-sm block font-medium mb-2">Admin Job Title</label>
             <input
               type="text"
               name="adminJobTitle"
               value={formData.adminJobTitle}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring focus:ring-indigo-200"
+              className="border border-gray-300 rounded p-2 w-full bg-gray-100 text-sm text-black"
               required
             />
           </div>
-          <button
-            type="submit"
-            className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors duration-300"
-            disabled={loading}
-          >
-            {loading ? 'Creating Company...' : 'Create Company'}
-          </button>
+          <div className="flex justify-center">
+            <button
+              type="button"
+              onClick={onClose} // Use onClose here
+              className="bg-gray-500 text-white px-4 py-2 rounded-md mr-2"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="bg-blue-600 text-white px-4 py-2 rounded-md"
+              disabled={loading}
+            >
+              {loading ? 'Creating Company...' : 'Create Company'}
+            </button>
+          </div>
         </form>
         {errorMessage && <p className="text-red-500 mt-4">{errorMessage}</p>}
-        {successMessage && <p className="text-green-500 mt-4">{successMessage}</p>}
+        {successMessage && <p className="text-black mt-4">{successMessage}</p>}
       </div>
     </div>
   );

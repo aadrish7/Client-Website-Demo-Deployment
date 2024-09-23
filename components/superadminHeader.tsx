@@ -1,6 +1,7 @@
 import React from 'react';
 import Image from "@/public/logo.jpg"
 
+
 interface HeaderProps {
   userName: string;
   userEmail: string;
