@@ -15,87 +15,106 @@ const client = generateClient<Schema>();
 
 // Modal component for creating a collection
 const CreateCollectionModal: React.FC<{ onClose: () => void; onCreate: () => void }> = ({ onClose, onCreate }) => {
-  const [name, setName] = useState<string>('');
-  const [tags, setTags] = useState<string>('');
-  const [questions, setQuestions] = useState<{ factor: string; questionText: string; options: string[] | null; id: string; createdAt: string; updatedAt: string; }[]>([]); // Updated type
-
-  useEffect(() => {
-    const fetchQuestions = async () => {
+    const [name, setName] = useState<string>('');
+    const [tags, setTags] = useState<string>('');
+    const [questions, setQuestions] = useState<{ factor: string; questionText: string; options: string[] | null; id: string; createdAt: string; updatedAt: string; }[]>([]);
+    const [isCreating, setIsCreating] = useState<boolean>(false);
+  
+    useEffect(() => {
+      const fetchQuestions = async () => {
+        try {
+          const { data: questionList } = await client.models.Question.list({});
+          setQuestions(questionList.map((question) => ({
+            ...question,
+            options: question.options as string[] | null,
+          }))); 
+        } catch (error) {
+          console.error('Failed to fetch questions', error);
+        }
+      };
+  
+      fetchQuestions();
+    }, []);
+  
+    const handleSubmit = async () => {
+      setIsCreating(true);
       try {
-        const { data: questionList } = await client.models.Question.list({});
-        setQuestions(questionList.map((question) => ({
-          ...question,
-          options: question.options as string[] | null,
-        }))); 
+        const questionIds = questions.map((question) => question.id);
+        
+        await client.models.Collection.create({
+          name,
+          tags,
+          questions: questionIds,
+        });
+        onCreate();  // Close modal and trigger refresh
       } catch (error) {
-        console.error('Failed to fetch questions', error);
+        console.error('Failed to create collection', error);
+      } finally {
+        setIsCreating(false);
       }
     };
-
-    fetchQuestions();
-  }, []);
-
-  const handleSubmit = async () => {
-    try {
-      // Extract question IDs to store in the collection
-      const questionIds = questions.map((question) => question.id);
+  
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-10">
+        <div className="bg-white p-6 rounded-md shadow-lg w-full max-w-md">
+          <h2 className="text-lg font-semibold mb-7">Create New Collection</h2>
       
-      // Create collection with name, tags, and associated question IDs
-      await client.models.Collection.create({
-        name,
-        tags,
-        questions: questionIds,
-      });
-      onCreate();  // Close modal and trigger refresh
-    } catch (error) {
-      console.error('Failed to create collection', error);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-        <h2 className="text-xl font-semibold mb-4">Create New Collection</h2>
-
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">Name</label>
-          <input
-            type="text"
-            className="border rounded p-2 w-full"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Enter collection name"
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">Tags</label>
-          <input
-            type="text"
-            className="border rounded p-2 w-full"
-            value={tags}
-            onChange={(e) => setTags(e.target.value)}
-            placeholder="Enter collection tags"
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">Questions</label>
-          <p>{questions.length} questions will be added to this collection by default.</p>
-        </div>
-
-        <div className="flex justify-end">
-          <button onClick={onClose} className="bg-gray-400 text-white px-4 py-2 rounded-md mr-2">
-            Cancel
-          </button>
-          <button onClick={handleSubmit} className="bg-blue-600 text-white px-4 py-2 rounded-md">
-            Create
-          </button>
+          {/* Name Input */}
+          <div className="mb-6 mt-4">
+            <label className="block text-sm font-medium mb-2">Name</label>
+            <input
+              type="text"
+              className="border border-gray-300 rounded p-2 w-full bg-gray-100 text-sm"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Enter collection name"
+              disabled={isCreating}
+            />
+          </div>
+      
+          {/* Tags Input */}
+          <div className="mb-6 mt-4">
+            <label className="block text-sm font-medium mb-2">Tags</label>
+            <input
+              type="text"
+              className="border border-gray-300 rounded p-2 w-full bg-gray-100 text-sm"
+              value={tags}
+              onChange={(e) => setTags(e.target.value)}
+              placeholder="Enter collection tags"
+              disabled={isCreating}
+            />
+          </div>
+      
+          {/* Questions Information */}
+          <div className="mb-6 mt-4">
+            <label className="block text-sm font-medium mb-2">Questions</label>
+            <p>{questions.length} questions will be added to this collection by default.</p>
+          </div>
+      
+          {/* Buttons */}
+          <div className="flex justify-center mt-4">
+            <button 
+              onClick={onClose} 
+              className="bg-gray-500 text-white px-4 py-2 rounded-md mr-2"
+              disabled={isCreating}
+            >
+              Cancel
+            </button>
+            <button 
+              onClick={handleSubmit} 
+              className={`bg-blue-600 text-white px-4 py-2 rounded-md ${
+                isCreating ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+              disabled={isCreating}
+            >
+              {isCreating ? 'Creating...' : 'Create'}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
-  );
-};
+      
+    );
+  };
 
 // Main component for displaying Collections
 const CollectionsPage: React.FC = () => {

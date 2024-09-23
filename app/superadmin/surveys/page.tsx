@@ -53,6 +53,7 @@ const CreateSurveyModal: React.FC<CreateSurveyModalProps> = ({ onClose, onCreate
   };
 
   return (
+
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-10">
       <div className="bg-white p-6 rounded-md shadow-lg w-full max-w-md">
         <h2 className="text-lg font-semibold mb-7">Add Survey</h2>
@@ -62,7 +63,7 @@ const CreateSurveyModal: React.FC<CreateSurveyModalProps> = ({ onClose, onCreate
           <label className=" text-sm block font-medium mb-2">Survey Name</label>
           <input
             type="text"
-            className="border border-gray-300 rounded p-2 w-full bg-gray-100 text-sm"
+            className="border border-gray-300 rounded p-2 w-full bg-gray-100 text-sm text-black"
             value={surveyName}
             onChange={(e) => setSurveyName(e.target.value)}
             placeholder="Enter survey name"

@@ -9,6 +9,8 @@ import Header from '@/components/superadminHeader';
 import Sidebar from '@/components/superadminSidebar';
 import Table from '@/components/table';    
 import Papa from 'papaparse';
+import ManualCSVPopup from "./createsnippet/page"
+
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
@@ -17,6 +19,7 @@ const SuperAdminMainPage: React.FC = () => {
   const [tableHeaders, setTableHeaders] = useState<string[]>([]);
   const [tableData, setTableData] = useState<Record<string, string>[]>([]);
   const [showCsvPopup, setShowCsvPopup] = useState(false);  // State to handle popup visibility
+  const [showManualCreationPopup, setShowManualCreationPopup] = useState(false);
   const [csvFile, setCsvFile] = useState<File | null>(null); // State to store uploaded CSV file
   const [isUploading, setIsUploading] = useState(false);
   const router = useRouter()
@@ -52,7 +55,10 @@ const SuperAdminMainPage: React.FC = () => {
       setCsvFile(event.target.files[0]);
     }
   };
-
+  const onClose = () => {
+    setShowManualCreationPopup(false);
+    fetchTextSnippets(); // Call fetchQuestions after closing the modal
+  };
   // Function to parse CSV and create snippets
   const handleCsvSubmit = async () => {
     setIsUploading(true);
@@ -122,7 +128,7 @@ const SuperAdminMainPage: React.FC = () => {
             <div className="flex items-center mb-4 justify-end">
               <div className="flex space-x-4">
                 <button
-                  onClick={() => { router.push("/superadmin/snippets/createsnippet") }}
+                  onClick={()=> setShowManualCreationPopup(true)}
                   className="bg-blue-600 text-white px-4 py-2 rounded-md flex items-center space-x-1"
                 >
                   <span>Create Text Snippet</span>
@@ -151,19 +157,39 @@ const SuperAdminMainPage: React.FC = () => {
 
       {/* CSV Upload Popup */}
       {showCsvPopup && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
-          <div className="bg-white p-8 rounded-lg shadow-lg">
-            <h2 className="text-xl mb-4">Upload CSV to Create Snippets</h2>
-            <input type="file" accept=".csv" onChange={handleFileChange} />
-            <div className="flex justify-end space-x-4 mt-4">
-              <button onClick={() => setShowCsvPopup(false)} className="bg-gray-300 px-4 py-2 rounded-md">Cancel</button>
-              <button onClick = {handleCsvSubmit} disabled={isUploading} className="bg-blue-600 text-white px-4 py-2 rounded-md">
-            {isUploading ? 'Uploading...' : 'Upload'}
-          </button>
-            </div>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-10">
+        <div className="bg-white p-6 rounded-md shadow-lg w-full max-w-md">
+          <h2 className="text-lg font-semibold mb-7">Upload CSV to Create Snippets</h2>
+          
+          {/* File Input */}
+          <div className="mb-6 mt-4">
+            <input 
+              type="file" 
+              accept=".csv" 
+              onChange={handleFileChange}
+              className="border border-gray-300 rounded p-2 w-full bg-gray-100 text-sm"
+            />
+          </div>
+          
+          {/* Buttons */}
+          <div className="flex justify-center">
+            <button 
+              onClick={() => setShowCsvPopup(false)} 
+              className="bg-gray-500 text-white px-4 py-2 rounded-md mr-2">
+              Cancel
+            </button>
+            <button 
+              onClick={handleCsvSubmit} 
+              disabled={isUploading} 
+              className="bg-blue-600 text-white px-4 py-2 rounded-md">
+              {isUploading ? 'Uploading...' : 'Upload'}
+            </button>
           </div>
         </div>
+      </div>
+      
       )}
+      {showManualCreationPopup && (<ManualCSVPopup onClose={onClose}/>)}
     </div>
   );
 };
