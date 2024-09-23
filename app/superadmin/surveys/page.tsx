@@ -46,58 +46,76 @@ const CreateSurveyModal: React.FC<CreateSurveyModalProps> = ({ onClose, onCreate
       };
       await client.models.Survey.create(survey);
       onCreate();
+      onClose();
     } catch (error) {
       console.error('Failed to create survey', error);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-        <h2 className="text-lg font-semibold mb-4">Create New Survey</h2>
-        <input
-          type="text"
-          className="border border-gray-300 rounded p-2 w-full mb-4"
-          value={surveyName}
-          onChange={(e) => setSurveyName(e.target.value)}
-          placeholder="Enter survey name"
-        />
-        <select
-          className="border border-gray-300 rounded p-2 w-full mb-4"
-          value={collectionId}
-          onChange={(e) => setCollectionId(e.target.value)}
-        >
-          <option value="">Select a collection</option>
-          {collections.map((collection) => (
-            <option key={collection.id} value={collection.id}>
-              {collection.name}
-            </option>
-          ))}
-        </select>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-10">
+      <div className="bg-white p-6 rounded-md shadow-lg w-full max-w-md">
+        <h2 className="text-lg font-semibold mb-7">Add Survey</h2>
 
-        <select
-          className="border border-gray-300 rounded p-2 w-full mb-4"
-          value={snippetSetId}
-          onChange={(e) => setSnippetSetId(e.target.value)}
-        >
-          <option value="">Select a Snippet</option>
-          {snippetSets.map((snippetSet) => (
-            <option key={snippetSet.id} value={snippetSet.id}>
-              {snippetSet.name}
-            </option>
-          ))}
-        </select>
+        {/* Survey Name Input */}
+        <div className="mb-6 mt-4">
+          <label className=" text-sm block font-medium mb-2">Survey Name</label>
+          <input
+            type="text"
+            className="border border-gray-300 rounded p-2 w-full bg-gray-100 text-sm"
+            value={surveyName}
+            onChange={(e) => setSurveyName(e.target.value)}
+            placeholder="Enter survey name"
+          />
+        </div>
 
-        <div className="flex items-center mb-4">
+        {/* Collection Selector */}
+        <div className="mb-6 mt-4">
+          <label className="text-sm block font-medium mb-2 ">Select Collection</label>
+          <select
+            className="border border-gray-300 rounded p-2 w-full bg-gray-100 text-sm"
+            value={collectionId}
+            onChange={(e) => setCollectionId(e.target.value)}
+          >
+            <option value="">Select a collection</option>
+            {collections.map((collection) => (
+              <option key={collection.id} value={collection.id}>
+                {collection.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Snippet Set Selector */}
+        <div className="mb-6 mt-4">
+          <label className="text-sm block font-medium mb-2">Select Snippet Set</label>
+          <select
+            className="border border-gray-300 rounded p-2 w-full bg-gray-100 text-sm"
+            value={snippetSetId}
+            onChange={(e) => setSnippetSetId(e.target.value)}
+          >
+            <option value="">Select a Snippet</option>
+            {snippetSets.map((snippetSet) => (
+              <option key={snippetSet.id} value={snippetSet.id}>
+                {snippetSet.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Start Checkbox */}
+        <div className="flex items-center mb-6 mt-4">
           <input
             type="checkbox"
             checked={start}
             onChange={(e) => setStart(e.target.checked)}
             className="mr-2"
           />
-          <label>Start</label>
+          <label className='text-sm'>Start</label>
         </div>
-        <div className="flex justify-end">
+
+        {/* Buttons */}
+        <div className="flex justify-center">
           <button onClick={onClose} className="bg-gray-500 text-white px-4 py-2 rounded-md mr-2">
             Cancel
           </button>
