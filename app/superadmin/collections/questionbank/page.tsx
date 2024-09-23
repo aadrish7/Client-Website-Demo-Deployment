@@ -52,41 +52,50 @@ const CSVUploadModal: React.FC<{ onClose: () => void; onUpload: (data: Map<strin
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-2xl max-h-[80vh] overflow-y-auto">
-        <h2 className="text-xl font-semibold mb-4">Upload Questions CSV</h2>
-        <input type="file" accept=".csv" onChange={handleFileUpload} className="mb-4" disabled={isCreating} />
-        
-        <div className="flex justify-end mt-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-10">
+    <div className="bg-white p-6 rounded-md shadow-lg w-full max-w-md max-h-[80vh] overflow-y-auto">
+      <h2 className="text-lg font-semibold mb-7">Upload Questions CSV</h2>
+      <input
+        type="file"
+        accept=".csv"
+        onChange={handleFileUpload}
+        className="mb-6"
+        disabled={isCreating}
+      />
+  
+      <div className="flex justify-end mt-4">
+        <button 
+          onClick={onClose} 
+          className="bg-gray-500 text-white px-4 py-2 rounded-md mr-2"
+          disabled={isCreating}
+        >
+          Cancel
+        </button>
+        {parsedData && (
           <button 
-            onClick={onClose} 
-            className="bg-gray-400 text-white px-4 py-2 rounded-md mr-2"
+            onClick={handleCreate} 
+            className={`bg-blue-600 text-white px-4 py-2 rounded-md ${isCreating ? 'opacity-50 cursor-not-allowed' : ''}`}
             disabled={isCreating}
           >
-            Cancel
+            {isCreating ? 'Creating...' : 'Create Questions'}
           </button>
-          {parsedData && (
-            <button 
-              onClick={handleCreate} 
-              className={`bg-green-600 text-white px-4 py-2 rounded-md ${isCreating ? 'opacity-50 cursor-not-allowed' : ''}`}
-              disabled={isCreating}
-            >
-              {isCreating ? 'Creating...' : 'Create Questions'}
-            </button>
-          )}
-        </div>
+        )}
       </div>
     </div>
+  </div>
+  
   );
 };
 // Modal component for creating a question
 const CreateQuestionModal: React.FC<{ onClose: () => void; onCreate: () => void }> = ({ onClose, onCreate }) => {
   const [factor, setFactor] = useState<string>('');
   const [questionText, setQuestionText] = useState<string>('');
+  const [isCreating, setIsCreating] = useState<boolean>(false);
 
   const factorOptions = ['Advocacy', 'Psychological Safety', 'Flexibility', 'Growth Satisfaction', 'Purpose'];
 
   const handleSubmit = async () => {
+    setIsCreating(true);
     try {
       await client.models.Question.create({
         factor,
@@ -96,50 +105,68 @@ const CreateQuestionModal: React.FC<{ onClose: () => void; onCreate: () => void 
       onCreate();  // Close modal and trigger refresh
     } catch (error) {
       console.error('Failed to create question', error);
+    } finally {
+      setIsCreating(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-        <h2 className="text-xl font-semibold mb-4">Create New Question</h2>
-
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">Factor</label>
-          <select
-            className="border rounded p-2 w-full"
-            value={factor}
-            onChange={(e) => setFactor(e.target.value)}
-          >
-            <option value="">Select a factor</option>
-            {factorOptions.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">Question Text</label>
-          <textarea
-            className="border rounded p-2 w-full"
-            value={questionText}
-            onChange={(e) => setQuestionText(e.target.value)}
-            placeholder="Enter question text"
-          />
-        </div>
-
-        <div className="flex justify-end">
-          <button onClick={onClose} className="bg-gray-400 text-white px-4 py-2 rounded-md mr-2">
-            Cancel
-          </button>
-          <button onClick={handleSubmit} className="bg-blue-600 text-white px-4 py-2 rounded-md">
-            Create
-          </button>
-        </div>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-10">
+    <div className="bg-white p-6 rounded-md shadow-lg w-full max-w-md">
+      <h2 className="text-lg font-semibold mb-7">Create New Question</h2>
+  
+      {/* Factor Selector */}
+      <div className="mb-6 mt-4">
+        <label className="text-sm block font-medium mb-2">Factor</label>
+        <select
+          className="border border-gray-300 rounded p-2 w-full bg-gray-100 text-sm"
+          value={factor}
+          onChange={(e) => setFactor(e.target.value)}
+          disabled={isCreating}
+        >
+          <option value="">Select a factor</option>
+          {factorOptions.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+      </div>
+  
+      {/* Question Text Input */}
+      <div className="mb-6 mt-4">
+        <label className="text-sm block font-medium mb-2">Question Text</label>
+        <textarea
+          className="border border-gray-300 rounded p-2 w-full bg-gray-100 text-sm"
+          value={questionText}
+          onChange={(e) => setQuestionText(e.target.value)}
+          placeholder="Enter question text"
+          disabled={isCreating}
+        />
+      </div>
+  
+      {/* Buttons */}
+      <div className="flex justify-center">
+        <button 
+          onClick={onClose} 
+          className="bg-gray-500 text-white px-4 py-2 rounded-md mr-2"
+          disabled={isCreating}
+        >
+          Cancel
+        </button>
+        <button 
+          onClick={handleSubmit} 
+          className={`bg-blue-600 text-white px-4 py-2 rounded-md ${
+            isCreating ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
+          disabled={isCreating}
+        >
+          {isCreating ? 'Creating...' : 'Create'}
+        </button>
       </div>
     </div>
+  </div>
+  
   );
 };
 // Main component for displaying Questions

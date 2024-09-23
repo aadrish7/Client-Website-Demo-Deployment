@@ -20,6 +20,7 @@ const CreateSnippetSetModal: React.FC<{
   const [name, setName] = useState<string>("");
   const [tags, setTags] = useState<string>("");
   const [textSnippets, setTextSnippets] = useState<{ id: string; snippetText: string }[]>([]);
+  const [isCreating, setIsCreating] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchTextSnippets = async () => {
@@ -40,74 +41,79 @@ const CreateSnippetSetModal: React.FC<{
   }, []);
 
   const handleSubmit = async () => {
+    setIsCreating(true);
     try {
-      // Extract textSnippet IDs to store in the snippet set
       const snippetIds = textSnippets.map((snippet) => snippet.id);
-
-      // Create snippet set with name, tags, and associated snippet IDs
       await client.models.SnippetSet.create({
         name,
         tags,
         textSnippets: snippetIds,
       });
-      onCreate(); // Close modal and trigger refresh
+      onCreate();
     } catch (error) {
       console.error("Failed to create snippet set", error);
+    } finally {
+      setIsCreating(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-        <h2 className="text-xl font-semibold mb-4">Create New Snippet Set</h2>
-
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">Name</label>
-          <input
-            type="text"
-            className="border rounded p-2 w-full"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Enter snippet set name"
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">Tags</label>
-          <input
-            type="text"
-            className="border rounded p-2 w-full"
-            value={tags}
-            onChange={(e) => setTags(e.target.value)}
-            placeholder="Enter snippet set tags"
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">
-            Text Snippets
-          </label>
-          <p>
-            {textSnippets.length} snippets will be added to this set by default.
-          </p>
-        </div>
-
-        <div className="flex justify-end">
-          <button
-            onClick={onClose}
-            className="bg-gray-400 text-white px-4 py-2 rounded-md mr-2"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md"
-          >
-            Create
-          </button>
-        </div>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-10">
+    <div className="bg-white p-6 rounded-md shadow-lg w-full max-w-md">
+      <h2 className="text-lg font-semibold mb-7">Create New Snippet Set</h2>
+  
+      {/* Snippet Set Name Input */}
+      <div className="mb-6 mt-4">
+        <label className="text-sm block font-medium mb-2">Name</label>
+        <input
+          type="text"
+          className="border border-gray-300 rounded p-2 w-full bg-gray-100 text-sm"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Enter snippet set name"
+        />
+      </div>
+  
+      {/* Tags Input */}
+      <div className="mb-6 mt-4">
+        <label className="text-sm block font-medium mb-2">Tags</label>
+        <input
+          type="text"
+          className="border border-gray-300 rounded p-2 w-full bg-gray-100 text-sm"
+          value={tags}
+          onChange={(e) => setTags(e.target.value)}
+          placeholder="Enter snippet set tags"
+        />
+      </div>
+  
+      {/* Text Snippets Info */}
+      <div className="mb-6 mt-4">
+        <label className="text-sm block font-medium mb-2">Text Snippets</label>
+        <p className="text-sm">{textSnippets.length} snippets will be added to this set by default.</p>
+      </div>
+  
+      {/* Buttons */}
+      <div className="flex justify-center">
+        <button
+          onClick={onClose}
+          className="bg-gray-500 text-white px-4 py-2 rounded-md mr-2"
+          disabled={isCreating}
+        >
+          Cancel
+        </button>
+        <button
+          onClick={handleSubmit}
+          className={`bg-blue-600 text-white px-4 py-2 rounded-md ${
+            isCreating ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
+          disabled={isCreating}
+        >
+          {isCreating ? 'Creating Snippet Set...' : 'Create'}
+        </button>
       </div>
     </div>
+  </div>
+  
   );
 };
 
