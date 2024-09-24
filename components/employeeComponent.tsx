@@ -7,7 +7,8 @@ import { Amplify } from "aws-amplify";
 import dynamic from "next/dynamic";
 import QuestionStepper from "@/components/questionStepper";
 import ProgressBar from "./progressBar";
-import TextSnippetDisplay from "@/components/employeeTextSnippet"
+import TextSnippetDisplay from "@/components/employeeTextSnippet";
+import { fetchUserAttributes } from "aws-amplify/auth";
 const BarChart = dynamic(() => import("@/components/barChartEmployee"), {
   ssr: false,
   loading: () => <div>Loading Graph...</div>,
@@ -19,6 +20,7 @@ const client = generateClient<Schema>();
 interface Question {
   questionText: string;
   options: string[];
+  id: string;
 }
 
 type QuestionsByFactor = Record<string, Question[]>;
@@ -30,6 +32,7 @@ const optionMapping: Record<number, string> = {
   4: "Mostly Agree",
   5: "Strongly Agree",
 };
+type UserSelectionsWithId = Record<string, { id: string; answer: number }[]>;
 
 const QuestionsComponent: React.FC = () => {
   const [questionsByFactor, setQuestionsByFactor] = useState<QuestionsByFactor>(
@@ -38,49 +41,125 @@ const QuestionsComponent: React.FC = () => {
   const [currentFactor, setCurrentFactor] = useState<string | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
   const [userSelections, setUserSelections] = useState<UserSelections>({});
+  const [userSelectionsWithId, setUserSelectionsWithId] =
+    useState<UserSelectionsWithId>({});
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [isFinished, setIsFinished] = useState<boolean>(false);
   const [firstAttempt, setFirstAttempt] = useState<boolean>(true);
   const [currentStep, setCurrentStep] = useState<number>(2);
   const [totalQuestions, setTotalQuestions] = useState<number>(0);
   const [currentQuestionNumber, setCurrentQuestionNumber] = useState<number>(0);
+  const [noQuestions, setNoQuestions] = useState<boolean>(false);
+  const [surveyId, setSurveyId] = useState<string>("");
+  const [userId, setUserId] = useState<string>("");
+
   const steps = [
     "Create Account",
     "Complete Profile",
     "Assessment",
     "Survey Results",
   ];
-  const fetchCollections = async () => {
-    const { data: collectionList } = await client.models.Collection.list();
-    return collectionList[0];
-  };
+
+  async function handleFinish() {
+    const updatedSelections: Record<string, { questionId: string | undefined; selection: string }[]> = {};
+    Object.keys(userSelections).forEach((factor) => {
+      const questionsForFactor = questionsByFactor[factor];
+      
+      // Map over the user's selections for each question, converting selection to string
+      updatedSelections[factor] = userSelections[factor].map((selection, index) => ({
+        questionId: questionsForFactor?.[index]?.id,  
+        selection: String(selection),  // Convert number to string for JSON compatibility
+      }));
+    });
+  
+    try {
+      const { data: saveddata } = await client.models.SurveyResults.create({
+        surveyId: surveyId,
+        userId: userId,
+        allanswersjson: JSON.stringify(updatedSelections),  
+      });
+      const avg = calculateAverages(userSelections);
+      const { data: savedAverageData } = await client.models.AverageSurveyResults.create({
+        surveyId: surveyId,
+        userId: userId,
+        averageScorejson: JSON.stringify(avg),
+      });
+      setIsFinished(true);
+      setCurrentQuestionNumber((prev) => prev + 1);
+      setCurrentStep((currentStep) => currentStep + 1);
+
+    } catch (error) {
+      console.error("Error saving data:", error);
+    }
+  }
+  
 
   const getQuestions = async () => {
     try {
-      const collection = await fetchCollections();
-      console.log("collection", collection);
-      const { data: questionList } = await client.models.Question.list({
+      const { email } = await fetchUserAttributes();
+      const { data: userList } = await client.models.User.list({
         filter: {
+          email: { eq: email },
         },
       });
-      setTotalQuestions(() => questionList.length);
-      // Grouping questions by factor
-    
-      const questionsByFactor = questionList.reduce((acc, question) => {
-        const { factor } = question;
-        if (!acc[factor]) {
-          acc[factor] = [];
-        }
-        acc[factor].push({
-          questionText: question.questionText,
-          options: question.options?.filter(
-            (option): option is string => option !== null
-          ) ?? ["1", "2", "3", "4"],
-        });
-        return acc;
-      }, {} as Record<string, {  questionText: string; options: string[] }[]>);
-      return questionsByFactor;
+      const finalUser = userList[0];
+      setUserId(() => finalUser.id);
 
+      const companyId = finalUser.companyId;
+
+      const { data: SurveyList } = await client.models.Survey.list({
+        filter: {
+          companyId: { eq: companyId },
+          start: { eq: true},
+        },
+      });
+      const survey = SurveyList[0];
+      setSurveyId(() => survey.id);
+      if (!survey) {
+        return {};
+      }
+      const collectionId = survey.collectionId;
+      if (!collectionId) {
+        return {};
+      }
+      const { data: collections } = await client.models.Collection.list({
+        filter: {
+          id: { eq: collectionId },
+        },
+      });
+      
+      const collection = collections[0];
+      const questionIds = collection.questions;
+      //questionIDs is an array of question IDs, fetch all the questions and store them in questionList
+      if (!questionIds) {
+        return {};
+      }
+      const questionList = await Promise.all(
+        questionIds.map(async (id) => {
+          if (!id) {
+            return null;}
+          const { data: questions } = await client.models.Question.list({
+            filter: {
+              id: { eq: id },
+          }});
+          return questions;
+        })
+      );
+
+      setTotalQuestions(() => questionList.length);
+      
+      const questionsByFactor: QuestionsByFactor = {};
+      questionList.forEach((question : any) => {
+        if (!question) {
+          return;
+        }
+        const factor = question[0].factor;
+        if (!questionsByFactor[factor]) {
+          questionsByFactor[factor] = [];
+        }
+        questionsByFactor[factor].push(...question);
+      });
+      return questionsByFactor;
     } catch (error) {
       console.error("Error fetching questions:", error);
       return {};
@@ -89,10 +168,18 @@ const QuestionsComponent: React.FC = () => {
 
   const loadQuestions = async () => {
     const groupedQuestions = await getQuestions();
+    if (Object.keys(groupedQuestions).length === 0) {
+      setNoQuestions(true);
+      return;
+    }
     setQuestionsByFactor(groupedQuestions);
     const firstFactor = Object.keys(groupedQuestions)[0];
     setCurrentFactor(firstFactor);
   };
+
+  useEffect(() => {
+    loadQuestions();
+  }, []);
 
   const handleOptionSelect = (option: number) => {
     setSelectedOption(option);
@@ -190,7 +277,7 @@ const QuestionsComponent: React.FC = () => {
     }
   };
 
-  const calculateAverages = (
+const calculateAverages = (
     userSelections: UserSelections
   ): Record<string, number> => {
     const averages: Record<string, number> = {};
@@ -207,13 +294,12 @@ const QuestionsComponent: React.FC = () => {
       }
     }
 
+
     return averages;
   };
-
-  useEffect(() => {
-    loadQuestions();
-  }, []);
-
+  if (noQuestions) {
+    return <div>No Surveys found for your Company</div>;
+  }
   if (!currentFactor) {
     return <div>Loading questions...</div>;
   }
@@ -241,7 +327,7 @@ const QuestionsComponent: React.FC = () => {
           {/* <pre className="mt-4">{JSON.stringify(userSelections, null, 2)}</pre> */}
           <div>
             <BarChart data={calculateAverages(userSelections)} />
-            <TextSnippetDisplay factors={calculateAverages(userSelections)}/>
+            <TextSnippetDisplay factors={calculateAverages(userSelections)} />
           </div>
         </div>
         ;
@@ -332,25 +418,27 @@ const QuestionsComponent: React.FC = () => {
         <p className="text-gray-700 mb-6">{currentQuestion.questionText}</p>
 
         <div className="border border-gray-300 rounded-lg">
-      {Object.entries(optionMapping).map(([value, text], index, array) => (
-        <div
-          key={value}
-          className={`flex items-center p-3 cursor-pointer hover:bg-gray-100 ${
-            index !== array.length - 1 ? "border-b border-gray-300" : ""
-          } ${selectedOption === Number(value) ? "bg-blue-100" : ""}`}
-          onClick={() => handleOptionSelect(Number(value))}
-        >
-          <div className={`mr-3 h-4 w-4 rounded-full border ${
-            selectedOption === Number(value) 
-              ? "bg-blue-500 border-blue-500" 
-              : "border-gray-300"
-          }`} />
-          <label className="text-gray-700 flex-grow cursor-pointer">
-            {text}
-          </label>
+          {Object.entries(optionMapping).map(([value, text], index, array) => (
+            <div
+              key={value}
+              className={`flex items-center p-3 cursor-pointer hover:bg-gray-100 ${
+                index !== array.length - 1 ? "border-b border-gray-300" : ""
+              } ${selectedOption === Number(value) ? "bg-blue-100" : ""}`}
+              onClick={() => handleOptionSelect(Number(value))}
+            >
+              <div
+                className={`mr-3 h-4 w-4 rounded-full border ${
+                  selectedOption === Number(value)
+                    ? "bg-blue-500 border-blue-500"
+                    : "border-gray-300"
+                }`}
+              />
+              <label className="text-gray-700 flex-grow cursor-pointer">
+                {text}
+              </label>
+            </div>
+          ))}
         </div>
-      ))}
-    </div>
       </div>
 
       <div className="flex justify-between">
@@ -364,7 +452,14 @@ const QuestionsComponent: React.FC = () => {
 
         <button
           className="mt-3 px-2 py-2 mx-[260px] bg-blue-600 text-white rounded"
-          onClick={handleNextQuestion}
+          onClick={
+            currentFactor &&
+            currentQuestionIndex === currentQuestions.length - 1 &&
+            Object.keys(questionsByFactor).indexOf(currentFactor) ===
+              Object.keys(questionsByFactor).length - 1
+              ? handleFinish
+              : handleNextQuestion
+          }
         >
           {currentFactor &&
           currentQuestionIndex === currentQuestions.length - 1 &&

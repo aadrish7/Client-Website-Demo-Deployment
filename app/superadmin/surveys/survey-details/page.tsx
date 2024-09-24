@@ -74,6 +74,7 @@ const EmployeeUploadPopup: React.FC<EmployeeUploadPopupProps> = ({ surveyId, com
           companyName: companyId || '',
           companyId: companyId || '',
         }));
+        console.log('Parsed data:', parsedData);
         setUsers(parsedData);
       },
       error: (error) => {
@@ -86,12 +87,12 @@ const EmployeeUploadPopup: React.FC<EmployeeUploadPopupProps> = ({ surveyId, com
   const createUserCollections = async () => {
     try {
       for (const user of users) {
-        await client.models.User.create({
+        const {data: clients} = await client.models.User.create({
           firstName: user.firstName,
           lastName: user.lastName,
           email: user.email,
-          dob: user.dob,
-          hireDate: user.hireDate,
+          // dob: user.dob,
+          // hireDate: user.hireDate,
           gender: user.gender,
           ethnicity: user.ethnicity,
           manager: user.manager,
@@ -104,6 +105,8 @@ const EmployeeUploadPopup: React.FC<EmployeeUploadPopupProps> = ({ surveyId, com
           surveyId: surveyId, // Store surveyId
           role: 'employee',
         });
+        console.log("user", user)
+        console.log("client", clients)
       }
       alert('Employees created successfully!');
       onEmployeesCreated();
@@ -199,6 +202,8 @@ const SurveyDetailsPage = () => {
           const { data: users } = await client.models.User.list({
             filter: { surveyId: { eq: surveyID } }
           });
+
+          console.log('Users:', users);
 
           const formattedEmployees = users.map(emp => ({
             name: `${emp.firstName} ${emp.lastName}`,
