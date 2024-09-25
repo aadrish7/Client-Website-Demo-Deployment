@@ -102,6 +102,15 @@ const schema = a.schema({
       textSnippets: a.string().array(),
     })
     .authorization((allow) => [allow.publicApiKey()]),
+
+  FactorImportance: a
+    .model({
+      factor: a.string().required(),
+      surveyId :  a.string().required(),
+      userId : a.string().required(),
+      score : a.integer().required(),
+    })
+    .authorization((allow) => [allow.publicApiKey()]),
 });
 
 export type Schema = ClientSchema<typeof schema>;

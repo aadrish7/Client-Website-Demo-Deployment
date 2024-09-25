@@ -55,7 +55,7 @@ const BarChart: React.FC<BarChartProps> = ({ data }) => {
       ]}
       layout={{
         barmode: 'stack',
-        title: 'Score Bar Chart',
+      
         yaxis: {
           title: 'Score',
           range: [0, 5],

@@ -20,7 +20,7 @@ const Sidebar: React.FC<SidebarProps> = ({ navItems }) => {
   };
 
   return (
-    <div className="w-1/5 bg-gray-50 p-6">
+    <div className="w-1/5 bg-white p-6">
       <ul className="space-y-6 text-gray-800">
         {navItems.map((item, index) => (
           <li key={index}>

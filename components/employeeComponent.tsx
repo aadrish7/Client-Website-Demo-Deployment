@@ -25,6 +25,8 @@ interface Question {
 
 type QuestionsByFactor = Record<string, Question[]>;
 type UserSelections = Record<string, number[]>;
+type UserSelectionsWithId = Record<string, { id: string; answer: number }[]>;
+type FactorImportance = Record<string, number>;
 const optionMapping: Record<number, string> = {
   1: "Strongly Disagree",
   2: "Mostly Disagree",
@@ -32,7 +34,6 @@ const optionMapping: Record<number, string> = {
   4: "Mostly Agree",
   5: "Strongly Agree",
 };
-type UserSelectionsWithId = Record<string, { id: string; answer: number }[]>;
 
 const QuestionsComponent: React.FC = () => {
   const [questionsByFactor, setQuestionsByFactor] = useState<QuestionsByFactor>(
@@ -52,6 +53,27 @@ const QuestionsComponent: React.FC = () => {
   const [noQuestions, setNoQuestions] = useState<boolean>(false);
   const [surveyId, setSurveyId] = useState<string>("");
   const [userId, setUserId] = useState<string>("");
+   const [factorImportance, setFactorImportance] = useState<FactorImportance>({});
+  const [isAskingFactorImportance, setIsAskingFactorImportance] = useState<boolean>(false);
+
+  const hardcodedQuestions: QuestionsByFactor = {
+    "Advocacy": [
+      { questionText: "How much do you agree that advocacy is important to you?", options: [], id: "q1" },
+    ],
+    "Psychological Safety": [
+      { questionText: "How much do you agree that psychological safety is important to you?", options: [], id: "q2" },
+    ],
+    "Flexibility": [
+      { questionText: "How much do you agree that flexibility is important to you?", options: [], id: "q3" },
+    ],
+    "Growth Satisfaction": [
+      { questionText: "How much do you agree that growth satisfaction is important to you?", options: [], id: "q4" },
+    ],
+    "Purpose": [
+      { questionText: "How much do you agree that purpose is important to you?", options: [], id: "q5" },
+    ],
+  };
+  
 
   const steps = [
     "Create Account",
@@ -114,14 +136,15 @@ const QuestionsComponent: React.FC = () => {
         },
       });
       const survey = SurveyList[0];
-      setSurveyId(() => survey.id);
       if (!survey) {
         return {};
       }
+      
       const collectionId = survey.collectionId;
       if (!collectionId) {
         return {};
       }
+      setSurveyId(() => survey.id);
       const { data: collections } = await client.models.Collection.list({
         filter: {
           id: { eq: collectionId },
@@ -470,10 +493,10 @@ const calculateAverages = (
         </button>
       </div>
 
-      <div className="mt-8 flex justify-center">
+      {/* <div className="mt-8 flex justify-center">
         <h3 className="text-lg font-semibold">User Selections</h3>
         <pre>{JSON.stringify(userSelections, null, 2)}</pre>
-      </div>
+      </div> */}
     </div>
   );
 };
