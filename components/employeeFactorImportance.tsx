@@ -1,44 +1,38 @@
-'use client'
-import React, { useState } from 'react';
-import Header from "@/components/superadminHeader"
+"use client";
+
+import React from "react";
+import QuestionStepper from "@/components/questionStepper";
 
 const categories = [
-  'Psychological Safety',
-  'Growth Satisfaction',
-  'Purpose',
-  'Advocacy',
-  'Alignment',
+  "Psychological Safety",
+  "Growth Satisfaction",
+  "Purpose",
+  "Advocacy",
+  "Alignment",
+  // "Flexibility",
 ];
 
-interface SelectionState {
-  [key: string]: number | null;
-}
-
-const SurveyComponent: React.FC = () => {
-  const [selectedValues, setSelectedValues] = useState<SelectionState>({
-    'Psychological Safety': null,
-    'Growth Satisfaction': null,
-    'Purpose': null,
-    'Advocacy': null,
-    'Alignment': null,
-  });
-
-  const handleSelection = (category: string, value: number) => {
-    // Create a new state object and remove the previous selection for the selected value
-    const newSelectedValues = Object.fromEntries(
-      Object.entries(selectedValues).map(([key, selectedValue]) => [
-        key,
-        selectedValue === value ? null : selectedValue,
-      ])
-    );
-
-    // Set the new selection for the current category
-    setSelectedValues({
-      ...newSelectedValues,
-      [category]: value,
-    });
+interface SurveyComponentProps {
+  selectedValues: {
+    [key: string]: number | null;
   };
-
+  factorImportanceBool: boolean;
+  onSelectionChange: (category: string, value: number) => void;
+  onButtonClick: () => void;
+}
+const steps = [
+  "Create Account",
+  "Complete Profile",
+  "Assessment",
+  "Survey Results",
+];
+const currentStep = 2;
+const SurveyComponent: React.FC<SurveyComponentProps> = ({
+  selectedValues,
+  onSelectionChange,
+  factorImportanceBool,
+  onButtonClick,
+}) => {
   return (
     <div className="bg-gray-100 min-h-screen">
       <header className="bg-white flex justify-between items-center mb-10 px-7 py-3">
@@ -48,7 +42,9 @@ const SurveyComponent: React.FC = () => {
           <p className="text-sm text-gray-600">neilsims@example.com</p>
         </div>
       </header>
-
+      <div className="m-4">
+        <QuestionStepper steps={steps} currentStep={currentStep} />
+      </div>
       <div className="mx-auto w-3/5 bg-white rounded-lg shadow-md p-8">
         <h2 className="text-xl font-semibold mb-6">
           Please rate each of the following categories from 1 to 5:
@@ -65,7 +61,7 @@ const SurveyComponent: React.FC = () => {
                     name={category}
                     value={value}
                     checked={selectedValues[category] === value}
-                    onChange={() => handleSelection(category, value)}
+                    onChange={() => onSelectionChange(category, value)}
                     className="h-4 w-4 text-blue-600"
                   />
                   <span>{value}</span>
@@ -74,6 +70,12 @@ const SurveyComponent: React.FC = () => {
             </div>
           </div>
         ))}
+        <button
+          onClick={onButtonClick}
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300"
+        >
+          Move to Questions
+        </button>
       </div>
     </div>
   );

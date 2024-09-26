@@ -349,7 +349,7 @@ const SurveysPage = () => {
         {
           label: "📦 Snippet Set",
           active: false,
-          href: "/superadmin/snippets/snnippetset",
+          href: "/superadmin/snippets/snippetset",
         },
       ],
     },
