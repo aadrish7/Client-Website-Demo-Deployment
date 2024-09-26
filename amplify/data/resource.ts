@@ -7,71 +7,110 @@ specifies that any user authenticated via an API key can "create", "read",
 "update", and "delete" any "Todo" records.
 =========================================================================*/
 const schema = a.schema({
-  User: a.model({
-    firstName: a.string().required(),
-    lastName: a.string().required(),
-    email: a.email(),
-    role: a.string().required(),
-    dob: a.date(),
-    hireDate: a.date(),
-    gender: a.string(),
-    ethnicity: a.string(),
-    manager: a.string(),
-    location: a.string(),
-    veteranStatus: a.string(),
-    disabilityStatus: a.string(),
-    jobLevel: a.string(),
-    department: a.string(),
-    password: a.string(),
-    companyId: a.id().required(),
-    surveyId : a.id().required(), 
-  }).authorization(allow => [allow.publicApiKey()]),
+  User: a
+    .model({
+      firstName: a.string().required(),
+      lastName: a.string().required(),
+      email: a.email(),
+      role: a.string().required(),
+      dob: a.date(),
+      hireDate: a.date(),
+      gender: a.string(),
+      ethnicity: a.string(),
+      manager: a.string(),
+      location: a.string(),
+      veteranStatus: a.string(),
+      disabilityStatus: a.string(),
+      jobLevel: a.string(),
+      department: a.string(),
+      password: a.string(),
+      companyId: a.id().required(),
+      surveyId: a.id().required(),
+    })
+    .authorization((allow) => [allow.publicApiKey()]),
 
-Survey: a.model({
-  surveyName: a.string().required(),
-  collectionId: a.string(),     
-  snippetSetId: a.string(),      
-  companyId: a.string(),              
-  start: a.boolean(),
-})
-.authorization(allow => [allow.publicApiKey()]),
+  Survey: a
+    .model({
+      surveyName: a.string().required(),
+      collectionId: a.string(),
+      snippetSetId: a.string(),
+      companyId: a.string(),
+      start: a.boolean(),
+    })
+    .authorization((allow) => [allow.publicApiKey()]),
 
-Snippet : a.model({
-  snippetName : a.string(),
-}).authorization(allow => [allow.publicApiKey()]),
+  SurveyResults: a
+    .model({
+      surveyId: a.string().required(),
+      userId: a.string().required(),
+      allanswersjson: a.json().required(),
+    })
+    .authorization((allow) => [allow.publicApiKey()]),
 
-  
-  Question: a.model({
-    factor: a.string().required(),
-    questionText: a.string().required(),
-    options: a.string().array(),
-  }) .authorization(allow => [allow.publicApiKey()]),
+  AverageSurveyResults: a
+    .model({
+      surveyId: a.string().required(),
+      userId : a.string().required(),
+      averageScorejson: a.json().required(),
+    })
+    .authorization((allow) => [allow.publicApiKey()]),
 
-  Collection: a.model({
-    name : a.string(),
-    tags : a.string(),
-    questions: a.string().array(),
-  }) .authorization(allow => [allow.publicApiKey()]),
+  Snippet: a
+    .model({
+      snippetName: a.string(),
+    })
+    .authorization((allow) => [allow.publicApiKey()]),
 
-  Company: a.model({
-    companyName: a.string(),
-    adminEmail: a.string().required(),
-    adminFirstName: a.string().required(),
-    adminLastName: a.string().required(),
-    adminJobTitle: a.string().required(),
-  }).authorization(allow => [allow.publicApiKey()]),
+  Question: a
+    .model({
+      factor: a.string().required(),
+      questionText: a.string().required(),
+      options: a.string().array(),
+    })
+    .authorization((allow) => [allow.publicApiKey()]),
 
-  TextSnippet: a.model({
-    factor: a.string().required(),
-    score: a.integer().required(),
-    snippetText: a.string().required(), 
-  }).authorization(allow => [allow.publicApiKey()]),
+  Collection: a
+    .model({
+      name: a.string(),
+      tags: a.string(),
+      questions: a.string().array(),
+    })
+    .authorization((allow) => [allow.publicApiKey()]),
 
-  SnippetSet: a.model({
-    name : a.string(),
-    tags : a.string(),
-    textSnippets: a.string().array(),
-  }) .authorization(allow => [allow.publicApiKey()]),
+  Company: a
+    .model({
+      companyName: a.string(),
+      adminEmail: a.string().required(),
+      adminFirstName: a.string().required(),
+      adminLastName: a.string().required(),
+      adminJobTitle: a.string().required(),
+    })
+    .authorization((allow) => [allow.publicApiKey()]),
+
+  TextSnippet: a
+    .model({
+      factor: a.string().required(),
+      score: a.integer().required(),
+      snippetText: a.string().required(),
+    })
+    .authorization((allow) => [allow.publicApiKey()]),
+
+  SnippetSet: a
+    .model({
+      name: a.string(),
+      tags: a.string(),
+      textSnippets: a.string().array(),
+    })
+    .authorization((allow) => [allow.publicApiKey()]),
+
+  FactorImportance: a
+    .model({
+      factor: a.string().required(),
+      surveyId :  a.string().required(),
+      userId : a.string().required(),
+      score : a.integer().required(),
+    })
+    .authorization((allow) => [allow.publicApiKey()]),
 });
 
 export type Schema = ClientSchema<typeof schema>;

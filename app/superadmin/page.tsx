@@ -1,18 +1,16 @@
-'use client'
-import React, { useState, useEffect } from 'react';
-import { generateClient } from 'aws-amplify/data';
-import { Schema } from '@/amplify/data/resource';
-import { Amplify } from 'aws-amplify';
-import { useRouter } from 'next/navigation';
-import outputs from '@/amplify_outputs.json';
-import Header from '@/components/superadminHeader'; 
-import Sidebar from '@/components/superadminSidebar';
-import Table from '@/components/table';   
-
+"use client";
+import React, { useState, useEffect } from "react";
+import { generateClient } from "aws-amplify/data";
+import { Schema } from "@/amplify/data/resource";
+import { Amplify } from "aws-amplify";
+import { useRouter } from "next/navigation";
+import outputs from "@/amplify_outputs.json";
+import Header from "@/components/superadminHeader";
+import Sidebar from "@/components/superadminSidebar";
+import Table from "@/components/table";
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
-
 
 interface CompanyForm {
   companyName: string;
@@ -28,15 +26,15 @@ interface CreateCompanyPageProps {
 
 const CreateCompanyPage: React.FC<CreateCompanyPageProps> = ({ onClose }) => {
   const [formData, setFormData] = useState<CompanyForm>({
-    companyName: '',
-    adminEmail: '',
-    adminFirstName: '',
-    adminLastName: '',
-    adminJobTitle: '',
+    companyName: "",
+    adminEmail: "",
+    adminFirstName: "",
+    adminLastName: "",
+    adminJobTitle: "",
   });
 
-  const [errorMessage, setErrorMessage] = useState<string>('');
-  const [successMessage, setSuccessMessage] = useState<string>('');
+  const [errorMessage, setErrorMessage] = useState<string>("");
+  const [successMessage, setSuccessMessage] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const router = useRouter();
 
@@ -48,9 +46,21 @@ const CreateCompanyPage: React.FC<CreateCompanyPageProps> = ({ onClose }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const { companyName, adminEmail, adminFirstName, adminLastName, adminJobTitle } = formData;
-    if (!companyName || !adminEmail || !adminFirstName || !adminLastName || !adminJobTitle) {
-      setErrorMessage('All fields are required.');
+    const {
+      companyName,
+      adminEmail,
+      adminFirstName,
+      adminLastName,
+      adminJobTitle,
+    } = formData;
+    if (
+      !companyName ||
+      !adminEmail ||
+      !adminFirstName ||
+      !adminLastName ||
+      !adminJobTitle
+    ) {
+      setErrorMessage("All fields are required.");
       return;
     }
 
@@ -65,13 +75,13 @@ const CreateCompanyPage: React.FC<CreateCompanyPageProps> = ({ onClose }) => {
         adminJobTitle,
       });
 
-      setSuccessMessage('Company created successfully!');
-      setErrorMessage('');
+      setSuccessMessage("Company created successfully!");
+      setErrorMessage("");
       clearForm();
-      router.push('/superadmin');
+      router.push("/superadmin");
       onClose(); // Close the modal after successful creation
     } catch (error) {
-      setErrorMessage('An error occurred while creating the company.');
+      setErrorMessage("An error occurred while creating the company.");
       console.error(error);
     } finally {
       setLoading(false);
@@ -80,14 +90,13 @@ const CreateCompanyPage: React.FC<CreateCompanyPageProps> = ({ onClose }) => {
 
   const clearForm = () => {
     setFormData({
-      companyName: '',
-      adminEmail: '',
-      adminFirstName: '',
-      adminLastName: '',
-      adminJobTitle: '',
+      companyName: "",
+      adminEmail: "",
+      adminFirstName: "",
+      adminLastName: "",
+      adminJobTitle: "",
     });
   };
-
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-10">
@@ -95,7 +104,9 @@ const CreateCompanyPage: React.FC<CreateCompanyPageProps> = ({ onClose }) => {
         <h2 className="text-lg font-semibold mb-7">Create a New Company</h2>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="mb-6 mt-4">
-            <label className="text-sm block font-medium mb-2">Company Name</label>
+            <label className="text-sm block font-medium mb-2">
+              Company Name
+            </label>
             <input
               type="text"
               name="companyName"
@@ -106,7 +117,9 @@ const CreateCompanyPage: React.FC<CreateCompanyPageProps> = ({ onClose }) => {
             />
           </div>
           <div className="mb-6 mt-4">
-            <label className="text-sm block font-medium mb-2">Admin Email</label>
+            <label className="text-sm block font-medium mb-2">
+              Admin Email
+            </label>
             <input
               type="email"
               name="adminEmail"
@@ -117,7 +130,9 @@ const CreateCompanyPage: React.FC<CreateCompanyPageProps> = ({ onClose }) => {
             />
           </div>
           <div className="mb-6 mt-4">
-            <label className="text-sm block font-medium mb-2">Admin First Name</label>
+            <label className="text-sm block font-medium mb-2">
+              Admin First Name
+            </label>
             <input
               type="text"
               name="adminFirstName"
@@ -128,7 +143,9 @@ const CreateCompanyPage: React.FC<CreateCompanyPageProps> = ({ onClose }) => {
             />
           </div>
           <div className="mb-6 mt-4">
-            <label className="text-sm block font-medium mb-2">Admin Last Name</label>
+            <label className="text-sm block font-medium mb-2">
+              Admin Last Name
+            </label>
             <input
               type="text"
               name="adminLastName"
@@ -139,7 +156,9 @@ const CreateCompanyPage: React.FC<CreateCompanyPageProps> = ({ onClose }) => {
             />
           </div>
           <div className="mb-6 mt-4">
-            <label className="text-sm block font-medium mb-2">Admin Job Title</label>
+            <label className="text-sm block font-medium mb-2">
+              Admin Job Title
+            </label>
             <input
               type="text"
               name="adminJobTitle"
@@ -162,7 +181,7 @@ const CreateCompanyPage: React.FC<CreateCompanyPageProps> = ({ onClose }) => {
               className="bg-blue-600 text-white px-4 py-2 rounded-md"
               disabled={loading}
             >
-              {loading ? 'Creating Company...' : 'Create Company'}
+              {loading ? "Creating Company..." : "Create Company"}
             </button>
           </div>
         </form>
@@ -174,7 +193,7 @@ const CreateCompanyPage: React.FC<CreateCompanyPageProps> = ({ onClose }) => {
 };
 
 const SuperAdminMainPage: React.FC = () => {
-  const [popUp, setPopUp] = useState<boolean>(false)
+  const [popUp, setPopUp] = useState<boolean>(false);
   const [tableHeaders, setTableHeaders] = useState<string[]>([]);
   const [tableData, setTableData] = useState<Record<string, string>[]>([]);
   const router = useRouter();
@@ -186,7 +205,7 @@ const SuperAdminMainPage: React.FC = () => {
   const fetchCompanies = async () => {
     try {
       const { data: companyList } = await client.models.Company.list({});
-      setTableHeaders(() => ['companyName', 'adminEmail']);
+      setTableHeaders(() => ["companyName", "adminEmail"]);
       setTableData(
         companyList.map((collection: any) => ({
           companyName: collection.companyName,
@@ -194,8 +213,8 @@ const SuperAdminMainPage: React.FC = () => {
         }))
       );
     } catch (error) {
-      console.error('Failed to fetch collections');
-      console.error('Error:', error);
+      console.error("Failed to fetch collections");
+      console.error("Error:", error);
     }
   };
 
@@ -205,31 +224,47 @@ const SuperAdminMainPage: React.FC = () => {
 
   const navItems = [
     {
-      label: '📦 Collections',
+      label: "📦 Collections",
       active: false,
       subItems: [
-        { label: '📋 Question Bank', active: false, href: '/superadmin/collections/questionbank' },
-        { label: '📦 Collection', active: false, href: '/superadmin/collections/collection' }
-      ]
+        {
+          label: "📋 Question Bank",
+          active: false,
+          href: "/superadmin/collections/questionbank",
+        },
+        {
+          label: "📦 Collection",
+          active: false,
+          href: "/superadmin/collections/collection",
+        },
+      ],
     },
     {
-      label: '📦 Snippets',
+      label: "📦 Snippets",
       active: false,
       subItems: [
-        { label: '📋 Snippet Bank', active: false, href: '/superadmin/snippets' },
-        { label: '📦 Snippet Set', active: false, href: '/superadmin/snippets/snippetset' }
-      ]
+        {
+          label: "📋 Snippet Bank",
+          active: false,
+          href: "/superadmin/snippets",
+        },
+        {
+          label: "📦 Snippet Set",
+          active: false,
+          href: "/superadmin/snippets/snippetset",
+        },
+      ],
     },
- 
-    { label: '🏢 Company', active: true, href: '/superadmin' },
-    { label: '📊 Analytics', active: false, href: '/analytics' },
-    { label: '💬 Help', active: false, href: '/help' }
-  ].filter(item => item !== undefined); 
+
+    { label: "🏢 Company", active: true, href: "/superadmin" },
+    { label: "📊 Analytics", active: false, href: "/analytics" },
+    { label: "💬 Help", active: false, href: "/help" },
+  ].filter((item) => item !== undefined);
 
   const handleClosePopUp = () => {
-    setPopUp(false)
+    setPopUp(false);
     fetchCompanies();
-  }
+  };
 
   return (
     <div className="h-screen flex flex-col">
@@ -242,7 +277,9 @@ const SuperAdminMainPage: React.FC = () => {
             <div className="flex items-center mb-4 justify-end">
               <div className="flex space-x-4">
                 <button
-                  onClick={()=>{setPopUp(true)}}
+                  onClick={() => {
+                    setPopUp(true);
+                  }}
                   className="bg-blue-600 text-white px-4 py-2 rounded-md flex items-center space-x-1"
                 >
                   <span>Create Company Manually</span>
@@ -259,14 +296,19 @@ const SuperAdminMainPage: React.FC = () => {
 
             {/* Generalized Table */}
             {tableData && tableHeaders ? (
-              <Table headers={tableHeaders} data={tableData} handleClick={handleIdClick} underlineColumn='companyname' />
+              <Table
+                headers={tableHeaders}
+                data={tableData}
+                handleClick={handleIdClick}
+                underlineColumn="companyname"
+              />
             ) : (
               <p>Loading Table...</p>
             )}
           </div>
         </div>
       </div>
-      {popUp && (<CreateCompanyPage onClose={handleClosePopUp}/>)}
+      {popUp && <CreateCompanyPage onClose={handleClosePopUp} />}
     </div>
   );
 };

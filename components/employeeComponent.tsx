@@ -7,11 +7,13 @@ import { Amplify } from "aws-amplify";
 import dynamic from "next/dynamic";
 import QuestionStepper from "@/components/questionStepper";
 import ProgressBar from "./progressBar";
-import TextSnippetDisplay from "@/components/employeeTextSnippet"
+import TextSnippetDisplay from "@/components/employeeTextSnippet";
+import { fetchUserAttributes } from "aws-amplify/auth";
 const BarChart = dynamic(() => import("@/components/barChartEmployee"), {
   ssr: false,
   loading: () => <div>Loading Graph...</div>,
 });
+import FactorImportance from "@/components/employeeFactorImportance";
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
@@ -19,10 +21,12 @@ const client = generateClient<Schema>();
 interface Question {
   questionText: string;
   options: string[];
+  id: string;
 }
 
 type QuestionsByFactor = Record<string, Question[]>;
 type UserSelections = Record<string, number[]>;
+type FactorImportance = Record<string, number>;
 const optionMapping: Record<number, string> = {
   1: "Strongly Disagree",
   2: "Mostly Disagree",
@@ -30,7 +34,9 @@ const optionMapping: Record<number, string> = {
   4: "Mostly Agree",
   5: "Strongly Agree",
 };
-
+interface SelectionState {
+  [key: string]: number | null;
+}
 const QuestionsComponent: React.FC = () => {
   const [questionsByFactor, setQuestionsByFactor] = useState<QuestionsByFactor>(
     {}
@@ -44,55 +50,255 @@ const QuestionsComponent: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<number>(2);
   const [totalQuestions, setTotalQuestions] = useState<number>(0);
   const [currentQuestionNumber, setCurrentQuestionNumber] = useState<number>(0);
+  const [noQuestions, setNoQuestions] = useState<boolean>(false);
+  const [surveyId, setSurveyId] = useState<string>("");
+  const [userId, setUserId] = useState<string>("");
+  const [factorImportanceBool, setFactorImportanceBool] =
+    useState<boolean>(false);
+  const [selectedValues, setSelectedValues] = useState<SelectionState>({
+    "Psychological Safety": null,
+    "Growth Satisfaction": null,
+    Purpose: null,
+    Advocacy: null,
+    Alignment: null,
+  });
+
   const steps = [
     "Create Account",
     "Complete Profile",
     "Assessment",
     "Survey Results",
   ];
-  const fetchCollections = async () => {
-    const { data: collectionList } = await client.models.Collection.list();
-    return collectionList[0];
+
+  async function handleFinish() {
+    const updatedSelections: Record<
+      string,
+      { questionId: string | undefined; selection: string }[]
+    > = {};
+    Object.keys(userSelections).forEach((factor) => {
+      const questionsForFactor = questionsByFactor[factor];
+
+      // Map over the user's selections for each question, converting selection to string
+      updatedSelections[factor] = userSelections[factor].map(
+        (selection, index) => ({
+          questionId: questionsForFactor?.[index]?.id,
+          selection: String(selection), 
+        })
+      );
+    });
+
+    try {
+      const { data: saveddata } = await client.models.SurveyResults.create({
+        surveyId: surveyId,
+        userId: userId,
+        allanswersjson: JSON.stringify(updatedSelections),
+      });
+      const avg = calculateAverages(userSelections);
+      const { data: savedAverageData } =
+        await client.models.AverageSurveyResults.create({
+          surveyId: surveyId,
+          userId: userId,
+          averageScorejson: JSON.stringify(avg),
+        });
+
+      //loop over selectedValues and save to FactorImportance
+      for (const [key, value] of Object.entries(selectedValues)) {
+        const { data: savedFactorImportanceData } =
+          await client.models.FactorImportance.create({
+            surveyId: surveyId,
+            userId: userId,
+            factor: key,
+            score: value || 0,
+          });
+          console.log("savedFactorImportanceData", savedFactorImportanceData);
+        }
+      setIsFinished(true);
+      setCurrentQuestionNumber((prev) => prev + 1);
+      setCurrentStep((currentStep) => currentStep + 1);
+    } catch (error) {
+      console.error("Error saving data:", error);
+    }
+  }
+
+  const handleSelection = (category: string, value: number) => {
+    const newSelectedValues = Object.fromEntries(
+      Object.entries(selectedValues).map(([key, selectedValue]) => [
+        key,
+        selectedValue === value ? null : selectedValue,
+      ])
+    );
+
+    setSelectedValues({
+      ...newSelectedValues,
+      [category]: value,
+    });
+  };
+
+  const handleFactorImportanceButton = () => {
+    if (Object.values(selectedValues).includes(null)) {
+      alert("Please rate all categories before proceeding");
+      return;
+    }
+    setFactorImportanceBool(() => false);
   };
 
   const getQuestions = async () => {
     try {
-      const collection = await fetchCollections();
-      console.log("collection", collection);
-      const { data: questionList } = await client.models.Question.list({
+      const { email } = await fetchUserAttributes();
+  
+      if (!email) {
+        throw new Error("User email is missing");
+      }
+  
+      const { data: userList } = await client.models.User.list({
         filter: {
+          email: { eq: email },
         },
       });
-      setTotalQuestions(() => questionList.length);
-      // Grouping questions by factor
-    
-      const questionsByFactor = questionList.reduce((acc, question) => {
-        const { factor } = question;
-        if (!acc[factor]) {
-          acc[factor] = [];
-        }
-        acc[factor].push({
-          questionText: question.questionText,
-          options: question.options?.filter(
-            (option): option is string => option !== null
-          ) ?? ["1", "2", "3", "4"],
-        });
-        return acc;
-      }, {} as Record<string, {  questionText: string; options: string[] }[]>);
-      return questionsByFactor;
+  
+      if (!userList || userList.length === 0) {
+        throw new Error(`No user found with email: ${email}`);
+      }
+  
+      const finalUser = userList[0];
+      if (!finalUser.id) {
+        throw new Error("User ID is missing");
+      }
+  
+      setUserId(() => finalUser.id);
+  
+      const companyId = finalUser.companyId;
+      if (!companyId) {
+        throw new Error("User's company ID is missing");
+      }
+  
+      const { data: SurveyList } = await client.models.Survey.list({
+        filter: {
+          companyId: { eq: companyId },
+          start: { eq: true },
+        },
+      });
+  
+      if (!SurveyList || SurveyList.length === 0) {
+        throw new Error(`No active survey found for company ID: ${companyId}`);
+      }
+  
+      const survey = SurveyList[0];
+      if (!survey.id) {
+        throw new Error("Survey ID is missing");
+      }
+  
+      const collectionId = survey.collectionId;
+      if (!collectionId) {
+        throw new Error("Survey's collection ID is missing");
+      }
+  
+      setSurveyId(() => survey.id);
 
-    } catch (error) {
-      console.error("Error fetching questions:", error);
+      const {data : AverageSurveyResults} = await client.models.AverageSurveyResults.list({
+        filter: {
+          surveyId: {eq: survey.id},
+          userId: {eq: finalUser.id}
+        }
+      });
+
+      // if (AverageSurveyResults && AverageSurveyResults.length > 0) {
+      //   setNoQuestions(true);
+      //   return null;
+      // }
+  
+      const { data: collections } = await client.models.Collection.list({
+        filter: {
+          id: { eq: collectionId },
+        },
+      });
+  
+      if (!collections || collections.length === 0) {
+        throw new Error(`No collection found with ID: ${collectionId}`);
+      }
+  
+      const collection = collections[0];
+      const questionIds = collection.questions;
+  
+      if (!questionIds || questionIds.length === 0) {
+        throw new Error(`No questions found in collection with ID: ${collectionId}`);
+      }
+  
+      const questionList = await Promise.all(
+        questionIds.map(async (id) => {
+          if (!id) {
+            console.warn("Encountered a null question ID");
+            return null;
+          }
+  
+          const { data: questions } = await client.models.Question.list({
+            filter: {
+              id: { eq: id },
+            },
+          });
+  
+          if (!questions || questions.length === 0) {
+            console.warn(`No questions found for question ID: ${id}`);
+            return null;
+          }
+  
+          return questions;
+        })
+      );
+  
+      const validQuestions = questionList.filter((q) => q !== null);
+  
+      setTotalQuestions(() => validQuestions.length);
+  
+      const questionsByFactor: QuestionsByFactor = {};
+      validQuestions.forEach((question: any) => {
+        const factor = question[0]?.factor;
+        if (!factor) {
+          console.warn("Question factor is missing");
+          return;
+        }
+  
+        if (!questionsByFactor[factor]) {
+          questionsByFactor[factor] = [];
+        }
+  
+        questionsByFactor[factor].push(...question);
+      });
+  
+      return questionsByFactor;
+    } catch (error: any) {
+      console.error("Error fetching questions:", error.message || error);
       return {};
     }
   };
+  
 
   const loadQuestions = async () => {
-    const groupedQuestions = await getQuestions();
-    setQuestionsByFactor(groupedQuestions);
-    const firstFactor = Object.keys(groupedQuestions)[0];
-    setCurrentFactor(firstFactor);
+    try {
+      const groupedQuestions = await getQuestions();
+      
+      if (!groupedQuestions || Object.keys(groupedQuestions).length === 0) {
+        console.warn("No questions available. Setting noQuestions to true.");
+        return;
+      }
+  
+      setQuestionsByFactor(groupedQuestions);
+      
+      const firstFactor = Object.keys(groupedQuestions)[0];
+      if (!firstFactor) {
+        throw new Error("Failed to determine the first factor from grouped questions.");
+      }
+  
+      setCurrentFactor(firstFactor);
+    } catch (error: any) {
+      console.error("Error loading questions:", error.message || error);
+    }
   };
+  
+
+  useEffect(() => {
+    loadQuestions();
+  }, []);
 
   const handleOptionSelect = (option: number) => {
     setSelectedOption(option);
@@ -136,6 +342,12 @@ const QuestionsComponent: React.FC = () => {
         setCurrentQuestionNumber((prev) => prev - 1);
       }
     }
+  };
+
+  const handleFirstAttempt = () => {
+    console.log("First attempt started");
+    setFirstAttempt(() => false);
+    setFactorImportanceBool(() => true);
   };
 
   const handleNextQuestion = () => {
@@ -210,10 +422,9 @@ const QuestionsComponent: React.FC = () => {
     return averages;
   };
 
-  useEffect(() => {
-    loadQuestions();
-  }, []);
-
+  if (noQuestions) {
+    return <div>No Active Surveys found for your Company. Either there is no survey or you already have attempted the started survey</div>;
+  }
   if (!currentFactor) {
     return <div>Loading questions...</div>;
   }
@@ -241,7 +452,7 @@ const QuestionsComponent: React.FC = () => {
           {/* <pre className="mt-4">{JSON.stringify(userSelections, null, 2)}</pre> */}
           <div>
             <BarChart data={calculateAverages(userSelections)} />
-            <TextSnippetDisplay factors={calculateAverages(userSelections)}/>
+            <TextSnippetDisplay factors={calculateAverages(userSelections)} />
           </div>
         </div>
         ;
@@ -297,13 +508,26 @@ const QuestionsComponent: React.FC = () => {
           </section>
 
           <button
-            onClick={() => setFirstAttempt(() => false)}
+            onClick={handleFirstAttempt}
             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300"
           >
             Start Survey
           </button>
         </main>
       </div>
+    );
+  }
+
+  if (factorImportanceBool) {
+    return (
+      <>
+        <FactorImportance
+          selectedValues={selectedValues}
+          onSelectionChange={handleSelection}
+          factorImportanceBool={factorImportanceBool}
+          onButtonClick={handleFactorImportanceButton}
+        />
+      </>
     );
   }
 
@@ -332,25 +556,27 @@ const QuestionsComponent: React.FC = () => {
         <p className="text-gray-700 mb-6">{currentQuestion.questionText}</p>
 
         <div className="border border-gray-300 rounded-lg">
-      {Object.entries(optionMapping).map(([value, text], index, array) => (
-        <div
-          key={value}
-          className={`flex items-center p-3 cursor-pointer hover:bg-gray-100 ${
-            index !== array.length - 1 ? "border-b border-gray-300" : ""
-          } ${selectedOption === Number(value) ? "bg-blue-100" : ""}`}
-          onClick={() => handleOptionSelect(Number(value))}
-        >
-          <div className={`mr-3 h-4 w-4 rounded-full border ${
-            selectedOption === Number(value) 
-              ? "bg-blue-500 border-blue-500" 
-              : "border-gray-300"
-          }`} />
-          <label className="text-gray-700 flex-grow cursor-pointer">
-            {text}
-          </label>
+          {Object.entries(optionMapping).map(([value, text], index, array) => (
+            <div
+              key={value}
+              className={`flex items-center p-3 cursor-pointer hover:bg-gray-100 ${
+                index !== array.length - 1 ? "border-b border-gray-300" : ""
+              } ${selectedOption === Number(value) ? "bg-blue-100" : ""}`}
+              onClick={() => handleOptionSelect(Number(value))}
+            >
+              <div
+                className={`mr-3 h-4 w-4 rounded-full border ${
+                  selectedOption === Number(value)
+                    ? "bg-blue-500 border-blue-500"
+                    : "border-gray-300"
+                }`}
+              />
+              <label className="text-gray-700 flex-grow cursor-pointer">
+                {text}
+              </label>
+            </div>
+          ))}
         </div>
-      ))}
-    </div>
       </div>
 
       <div className="flex justify-between">
@@ -364,7 +590,14 @@ const QuestionsComponent: React.FC = () => {
 
         <button
           className="mt-3 px-2 py-2 mx-[260px] bg-blue-600 text-white rounded"
-          onClick={handleNextQuestion}
+          onClick={
+            currentFactor &&
+            currentQuestionIndex === currentQuestions.length - 1 &&
+            Object.keys(questionsByFactor).indexOf(currentFactor) ===
+              Object.keys(questionsByFactor).length - 1
+              ? handleFinish
+              : handleNextQuestion
+          }
         >
           {currentFactor &&
           currentQuestionIndex === currentQuestions.length - 1 &&
@@ -375,10 +608,10 @@ const QuestionsComponent: React.FC = () => {
         </button>
       </div>
 
-      <div className="mt-8 flex justify-center">
+      {/* <div className="mt-8 flex justify-center">
         <h3 className="text-lg font-semibold">User Selections</h3>
         <pre>{JSON.stringify(userSelections, null, 2)}</pre>
-      </div>
+      </div> */}
     </div>
   );
 };
