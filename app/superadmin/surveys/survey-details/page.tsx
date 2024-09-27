@@ -11,10 +11,7 @@ import Table from '@/components/table';
 import { Schema } from '@/amplify/data/resource';
 import { Suspense } from 'react';
 
-// Configure Amplify
 Amplify.configure(outputs);
-
-// Generate the client with Schema typing
 const client = generateClient<Schema>();
 
 import Papa from 'papaparse';
@@ -87,12 +84,14 @@ const EmployeeUploadPopup: React.FC<EmployeeUploadPopupProps> = ({ surveyId, com
   const createUserCollections = async () => {
     try {
       for (const user of users) {
+        const formattedDOB = user.dob ? new Date(user.dob).toISOString().split('T')[0] : null;
+        const formattedHireDate = user.hireDate ? new Date(user.hireDate).toISOString().split('T')[0] : null;
         const {data: clients} = await client.models.User.create({
           firstName: user.firstName,
           lastName: user.lastName,
           email: user.email,
-          // dob: user.dob,
-          // hireDate: user.hireDate,
+          dob: formattedDOB,
+          hireDate: formattedHireDate,
           gender: user.gender,
           ethnicity: user.ethnicity,
           manager: user.manager,
@@ -105,12 +104,10 @@ const EmployeeUploadPopup: React.FC<EmployeeUploadPopupProps> = ({ surveyId, com
           surveyId: surveyId, // Store surveyId
           role: 'employee',
         });
-        console.log("user", user)
-        console.log("client", clients)
       }
       alert('Employees created successfully!');
       onEmployeesCreated();
-      onClose(); // Close the modal after success
+      onClose(); 
     } catch (error) {
       console.error('Error creating users:', error);
       setErrorMessage('Error creating employees');
@@ -140,7 +137,6 @@ const EmployeeUploadPopup: React.FC<EmployeeUploadPopupProps> = ({ surveyId, com
 const SurveyDetailsPage = () => {
   const router = useRouter();
   const handleCollectionClick = (collectionName: string) => {
-    console.log("here")
     const newPath = `collection/collection-details?name=${encodeURIComponent(collectionName)}`;
     
   };
