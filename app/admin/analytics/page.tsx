@@ -511,10 +511,9 @@ const AdminPage: React.FC = () => {
       <Header userName="Neil Sims" userEmail="neilsimsemail@example.com" />
       <div className="flex flex-1">
         <Sidebar navItems={navItems} />
-        <div className="w-4/5 p-8 bg-gray-50">
-          <h1 className="text-2xl font-semibold mb-6">Analytics</h1>
-          <div className="flex flex-col mb-4">
-            <div className="flex items-center mb-2">
+        <div className="w-4/5 p-3 bg-gray-50">
+          <div className="flex mb-4 space-x-4">
+            <div className="flex items-center">
               <label className="mr-2">Department:</label>
               <select
                 className="p-2 border border-gray-300 rounded-md"
@@ -543,7 +542,8 @@ const AdminPage: React.FC = () => {
               </select>
             </div>
           </div>
-          <div className="border p-4">
+
+          <div className="border p-4 rounded-sm">
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div className="flex flex-col items-center w-full h-[400px] border-2 border-white rounded-sm p-4 bg-white">
                 <h2 className="text-sm font-semibold mb-2">
