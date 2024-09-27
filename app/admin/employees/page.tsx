@@ -41,7 +41,11 @@ const EmployeesPage: React.FC = () => {
         filter : {
             surveyId : {
                 eq : survey.id
-        }, }
+        },
+        role : {
+            eq : "employee"
+        },
+       }
       });
      const {data : attemptedSurveyResponses} = await client.models.SurveyResults.list({
          filter: {
@@ -74,6 +78,7 @@ const EmployeesPage: React.FC = () => {
       fetchData();
     }
   }, []);
+
 
   const navItems = [
     {
