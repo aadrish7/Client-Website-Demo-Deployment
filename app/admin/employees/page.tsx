@@ -6,7 +6,6 @@ import { Amplify } from "aws-amplify";
 import outputs from "@/amplify_outputs.json";
 import Header from "@/components/superadminHeader";
 import Sidebar from "@/components/superadminSidebar";
-import Table from "@/components/table";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 
@@ -16,10 +15,14 @@ const client = generateClient<Schema>();
 const EmployeesPage: React.FC = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const [loading, setLoading] = useState(true);
   const [tableHeaders, setTableHeaders] = useState<string[]>([]);
   const [tableData, setTableData] = useState<Record<string, string>[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(5);
 
   const fetchData = async () => {
+    setLoading(true);
     const idOfSurvey = searchParams.get("surveyId") || "";
 
     const { data: surveys } = await client.models.Survey.list({
@@ -73,6 +76,7 @@ const EmployeesPage: React.FC = () => {
         };
       })
     );
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -108,16 +112,159 @@ const EmployeesPage: React.FC = () => {
     return ''; 
   };
 
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = tableData.slice(indexOfFirstItem, indexOfLastItem);
+
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+
+  const pageNumbers = [];
+  for (let i = 1; i <= Math.ceil(tableData.length / itemsPerPage); i++) {
+    pageNumbers.push(i);
+  }
+
+  const renderPaginationButtons = () => {
+    const totalPages = pageNumbers.length;
+    const buttons = [];
+
+    buttons.push(
+      <button
+        key="prev"
+        onClick={() => paginate(Math.max(1, currentPage - 1))}
+        disabled={currentPage === 1}
+        className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+      >
+        &lt;
+      </button>
+    );
+
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) {
+        buttons.push(
+          <button
+            key={i}
+            onClick={() => paginate(i)}
+            className={`relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium ${
+              currentPage === i ? 'z-10 bg-blue-50 border-blue-500 text-blue-600' : 'text-gray-500 hover:bg-gray-50'
+            }`}
+          >
+            {i}
+          </button>
+        );
+      }
+    } else {
+      // Always show first page button
+      buttons.push(
+        <button
+          key={1}
+          onClick={() => paginate(1)}
+          className={`relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium ${
+            currentPage === 1 ? 'z-10 bg-blue-50 border-blue-500 text-blue-600' : 'text-gray-500 hover:bg-gray-50'
+          }`}
+        >
+          1
+        </button>
+      );
+
+      // Add ellipsis if necessary
+      if (currentPage > 3) {
+        buttons.push(
+          <span key="ellipsis1" className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+            ...
+          </span>
+        );
+      }
+
+      // Add one or two buttons before current page
+      for (let i = Math.max(2, currentPage - 1); i < currentPage; i++) {
+        buttons.push(
+          <button
+            key={i}
+            onClick={() => paginate(i)}
+            className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+          >
+            {i}
+          </button>
+        );
+      }
+
+      // Current page
+      if (currentPage !== 1 && currentPage !== totalPages) {
+        buttons.push(
+          <button
+            key={currentPage}
+            onClick={() => paginate(currentPage)}
+            className="z-10 bg-blue-50 border-blue-500 text-blue-600 relative inline-flex items-center px-4 py-2 border text-sm font-medium"
+          >
+            {currentPage}
+          </button>
+        );
+      }
+
+      // Add one or two buttons after current page
+      for (let i = currentPage + 1; i < Math.min(totalPages, currentPage + 2); i++) {
+        buttons.push(
+          <button
+            key={i}
+            onClick={() => paginate(i)}
+            className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+          >
+            {i}
+          </button>
+        );
+      }
+
+      // Add ellipsis if necessary
+      if (currentPage < totalPages - 2) {
+        buttons.push(
+          <span key="ellipsis2" className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+            ...
+          </span>
+        );
+      }
+
+      // Always show last page button
+      buttons.push(
+        <button
+          key={totalPages}
+          onClick={() => paginate(totalPages)}
+          className={`relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium ${
+            currentPage === totalPages ? 'z-10 bg-blue-50 border-blue-500 text-blue-600' : 'text-gray-500 hover:bg-gray-50'
+          }`}
+        >
+          {totalPages}
+        </button>
+      );
+    }
+
+    buttons.push(
+      <button
+        key="next"
+        onClick={() => paginate(Math.min(totalPages, currentPage + 1))}
+        disabled={currentPage === totalPages}
+        className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+      >
+        &gt;
+      </button>
+    );
+
+    return buttons;
+  };
+
   return (
     <div className="h-screen flex flex-col">
       <Header userName="Neil Sims" userEmail="neilsimsemail@example.com" />
       <div className="flex flex-1">
         <Sidebar navItems={navItems} />
-        <div className="w-4/5 p-8 bg-gray-50">
+        <div className="w-4/5 p-8 bg-white">
           <h1 className="text-2xl font-semibold mb-6">Employees</h1>
           <div className="border p-4">
+          {loading ? (
+              <div className="text-center py-4">Loading Data for Employees...</div>
+            ) : tableData.length > 0 ? (
+            <>
             <div className="overflow-x-auto border border-gray-200 rounded-md">
-              <table className="min-w-full bg-white divide-y divide-gray-200">
+            <table className="min-w-full bg-white divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
                     {tableHeaders.map((header, index) => (
@@ -131,21 +278,18 @@ const EmployeesPage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {tableData.map((row, rowIndex) => (
+                  {currentItems.map((row, rowIndex) => (
                     <tr key={rowIndex}>
                       {tableHeaders.map((header, colIndex) => (
                         <td
                           key={colIndex}
-                          className={`px-6 py-4 whitespace-nowrap text-sm`}
+                          className="px-6 py-4 whitespace-nowrap text-sm"
                         >
                         {header.toLowerCase() === 'status' ? (
                             <span className={getStatusStyle(row[header])}>
-
                               {row[header]}
-
                             </span>
                           ) : (
-
                             row[header]
                           )}
                         </td>
@@ -155,6 +299,21 @@ const EmployeesPage: React.FC = () => {
                 </tbody>
               </table>
             </div>
+            {/* Pagination */}
+            <div className="mt-4 flex justify-between items-center">
+              <div className="ml-1 font-light">
+               Showing <span className="font-bold">{indexOfFirstItem + 1}</span> - <span className="font-bold">{Math.min(indexOfLastItem, tableData.length)}</span> of <span className="font-bold">{tableData.length}</span>
+              </div>
+              <div>
+                <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                  {renderPaginationButtons()}
+                </nav>
+              </div>
+            </div>
+            </>
+            ) : (
+              <div className="text-center py-4">No data found</div>
+            )}
           </div>
         </div>
       </div>
