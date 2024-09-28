@@ -6,120 +6,37 @@ import { Amplify } from "aws-amplify";
 import outputs from "@/amplify_outputs.json";
 import Header from "@/components/superadminHeader";
 import Sidebar from "@/components/superadminSidebar";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
 
 const EmployeesPage: React.FC = () => {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [tableHeaders, setTableHeaders] = useState<string[]>([]);
   const [tableData, setTableData] = useState<Record<string, string>[]>([]);
+  const [filteredData, setFilteredData] = useState<Record<string, string>[]>(
+    []
+  );
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
-
-  const fetchData = async () => {
-    setLoading(true);
-    const idOfSurvey = searchParams.get("surveyId") || "";
-
-    const { data: surveys } = await client.models.Survey.list({
-      filter: {
-        id: {
-          eq: idOfSurvey,
-        },
-      },
-    });
-    if (surveys.length === 0) {
-      console.error("No surveys found for company:");
-      return;
-    }
-    const survey = surveys[0];
-    console.log("survey", survey);
-
-    const { data: listOfEmployees } = await client.models.User.list({
-      filter: {
-        surveyId: {
-          eq: survey.id,
-        },
-        role: {
-          eq: "employee",
-        },
-      },
-    });
-    const { data: attemptedSurveyResponses } =
-      await client.models.SurveyResults.list({
-        filter: {
-          surveyId: {
-            eq: survey.id,
-          },
-        },
-      });
-    const attemptedSurveyUserIds = attemptedSurveyResponses.map(
-      (response) => response.userId
-    );
-    console.log("attemptedSurveyUserIds", attemptedSurveyUserIds);
-    console.log("listOfEmployees", listOfEmployees);
-    setTableHeaders(["name", "department", "email", "status"]);
-    setTableData(
-      listOfEmployees.map((surveyResponse) => {
-        return {
-          name:
-            surveyResponse?.firstName + " " + surveyResponse?.lastName || "",
-          department: surveyResponse?.department || "",
-          email: surveyResponse?.email || "",
-          status: attemptedSurveyUserIds.includes(surveyResponse.id)
-            ? "Attempted"
-            : "Not Attempted",
-        };
-      })
-    );
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    if (searchParams.has("surveyId")) {
-      fetchData();
-    }
-  }, []);
-
-  const navItems = [
-    {
-      label: "📦 Overview",
-      active: false,
-      href: "/admin",
-    },
-    {
-      label: "📊 Analytics",
-      active: false,
-      href: `/admin/analytics?surveyId=${searchParams.get("surveyId")}`,
-    },
-    {
-      label: "🏢 Employees",
-      active: true,
-      href: `/admin/employees?surveyId=${searchParams.get("surveyId")}`,
-    },
-  ].filter((item) => item !== undefined);
-
-  const getStatusStyle = (status: string) => {
-    if (status === 'Attempted') {
-      return 'inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-medium bg-green-100 text-green-800';
-    } else if (status === 'Not Attempted') {
-      return 'inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-medium bg-red-100 text-red-800';
-    }
-    return ''; 
-  };
+  const [selectedDepartment, setSelectedDepartment] = useState<string | null>(
+    null
+  );
+  const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
+  const [showDepartmentDropdown, setShowDepartmentDropdown] = useState(false);
+  const [showStatusDropdown, setShowStatusDropdown] = useState(false);
+  const [departments, setDepartments] = useState<string[]>([]);
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = tableData.slice(indexOfFirstItem, indexOfLastItem);
+  const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
   const pageNumbers = [];
-  for (let i = 1; i <= Math.ceil(tableData.length / itemsPerPage); i++) {
+  for (let i = 1; i <= Math.ceil(filteredData.length / itemsPerPage); i++) {
     pageNumbers.push(i);
   }
 
@@ -145,7 +62,9 @@ const EmployeesPage: React.FC = () => {
             key={i}
             onClick={() => paginate(i)}
             className={`relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium ${
-              currentPage === i ? 'z-10 bg-blue-50 border-blue-500 text-blue-600' : 'text-gray-500 hover:bg-gray-50'
+              currentPage === i
+                ? "z-10 bg-blue-50 border-blue-500 text-blue-600"
+                : "text-gray-500 hover:bg-gray-50"
             }`}
           >
             {i}
@@ -159,7 +78,9 @@ const EmployeesPage: React.FC = () => {
           key={1}
           onClick={() => paginate(1)}
           className={`relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium ${
-            currentPage === 1 ? 'z-10 bg-blue-50 border-blue-500 text-blue-600' : 'text-gray-500 hover:bg-gray-50'
+            currentPage === 1
+              ? "z-10 bg-blue-50 border-blue-500 text-blue-600"
+              : "text-gray-500 hover:bg-gray-50"
           }`}
         >
           1
@@ -169,7 +90,10 @@ const EmployeesPage: React.FC = () => {
       // Add ellipsis if necessary
       if (currentPage > 3) {
         buttons.push(
-          <span key="ellipsis1" className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+          <span
+            key="ellipsis1"
+            className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700"
+          >
             ...
           </span>
         );
@@ -202,7 +126,11 @@ const EmployeesPage: React.FC = () => {
       }
 
       // Add one or two buttons after current page
-      for (let i = currentPage + 1; i < Math.min(totalPages, currentPage + 2); i++) {
+      for (
+        let i = currentPage + 1;
+        i < Math.min(totalPages, currentPage + 2);
+        i++
+      ) {
         buttons.push(
           <button
             key={i}
@@ -217,7 +145,10 @@ const EmployeesPage: React.FC = () => {
       // Add ellipsis if necessary
       if (currentPage < totalPages - 2) {
         buttons.push(
-          <span key="ellipsis2" className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+          <span
+            key="ellipsis2"
+            className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700"
+          >
             ...
           </span>
         );
@@ -229,7 +160,9 @@ const EmployeesPage: React.FC = () => {
           key={totalPages}
           onClick={() => paginate(totalPages)}
           className={`relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium ${
-            currentPage === totalPages ? 'z-10 bg-blue-50 border-blue-500 text-blue-600' : 'text-gray-500 hover:bg-gray-50'
+            currentPage === totalPages
+              ? "z-10 bg-blue-50 border-blue-500 text-blue-600"
+              : "text-gray-500 hover:bg-gray-50"
           }`}
         >
           {totalPages}
@@ -251,6 +184,116 @@ const EmployeesPage: React.FC = () => {
     return buttons;
   };
 
+  const fetchData = async () => {
+    setLoading(true);
+    const idOfSurvey = searchParams.get("surveyId") || "";
+
+    const { data: surveys } = await client.models.Survey.list({
+      filter: {
+        id: {
+          eq: idOfSurvey,
+        },
+      },
+    });
+    if (surveys.length === 0) {
+      console.error("No surveys found for company:");
+      return;
+    }
+    const survey = surveys[0];
+    const { data: listOfEmployees } = await client.models.User.list({
+      filter: {
+        surveyId: {
+          eq: survey.id,
+        },
+        role: {
+          eq: "employee",
+        },
+      },
+    });
+    const { data: attemptedSurveyResponses } =
+      await client.models.SurveyResults.list({
+        filter: {
+          surveyId: {
+            eq: survey.id,
+          },
+        },
+      });
+    const attemptedSurveyUserIds = attemptedSurveyResponses.map(
+      (response) => response.userId
+    );
+    setTableHeaders(["name", "department", "email", "status"]);
+    const employees = listOfEmployees.map((surveyResponse) => ({
+      name: surveyResponse?.firstName + " " + surveyResponse?.lastName || "",
+      department: surveyResponse?.department || "",
+      email: surveyResponse?.email || "",
+      status: attemptedSurveyUserIds.includes(surveyResponse.id)
+        ? "Attempted"
+        : "Not Attempted",
+    }));
+    setTableData(employees);
+    setFilteredData(employees);
+
+    const uniqueDepartments: string[] = [];
+    for (const employee of employees) {
+      if (!uniqueDepartments.includes(employee.department)) {
+        uniqueDepartments.push(employee.department);
+      }
+    }
+    setDepartments(uniqueDepartments);
+
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    if (searchParams.has("surveyId")) {
+      fetchData();
+    }
+  }, []);
+
+  useEffect(() => {
+    filterData();
+  }, [selectedDepartment, selectedStatus, tableData]);
+
+  const filterData = () => {
+    const filtered = tableData.filter((employee) => {
+      const matchesDepartment =
+        selectedDepartment === null ||
+        employee.department === selectedDepartment;
+      const matchesStatus =
+        selectedStatus === null || employee.status === selectedStatus;
+      return matchesDepartment && matchesStatus;
+    });
+    setFilteredData(filtered);
+    setCurrentPage(1); // Reset to first page when filtering
+  };
+
+  const getStatusStyle = (status: string) => {
+    if (status === "Attempted") {
+      return "inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-medium bg-green-100 text-green-800";
+    } else if (status === "Not Attempted") {
+      return "inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-medium bg-red-100 text-red-800";
+    }
+    return "";
+  };
+
+  const navItems = [
+    {
+      label: "📦 Overview",
+      active: false,
+      href: "/admin",
+    },
+    {
+      label: "📊 Analytics",
+      active: false,
+      href: `/admin/analytics?surveyId=${searchParams.get("surveyId")}`,
+    },
+    {
+      label: "🏢 Employees",
+      active: true,
+      href: `/admin/employees?surveyId=${searchParams.get("surveyId")}`,
+    },
+  ].filter((item) => item !== undefined);
+
   return (
     <div className="h-screen flex flex-col">
       <Header userName="Neil Sims" userEmail="neilsimsemail@example.com" />
@@ -258,61 +301,166 @@ const EmployeesPage: React.FC = () => {
         <Sidebar navItems={navItems} />
         <div className="w-4/5 p-8 bg-white">
           <h1 className="text-2xl font-semibold mb-6">Employees</h1>
-          <div className="border p-4">
-          {loading ? (
-              <div className="text-center py-4">Loading Data for Employees...</div>
-            ) : tableData.length > 0 ? (
-            <>
-            <div className="overflow-x-auto border border-gray-200 rounded-md">
-            <table className="min-w-full bg-white divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    {tableHeaders.map((header, index) => (
-                      <th
-                        key={index}
-                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+          <div className="mb-4 flex space-x-4">
+            {/* Department Filter */}
+            <div className="relative inline-block text-left">
+              <button
+                onClick={() => {
+                  setShowDepartmentDropdown(!showDepartmentDropdown);
+                  setShowStatusDropdown(false); 
+                }}
+                className="inline-flex justify-center w-48 rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                <span className="truncate">
+                  {selectedDepartment || "All Departments"}
+                </span>
+              </button>
+              {showDepartmentDropdown && (
+                <div className="absolute mt-2 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                  <div className="py-1">
+                    <button
+                      onClick={() => {
+                        setSelectedDepartment(null);
+                        setShowDepartmentDropdown(false);
+                      }}
+                      className="block px-4 py-2 text-sm text-gray-700"
+                    >
+                      All Departments
+                    </button>
+                    {departments.map((dept) => (
+                      <button
+                        key={dept}
+                        onClick={() => {
+                          setSelectedDepartment(dept);
+                          setShowDepartmentDropdown(false);
+                        }}
+                        className="block px-4 py-2 text-sm text-gray-700"
                       >
-                        {header}
-                      </th>
+                        {dept}
+                      </button>
                     ))}
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {currentItems.map((row, rowIndex) => (
-                    <tr key={rowIndex}>
-                      {tableHeaders.map((header, colIndex) => (
-                        <td
-                          key={colIndex}
-                          className="px-6 py-4 whitespace-nowrap text-sm"
-                        >
-                        {header.toLowerCase() === 'status' ? (
-                            <span className={getStatusStyle(row[header])}>
-                              {row[header]}
-                            </span>
-                          ) : (
-                            row[header]
-                          )}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </div>
+                </div>
+              )}
             </div>
-            {/* Pagination */}
-            <div className="mt-4 flex justify-between items-center">
-              <h6 className="ml-1 font-thin text-gray-500 opacity-98">
-               Showing <span className="font-semibold text-black">{indexOfFirstItem + 1} - {Math.min(indexOfLastItem, tableData.length)}</span> of <span className="font-semibold text-black">{tableData.length}</span>
-              </h6>
-              <div>
-                <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                  {renderPaginationButtons()}
-                </nav>
+
+            {/* Status Filter */}
+            <div className="relative inline-block text-left">
+              <button
+                onClick={() => {
+                  setShowStatusDropdown(!showStatusDropdown);
+                  setShowDepartmentDropdown(false); 
+                }}
+                className="inline-flex justify-center w-48 rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                <span className="truncate">
+                  {selectedStatus || "All Status"}
+                </span>
+              </button>
+              {showStatusDropdown && (
+                <div className="absolute mt-2 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                  <div className="py-1">
+                    <button
+                      onClick={() => {
+                        setSelectedStatus(null);
+                        setShowStatusDropdown(false);
+                      }}
+                      className="block px-4 py-2 text-sm text-gray-700"
+                    >
+                      All Status
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSelectedStatus("Attempted");
+                        setShowStatusDropdown(false);
+                      }}
+                      className="block px-4 py-2 text-sm text-gray-700"
+                    >
+                      Attempted
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSelectedStatus("Not Attempted");
+                        setShowStatusDropdown(false);
+                      }}
+                      className="block px-4 py-2 text-sm text-gray-700"
+                    >
+                      Not Attempted
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="border p-4">
+            {loading ? (
+              <div className="text-center py-4">
+                Loading Data for Employees...
               </div>
-            </div>
-            </>
+            ) : currentItems.length > 0 ? (
+              <>
+                <div className="overflow-x-auto border border-gray-200 rounded-md">
+                  <table className="min-w-full bg-white divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        {tableHeaders.map((header, index) => (
+                          <th
+                            key={index}
+                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            {header}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {currentItems.map((row, rowIndex) => (
+                        <tr key={rowIndex}>
+                          {tableHeaders.map((header, colIndex) => (
+                            <td
+                              key={colIndex}
+                              className="px-6 py-4 whitespace-nowrap text-sm"
+                            >
+                              {header.toLowerCase() === "status" ? (
+                                <span className={getStatusStyle(row[header])}>
+                                  {row[header]}
+                                </span>
+                              ) : (
+                                row[header]
+                              )}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {/* Pagination */}
+                <div className="mt-4 flex justify-between items-center">
+                  <h6 className="ml-1 font-thin text-gray-500 opacity-98">
+                    Showing{" "}
+                    <span className="font-semibold text-black">
+                      {indexOfFirstItem + 1} -{" "}
+                      {Math.min(indexOfLastItem, filteredData.length)}
+                    </span>{" "}
+                    of{" "}
+                    <span className="font-semibold text-black">
+                      {filteredData.length}
+                    </span>
+                  </h6>
+                  <div>
+                    <nav
+                      className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
+                      aria-label="Pagination"
+                    >
+                      {renderPaginationButtons()}
+                    </nav>
+                  </div>
+                </div>
+              </>
             ) : (
-              <div className="text-center py-4">No data found</div>
+              <div className="text-center py-4">No employees to display</div>
             )}
           </div>
         </div>
@@ -321,10 +469,4 @@ const EmployeesPage: React.FC = () => {
   );
 };
 
-export default function () {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <EmployeesPage />
-    </Suspense>
-  );
-}
+export default EmployeesPage;
