@@ -302,7 +302,7 @@ const EmployeesPage: React.FC = () => {
             {/* Pagination */}
             <div className="mt-4 flex justify-between items-center">
               <h6 className="ml-1 font-thin text-gray-500 opacity-98">
-               Showing <span className="font-bold text-black">{indexOfFirstItem + 1} - {Math.min(indexOfLastItem, tableData.length)}</span> of <span className="font-bold text-black">{tableData.length}</span>
+               Showing <span className="font-semibold text-black">{indexOfFirstItem + 1} - {Math.min(indexOfLastItem, tableData.length)}</span> of <span className="font-semibold text-black">{tableData.length}</span>
               </h6>
               <div>
                 <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">

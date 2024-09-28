@@ -13,19 +13,19 @@ import { Suspense } from "react";
 
 const PieChart = dynamic(() => import("@/components/adminPieChart"), {
   ssr: false,
-  loading: () => <div>Loading Graph...</div>,
+  loading: () => <div className="text-center py-4">Loading Graph...</div>,
 });
 
 const BarChart = dynamic(() => import("@/components/barChartEmployee"), {
   ssr: false,
-  loading: () => <div>Loading Graph...</div>,
+  loading: () => <div className="text-center py-4">Loading Graph...</div>,
 });
 
 const StackedBarChart = dynamic(
   () => import("@/components/adminStackedBarChart"),
   {
     ssr: false,
-    loading: () => <div>Loading Graph...</div>,
+    loading: () => <div className="text-center py-4">Loading Graph...</div>,
   }
 );
 
@@ -33,7 +33,7 @@ const AdminBarChart = dynamic(
   () => import("@/components/adminBarChartQuestions"),
   {
     ssr: false,
-    loading: () => <div>Loading Graph...</div>,
+    loading: () => <div className="text-center py-4">Loading Graph...</div>,
   }
 );
 Amplify.configure(outputs);
