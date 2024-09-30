@@ -578,7 +578,7 @@ const QuestionsComponent: React.FC = () => {
           </section>
 
           <section className="mb-6">
-            <p>Total Number of Prompts: 100</p>
+            <p>Total Number of Prompts: {totalQuestions}</p>
             <p>Estimated Time Required: 10-15 minutes</p>
           </section>
 
