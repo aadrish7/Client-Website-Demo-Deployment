@@ -9,6 +9,7 @@ import QuestionStepper from "@/components/questionStepper";
 import ProgressBar from "./progressBar";
 import MetricsBreakdown from "./employeeMetricsBreakdown";
 import { fetchUserAttributes } from "aws-amplify/auth";
+import Header from "@/components/superadminHeader"
 const BarChart = dynamic(() => import("@/components/barChartEmployee"), {
   ssr: false,
   loading: () => <div>Loading Graph...</div>,
@@ -65,10 +66,12 @@ const QuestionsComponent: React.FC = () => {
     Advocacy: null,
     Alignment: null,
   });
+  const [isViewingResults, setIsViewingResults] = useState<boolean>(false);
 
   const steps = ["Create Account", "Assessment", "Survey Results"];
 
   async function handleFinish() {
+    setIsViewingResults(() => true);
     const updatedSelections: Record<
       string,
       { questionId: string | undefined; selection: string }[]
@@ -108,9 +111,10 @@ const QuestionsComponent: React.FC = () => {
             factor: key,
             score: value || 0,
           });
-        console.log("savedFactorImportanceData", savedFactorImportanceData);
+        
       }
       setIsFinished(()=>false);
+      setIsViewingResults(() => false);
       // setCurrentQuestionNumber((prev) => prev + 1);
       setCurrentStep((currentStep) => currentStep + 1);
       setViewSurveyResults(() => true);
@@ -179,6 +183,7 @@ const QuestionsComponent: React.FC = () => {
       });
 
       if (!SurveyList || SurveyList.length === 0) {
+        setNoQuestions(() => true);
         throw new Error(`No active survey found for company ID: ${companyId}`);
       }
 
@@ -215,13 +220,13 @@ const QuestionsComponent: React.FC = () => {
       setArrOfSnippetIds(() => validSnippetIds);
       
 
-      const { data: AverageSurveyResults } =
-        await client.models.AverageSurveyResults.list({
-          filter: {
-            surveyId: { eq: survey.id },
-            userId: { eq: finalUser.id },
-          },
-        });
+      // const { data: AverageSurveyResults } =
+      //   await client.models.AverageSurveyResults.list({
+      //     filter: {
+      //       surveyId: { eq: survey.id },
+      //       userId: { eq: finalUser.id },
+      //     },
+      //   });
 
       // if (AverageSurveyResults && AverageSurveyResults.length > 0) {
       //   setNoQuestions(true);
@@ -447,13 +452,7 @@ const QuestionsComponent: React.FC = () => {
   if (viewSurveyResults) {
     return(
     <div className="bg-gray-100 min-h-screen">
-      <header className=" bg-white flex justify-between items-center mb-10 px-7 py-3">
-        <img src="/api/placeholder/40/40" alt="Logo" className="w-10 h-10" />
-        <div className="text-right">
-          <h2 className="text-lg font-semibold">Neil Sims</h2>
-          <p className="text-sm text-gray-600">neilsims@example.com</p>
-        </div>
-      </header>
+      <Header userName="" userEmail="" />
       <div className="m-4">
         <QuestionStepper steps={steps} currentStep={currentStep} />
       </div>
@@ -483,39 +482,39 @@ const QuestionsComponent: React.FC = () => {
     </div>
 
     )
-    {
-      /* <div>
-          <BarChart data={calculateAverages(userSelections)} />
-          <TextSnippetDisplay factors={calculateAverages(userSelections)} />
-        </div> */
-    }
   }
 
   if (noQuestions) {
     return (
-      <div className="">
-        No Active Surveys found for your Company. Either there is no survey or
-        you already have attempted the started survey
+      <div className="flex items-center justify-center h-screen bg-gray-100 text-center">
+        <div>
+          <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+            No Active Surveys
+          </h2>
+          <p className="text-gray-600">
+            There are no active surveys for your company. You may have completed the ongoing survey, or none are available at the moment.
+          </p>
+        </div>
       </div>
     );
   }
+  
+  
   if (!currentFactor) {
-    return <div>Loading questions...</div>;
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-100">
+        <div className="text-gray-600 text-lg font-medium">Loading questions...</div>
+      </div>
+    );
   }
-
+  
   const currentQuestions = questionsByFactor[currentFactor];
   const currentQuestion = currentQuestions[currentQuestionIndex];
 
   if (isFinished) {
     return (
       <div className="bg-gray-100 min-h-screen">
-        <header className=" bg-white flex justify-between items-center mb-10 px-7 py-3">
-          <img src="/api/placeholder/40/40" alt="Logo" className="w-10 h-10" />
-          <div className="text-right">
-            <h2 className="text-lg font-semibold">Neil Sims</h2>
-            <p className="text-sm text-gray-600">neilsims@example.com</p>
-          </div>
-        </header>
+        <Header userName="" userEmail="" />
         <div className="m-4">
           <QuestionStepper steps={steps} currentStep={currentStep} />
         </div>
@@ -526,18 +525,15 @@ const QuestionsComponent: React.FC = () => {
           <p className="text-gray-800 mt-2 text-sm mb-[280px]">
             Click “View Report” to see how you did on this survey.
           </p>
-          {/* <div>
-            <BarChart data={calculateAverages(userSelections)} />
-            <TextSnippetDisplay factors={calculateAverages(userSelections)} />
-          </div> */}
         </div>
         <div className="flex justify-end mt-4 mr-[295px]">
-          <button
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300"
-            onClick={handleFinish}
-          >
-            View Report
-          </button>
+        <button
+      className={`bg-blue-600 text-white rounded px-2 py-2 ${isViewingResults ? 'opacity-50 cursor-not-allowed' : ''}`}
+      onClick={handleFinish}
+      disabled={isViewingResults}
+    >
+      {isViewingResults ? 'Viewing Reports...' : 'View Report'}
+    </button>
         </div>
       </div>
     );
@@ -548,13 +544,7 @@ const QuestionsComponent: React.FC = () => {
   if (firstAttempt) {
     return (
       <div className="bg-gray-100 min-h-screen">
-        <header className=" bg-white flex justify-between items-center mb-10 px-7 py-3">
-          <img src="/api/placeholder/40/40" alt="Logo" className="w-10 h-10" />
-          <div className="text-right">
-            <h2 className="text-lg font-semibold">Neil Sims</h2>
-            <p className="text-sm text-gray-600">neilsims@example.com</p>
-          </div>
-        </header>
+       <Header userName="" userEmail="" />
         <div className="m-4">
           <QuestionStepper steps={steps} currentStep={currentStep} />
         </div>
@@ -618,13 +608,7 @@ const QuestionsComponent: React.FC = () => {
 
   return (
     <div className="bg-gray-100 min-h-screen">
-      <header className=" bg-white flex justify-between items-center mb-10 px-7 py-3">
-        <img src="/api/placeholder/40/40" alt="Logo" className="w-10 h-10" />
-        <div className="text-right">
-          <h2 className="text-lg font-semibold">Neil Sims</h2>
-          <p className="text-sm text-gray-600">neilsims@example.com</p>
-        </div>
-      </header>
+      <Header userName="" userEmail="" />
 
       <div className="m-4">
         <QuestionStepper steps={steps} currentStep={currentStep} />

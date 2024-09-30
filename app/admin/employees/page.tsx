@@ -7,6 +7,7 @@ import outputs from "@/amplify_outputs.json";
 import Header from "@/components/superadminHeader";
 import Sidebar from "@/components/superadminSidebar";
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
@@ -494,4 +495,10 @@ const EmployeesPage: React.FC = () => {
   );
 };
 
-export default EmployeesPage;
+export default function () {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <EmployeesPage />
+    </Suspense>
+  );
+}
