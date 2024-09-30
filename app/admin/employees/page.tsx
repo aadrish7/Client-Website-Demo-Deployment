@@ -28,6 +28,7 @@ const EmployeesPage: React.FC = () => {
   const [showDepartmentDropdown, setShowDepartmentDropdown] = useState(false);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [departments, setDepartments] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -252,7 +253,7 @@ const EmployeesPage: React.FC = () => {
 
   useEffect(() => {
     filterData();
-  }, [selectedDepartment, selectedStatus, tableData]);
+  }, [selectedDepartment, selectedStatus, tableData, searchTerm]);
 
   const filterData = () => {
     const filtered = tableData.filter((employee) => {
@@ -261,10 +262,20 @@ const EmployeesPage: React.FC = () => {
         employee.department === selectedDepartment;
       const matchesStatus =
         selectedStatus === null || employee.status === selectedStatus;
-      return matchesDepartment && matchesStatus;
+      const matchesSearch =
+        searchTerm === "" ||
+        employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        employee.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        employee.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        employee.status.toLocaleLowerCase().includes(searchTerm.toLowerCase());
+      return matchesDepartment && matchesStatus && matchesSearch;
     });
     setFilteredData(filtered);
     setCurrentPage(1); // Reset to first page when filtering
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
   };
 
   const getStatusStyle = (status: string) => {
@@ -301,95 +312,109 @@ const EmployeesPage: React.FC = () => {
         <Sidebar navItems={navItems} />
         <div className="w-4/5 p-8 bg-white">
           <h1 className="text-2xl font-semibold mb-6">Employees</h1>
-          <div className="mb-4 flex space-x-4">
-            {/* Department Filter */}
-            <div className="relative inline-block text-left">
-              <button
-                onClick={() => {
-                  setShowDepartmentDropdown(!showDepartmentDropdown);
-                  setShowStatusDropdown(false); 
-                }}
-                className="inline-flex justify-center w-48 rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
-              >
-                <span className="truncate">
-                  {selectedDepartment || "All Departments"}
-                </span>
-              </button>
-              {showDepartmentDropdown && (
-                <div className="absolute mt-2 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
-                  <div className="py-1">
-                    <button
-                      onClick={() => {
-                        setSelectedDepartment(null);
-                        setShowDepartmentDropdown(false);
-                      }}
-                      className="block px-4 py-2 text-sm text-gray-700"
-                    >
-                      All Departments
-                    </button>
-                    {departments.map((dept) => (
+          <div className="flex justify-between items-center mb-4">
+            {/* Left Side - Two Buttons */}
+            <div className="flex space-x-4">
+              {/* Department Filter Button */}
+              <div className="relative inline-block text-left">
+                <button
+                  onClick={() => {
+                    setShowDepartmentDropdown(!showDepartmentDropdown);
+                    setShowStatusDropdown(false);
+                  }}
+                  className="inline-flex justify-center w-48 rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  <span className="truncate">
+                    {selectedDepartment || "All Departments"}
+                  </span>
+                </button>
+                {showDepartmentDropdown && (
+                  <div className="absolute mt-2 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                    <div className="py-1">
                       <button
-                        key={dept}
                         onClick={() => {
-                          setSelectedDepartment(dept);
+                          setSelectedDepartment(null);
                           setShowDepartmentDropdown(false);
                         }}
                         className="block px-4 py-2 text-sm text-gray-700"
                       >
-                        {dept}
+                        All Departments
                       </button>
-                    ))}
+                      {departments.map((dept) => (
+                        <button
+                          key={dept}
+                          onClick={() => {
+                            setSelectedDepartment(dept);
+                            setShowDepartmentDropdown(false);
+                          }}
+                          className="block px-4 py-2 text-sm text-gray-700"
+                        >
+                          {dept}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
+
+              {/* Status Filter Button */}
+              <div className="relative inline-block text-left">
+                <button
+                  onClick={() => {
+                    setShowStatusDropdown(!showStatusDropdown);
+                    setShowDepartmentDropdown(false);
+                  }}
+                  className="inline-flex justify-center w-48 rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  <span className="truncate">
+                    {selectedStatus || "All Status"}
+                  </span>
+                </button>
+                {showStatusDropdown && (
+                  <div className="absolute mt-2 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                    <div className="py-1">
+                      <button
+                        onClick={() => {
+                          setSelectedStatus(null);
+                          setShowStatusDropdown(false);
+                        }}
+                        className="block px-4 py-2 text-sm text-gray-700"
+                      >
+                        All Status
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedStatus("Attempted");
+                          setShowStatusDropdown(false);
+                        }}
+                        className="block px-4 py-2 text-sm text-gray-700"
+                      >
+                        Attempted
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedStatus("Not Attempted");
+                          setShowStatusDropdown(false);
+                        }}
+                        className="block px-4 py-2 text-sm text-gray-700"
+                      >
+                        Not Attempted
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* Status Filter */}
-            <div className="relative inline-block text-left">
-              <button
-                onClick={() => {
-                  setShowStatusDropdown(!showStatusDropdown);
-                  setShowDepartmentDropdown(false); 
-                }}
-                className="inline-flex justify-center w-48 rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
-              >
-                <span className="truncate">
-                  {selectedStatus || "All Status"}
-                </span>
-              </button>
-              {showStatusDropdown && (
-                <div className="absolute mt-2 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
-                  <div className="py-1">
-                    <button
-                      onClick={() => {
-                        setSelectedStatus(null);
-                        setShowStatusDropdown(false);
-                      }}
-                      className="block px-4 py-2 text-sm text-gray-700"
-                    >
-                      All Status
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSelectedStatus("Attempted");
-                        setShowStatusDropdown(false);
-                      }}
-                      className="block px-4 py-2 text-sm text-gray-700"
-                    >
-                      Attempted
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSelectedStatus("Not Attempted");
-                        setShowStatusDropdown(false);
-                      }}
-                      className="block px-4 py-2 text-sm text-gray-700"
-                    >
-                      Not Attempted
-                    </button>
-                  </div>
-                </div>
-              )}
+            {/* Right Side - Search Bar */}
+            <div className="flex-grow max-w-md">
+              <input
+                type="text"
+                placeholder="Search"
+                value={searchTerm}
+                onChange={handleSearchChange}
+                className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
             </div>
           </div>
 

@@ -22,11 +22,10 @@ interface SurveyComponentProps {
 }
 const steps = [
   "Create Account",
-  "Complete Profile",
   "Assessment",
   "Survey Results",
 ];
-const currentStep = 2;
+const currentStep = 1;
 const SurveyComponent: React.FC<SurveyComponentProps> = ({
   selectedValues,
   onSelectionChange,

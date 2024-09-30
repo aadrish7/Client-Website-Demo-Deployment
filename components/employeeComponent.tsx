@@ -7,13 +7,14 @@ import { Amplify } from "aws-amplify";
 import dynamic from "next/dynamic";
 import QuestionStepper from "@/components/questionStepper";
 import ProgressBar from "./progressBar";
-import TextSnippetDisplay from "@/components/employeeTextSnippet";
+import MetricsBreakdown from "./employeeMetricsBreakdown";
 import { fetchUserAttributes } from "aws-amplify/auth";
 const BarChart = dynamic(() => import("@/components/barChartEmployee"), {
   ssr: false,
   loading: () => <div>Loading Graph...</div>,
 });
 import FactorImportance from "@/components/employeeFactorImportance";
+
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
@@ -41,13 +42,14 @@ const QuestionsComponent: React.FC = () => {
   const [questionsByFactor, setQuestionsByFactor] = useState<QuestionsByFactor>(
     {}
   );
+  const [arrOfSnippetIds, setArrOfSnippetIds] = useState<string[]>([]);
   const [currentFactor, setCurrentFactor] = useState<string | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
   const [userSelections, setUserSelections] = useState<UserSelections>({});
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [isFinished, setIsFinished] = useState<boolean>(false);
   const [firstAttempt, setFirstAttempt] = useState<boolean>(true);
-  const [currentStep, setCurrentStep] = useState<number>(2);
+  const [currentStep, setCurrentStep] = useState<number>(1);
   const [totalQuestions, setTotalQuestions] = useState<number>(0);
   const [currentQuestionNumber, setCurrentQuestionNumber] = useState<number>(0);
   const [noQuestions, setNoQuestions] = useState<boolean>(false);
@@ -55,6 +57,7 @@ const QuestionsComponent: React.FC = () => {
   const [userId, setUserId] = useState<string>("");
   const [factorImportanceBool, setFactorImportanceBool] =
     useState<boolean>(false);
+  const [viewSurveyResults, setViewSurveyResults] = useState<boolean>(false);
   const [selectedValues, setSelectedValues] = useState<SelectionState>({
     "Psychological Safety": null,
     "Growth Satisfaction": null,
@@ -63,12 +66,7 @@ const QuestionsComponent: React.FC = () => {
     Alignment: null,
   });
 
-  const steps = [
-    "Create Account",
-    "Complete Profile",
-    "Assessment",
-    "Survey Results",
-  ];
+  const steps = ["Create Account", "Assessment", "Survey Results"];
 
   async function handleFinish() {
     const updatedSelections: Record<
@@ -82,7 +80,7 @@ const QuestionsComponent: React.FC = () => {
       updatedSelections[factor] = userSelections[factor].map(
         (selection, index) => ({
           questionId: questionsForFactor?.[index]?.id,
-          selection: String(selection), 
+          selection: String(selection),
         })
       );
     });
@@ -110,11 +108,12 @@ const QuestionsComponent: React.FC = () => {
             factor: key,
             score: value || 0,
           });
-          console.log("savedFactorImportanceData", savedFactorImportanceData);
-        }
-      setIsFinished(true);
-      setCurrentQuestionNumber((prev) => prev + 1);
+        console.log("savedFactorImportanceData", savedFactorImportanceData);
+      }
+      setIsFinished(()=>false);
+      // setCurrentQuestionNumber((prev) => prev + 1);
       setCurrentStep((currentStep) => currentStep + 1);
+      setViewSurveyResults(() => true);
     } catch (error) {
       console.error("Error saving data:", error);
     }
@@ -145,111 +144,135 @@ const QuestionsComponent: React.FC = () => {
   const getQuestions = async () => {
     try {
       const { email } = await fetchUserAttributes();
-  
+
       if (!email) {
         throw new Error("User email is missing");
       }
-  
+
       const { data: userList } = await client.models.User.list({
         filter: {
           email: { eq: email },
         },
       });
-  
+
       if (!userList || userList.length === 0) {
         throw new Error(`No user found with email: ${email}`);
       }
-  
+
       const finalUser = userList[0];
       if (!finalUser.id) {
         throw new Error("User ID is missing");
       }
-  
+
       setUserId(() => finalUser.id);
-  
+
       const companyId = finalUser.companyId;
       if (!companyId) {
         throw new Error("User's company ID is missing");
       }
-  
+
       const { data: SurveyList } = await client.models.Survey.list({
         filter: {
           companyId: { eq: companyId },
           start: { eq: true },
         },
       });
-  
+
       if (!SurveyList || SurveyList.length === 0) {
         throw new Error(`No active survey found for company ID: ${companyId}`);
       }
-  
+
       const survey = SurveyList[0];
       if (!survey.id) {
         throw new Error("Survey ID is missing");
       }
-  
+
       const collectionId = survey.collectionId;
       if (!collectionId) {
         throw new Error("Survey's collection ID is missing");
       }
-  
+
       setSurveyId(() => survey.id);
 
-      const {data : AverageSurveyResults} = await client.models.AverageSurveyResults.list({
-        filter: {
-          surveyId: {eq: survey.id},
-          userId: {eq: finalUser.id}
-        }
-      });
+      const snippetID = survey.snippetSetId;
+      if (!snippetID) {
+        throw new Error("Survey's snippet ID is missing");
+      }
+
+      const {data : snippetData} = await client.models.SnippetSet.get({id: snippetID});
+
+      if (!snippetData) {
+        throw new Error(`No snippet found for snippet ID: ${snippetID}`);
+      }
+
+      const snippetIds = snippetData.textSnippets;
+      if (!snippetIds || snippetIds.length === 0) {
+        throw new Error(
+          `No text snippets found in snippet set with ID: ${snippetID}`
+        );
+      }
+      const validSnippetIds = snippetIds.filter((id): id is string => id !== null);
+      setArrOfSnippetIds(() => validSnippetIds);
+      
+
+      const { data: AverageSurveyResults } =
+        await client.models.AverageSurveyResults.list({
+          filter: {
+            surveyId: { eq: survey.id },
+            userId: { eq: finalUser.id },
+          },
+        });
 
       // if (AverageSurveyResults && AverageSurveyResults.length > 0) {
       //   setNoQuestions(true);
       //   return null;
       // }
-  
+
       const { data: collections } = await client.models.Collection.list({
         filter: {
           id: { eq: collectionId },
         },
       });
-  
+
       if (!collections || collections.length === 0) {
         throw new Error(`No collection found with ID: ${collectionId}`);
       }
-  
+
       const collection = collections[0];
       const questionIds = collection.questions;
-  
+
       if (!questionIds || questionIds.length === 0) {
-        throw new Error(`No questions found in collection with ID: ${collectionId}`);
+        throw new Error(
+          `No questions found in collection with ID: ${collectionId}`
+        );
       }
-  
+
       const questionList = await Promise.all(
         questionIds.map(async (id) => {
           if (!id) {
             console.warn("Encountered a null question ID");
             return null;
           }
-  
+
           const { data: questions } = await client.models.Question.list({
             filter: {
               id: { eq: id },
             },
           });
-  
+
           if (!questions || questions.length === 0) {
             console.warn(`No questions found for question ID: ${id}`);
             return null;
           }
-  
+
           return questions;
         })
       );
-  
+
       const validQuestions = questionList.filter((q) => q !== null);
-  
+
       setTotalQuestions(() => validQuestions.length);
-  
+
       const questionsByFactor: QuestionsByFactor = {};
       validQuestions.forEach((question: any) => {
         const factor = question[0]?.factor;
@@ -257,44 +280,44 @@ const QuestionsComponent: React.FC = () => {
           console.warn("Question factor is missing");
           return;
         }
-  
+
         if (!questionsByFactor[factor]) {
           questionsByFactor[factor] = [];
         }
-  
+
         questionsByFactor[factor].push(...question);
       });
-  
+
       return questionsByFactor;
     } catch (error: any) {
       console.error("Error fetching questions:", error.message || error);
       return {};
     }
   };
-  
 
   const loadQuestions = async () => {
     try {
       const groupedQuestions = await getQuestions();
-      
+
       if (!groupedQuestions || Object.keys(groupedQuestions).length === 0) {
         console.warn("No questions available. Setting noQuestions to true.");
         return;
       }
-  
+
       setQuestionsByFactor(groupedQuestions);
-      
+
       const firstFactor = Object.keys(groupedQuestions)[0];
       if (!firstFactor) {
-        throw new Error("Failed to determine the first factor from grouped questions.");
+        throw new Error(
+          "Failed to determine the first factor from grouped questions."
+        );
       }
-  
+
       setCurrentFactor(firstFactor);
     } catch (error: any) {
       console.error("Error loading questions:", error.message || error);
     }
   };
-  
 
   useEffect(() => {
     loadQuestions();
@@ -345,7 +368,6 @@ const QuestionsComponent: React.FC = () => {
   };
 
   const handleFirstAttempt = () => {
-    console.log("First attempt started");
     setFirstAttempt(() => false);
     setFactorImportanceBool(() => true);
   };
@@ -422,8 +444,60 @@ const QuestionsComponent: React.FC = () => {
     return averages;
   };
 
+  if (viewSurveyResults) {
+    return(
+    <div className="bg-gray-100 min-h-screen">
+      <header className=" bg-white flex justify-between items-center mb-10 px-7 py-3">
+        <img src="/api/placeholder/40/40" alt="Logo" className="w-10 h-10" />
+        <div className="text-right">
+          <h2 className="text-lg font-semibold">Neil Sims</h2>
+          <p className="text-sm text-gray-600">neilsims@example.com</p>
+        </div>
+      </header>
+      <div className="m-4">
+        <QuestionStepper steps={steps} currentStep={currentStep} />
+      </div>
+      <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
+        <h2 className="text-lg font-semibold text-gray-800 mb-4">
+          Hi <span className="text-blue-600">Jackson!</span> Here is your survey
+          result.
+        </h2>
+
+        <div className="my-4"></div>
+        <BarChart data={calculateAverages(userSelections)} />
+        <div className="mt-6">
+          <h3 className="text-lg font-semibold text-gray-800">Overview</h3>
+          <p className="text-gray-600 mt-2">
+            Your survey results show that you feel comfortable and safe being
+            yourself at work, which is a strong foundation. There's an
+            opportunity to enhance your personal growth and find more challenges
+            that excite you. While you already have some support from your
+            manager, discovering more meaning in your work and finding a better
+            balance between work and personal life could really boost your
+            overall satisfaction. With a few tweaks, you could feel even more
+            fulfilled and motivated.
+          </p>
+          <MetricsBreakdown averages={calculateAverages(userSelections)} arrOfTextSnippetsId={arrOfSnippetIds} />
+        </div>
+      </div>
+    </div>
+
+    )
+    {
+      /* <div>
+          <BarChart data={calculateAverages(userSelections)} />
+          <TextSnippetDisplay factors={calculateAverages(userSelections)} />
+        </div> */
+    }
+  }
+
   if (noQuestions) {
-    return <div>No Active Surveys found for your Company. Either there is no survey or you already have attempted the started survey</div>;
+    return (
+      <div className="">
+        No Active Surveys found for your Company. Either there is no survey or
+        you already have attempted the started survey
+      </div>
+    );
   }
   if (!currentFactor) {
     return <div>Loading questions...</div>;
@@ -446,19 +520,30 @@ const QuestionsComponent: React.FC = () => {
           <QuestionStepper steps={steps} currentStep={currentStep} />
         </div>
         <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
-          <h1 className="text-2xl font-bold">
-            You have completed all the questions!
-          </h1>
-          {/* <pre className="mt-4">{JSON.stringify(userSelections, null, 2)}</pre> */}
-          <div>
+          <p className="text-md font-thin">
+            Congratulations! You finished the survey.
+          </p>
+          <p className="text-gray-800 mt-2 text-sm mb-[280px]">
+            Click “View Report” to see how you did on this survey.
+          </p>
+          {/* <div>
             <BarChart data={calculateAverages(userSelections)} />
             <TextSnippetDisplay factors={calculateAverages(userSelections)} />
-          </div>
+          </div> */}
         </div>
-        ;
+        <div className="flex justify-end mt-4 mr-[295px]">
+          <button
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300"
+            onClick={handleFinish}
+          >
+            View Report
+          </button>
+        </div>
       </div>
     );
   }
+
+
 
   if (firstAttempt) {
     return (
@@ -595,16 +680,11 @@ const QuestionsComponent: React.FC = () => {
             currentQuestionIndex === currentQuestions.length - 1 &&
             Object.keys(questionsByFactor).indexOf(currentFactor) ===
               Object.keys(questionsByFactor).length - 1
-              ? handleFinish
+              ? () => setIsFinished(true)
               : handleNextQuestion
           }
         >
-          {currentFactor &&
-          currentQuestionIndex === currentQuestions.length - 1 &&
-          Object.keys(questionsByFactor).indexOf(currentFactor) ===
-            Object.keys(questionsByFactor).length - 1
-            ? "Finish"
-            : "Next Question"}
+          Next Question
         </button>
       </div>
 
