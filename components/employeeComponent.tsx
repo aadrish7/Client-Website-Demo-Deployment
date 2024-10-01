@@ -9,13 +9,12 @@ import QuestionStepper from "@/components/questionStepper";
 import ProgressBar from "./progressBar";
 import MetricsBreakdown from "./employeeMetricsBreakdown";
 import { fetchUserAttributes } from "aws-amplify/auth";
-import Header from "@/components/superadminHeader"
+import Header from "@/components/superadminHeader";
 const BarChart = dynamic(() => import("@/components/barChartEmployee"), {
   ssr: false,
   loading: () => <div>Loading Graph...</div>,
 });
 import FactorImportance from "@/components/employeeFactorImportance";
-
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
@@ -111,10 +110,8 @@ const QuestionsComponent: React.FC = () => {
             factor: key,
             score: value || 0,
           });
-          
-        
       }
-      setIsFinished(()=>false);
+      setIsFinished(() => false);
       setIsViewingResults(() => false);
       // setCurrentQuestionNumber((prev) => prev + 1);
       setCurrentStep((currentStep) => currentStep + 1);
@@ -205,7 +202,9 @@ const QuestionsComponent: React.FC = () => {
         throw new Error("Survey's snippet ID is missing");
       }
 
-      const {data : snippetData} = await client.models.SnippetSet.get({id: snippetID});
+      const { data: snippetData } = await client.models.SnippetSet.get({
+        id: snippetID,
+      });
 
       if (!snippetData) {
         throw new Error(`No snippet found for snippet ID: ${snippetID}`);
@@ -217,9 +216,10 @@ const QuestionsComponent: React.FC = () => {
           `No text snippets found in snippet set with ID: ${snippetID}`
         );
       }
-      const validSnippetIds = snippetIds.filter((id): id is string => id !== null);
+      const validSnippetIds = snippetIds.filter(
+        (id): id is string => id !== null
+      );
       setArrOfSnippetIds(() => validSnippetIds);
-      
 
       // const { data: AverageSurveyResults } =
       //   await client.models.AverageSurveyResults.list({
@@ -451,38 +451,40 @@ const QuestionsComponent: React.FC = () => {
   };
 
   if (viewSurveyResults) {
-    return(
-    <div className="bg-gray-100 min-h-screen">
-      <Header userName="" userEmail="" />
-      <div className="m-4">
-        <QuestionStepper steps={steps} currentStep={currentStep} />
-      </div>
-      <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">
-          Hi <span className="text-blue-600">Jackson!</span> Here is your survey
-          result.
-        </h2>
+    return (
+      <div className="bg-gray-100 min-h-screen">
+        <Header userName="" userEmail="" />
+        <div className="m-4">
+          <QuestionStepper steps={steps} currentStep={currentStep} />
+        </div>
+        <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">
+            Hi <span className="text-blue-600">Jackson!</span> Here is your
+            survey result.
+          </h2>
 
-        <div className="my-4"></div>
-        <BarChart data={calculateAverages(userSelections)} />
-        <div className="mt-6">
-          <h3 className="text-lg font-semibold text-gray-800">Overview</h3>
-          <p className="text-gray-600 mt-2">
-            Your survey results show that you feel comfortable and safe being
-            yourself at work, which is a strong foundation. There's an
-            opportunity to enhance your personal growth and find more challenges
-            that excite you. While you already have some support from your
-            manager, discovering more meaning in your work and finding a better
-            balance between work and personal life could really boost your
-            overall satisfaction. With a few tweaks, you could feel even more
-            fulfilled and motivated.
-          </p>
-          <MetricsBreakdown averages={calculateAverages(userSelections)} arrOfTextSnippetsId={arrOfSnippetIds} />
+          <div className="my-4"></div>
+          <BarChart data={calculateAverages(userSelections)} />
+          <div className="mt-6">
+            <h3 className="text-lg font-semibold text-gray-800">Overview</h3>
+            <p className="text-gray-600 mt-2">
+              Your survey results show that you feel comfortable and safe being
+              yourself at work, which is a strong foundation. There's an
+              opportunity to enhance your personal growth and find more
+              challenges that excite you. While you already have some support
+              from your manager, discovering more meaning in your work and
+              finding a better balance between work and personal life could
+              really boost your overall satisfaction. With a few tweaks, you
+              could feel even more fulfilled and motivated.
+            </p>
+            <MetricsBreakdown
+              averages={calculateAverages(userSelections)}
+              arrOfTextSnippetsId={arrOfSnippetIds}
+            />
+          </div>
         </div>
       </div>
-    </div>
-
-    )
+    );
   }
 
   if (noQuestions) {
@@ -493,22 +495,24 @@ const QuestionsComponent: React.FC = () => {
             No Active Surveys
           </h2>
           <p className="text-gray-600">
-            There are no active surveys for your company. You may have completed the ongoing survey, or none are available at the moment.
+            There are no active surveys for your company. You may have completed
+            the ongoing survey, or none are available at the moment.
           </p>
         </div>
       </div>
     );
   }
-  
-  
+
   if (!currentFactor) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-100">
-        <div className="text-gray-600 text-lg font-medium">Loading questions...</div>
+        <div className="text-gray-600 text-lg font-medium">
+          Loading questions...
+        </div>
       </div>
     );
   }
-  
+
   const currentQuestions = questionsByFactor[currentFactor];
   const currentQuestion = currentQuestions[currentQuestionIndex];
 
@@ -528,24 +532,24 @@ const QuestionsComponent: React.FC = () => {
           </p>
         </div>
         <div className="flex justify-end mt-4 mr-[295px]">
-        <button
-      className={`bg-blue-600 text-white rounded px-2 py-2 ${isViewingResults ? 'opacity-50 cursor-not-allowed' : ''}`}
-      onClick={handleFinish}
-      disabled={isViewingResults}
-    >
-      {isViewingResults ? 'Viewing Reports...' : 'View Report'}
-    </button>
+          <button
+            className={`bg-blue-600 text-white rounded px-2 py-2 ${
+              isViewingResults ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+            onClick={handleFinish}
+            disabled={isViewingResults}
+          >
+            {isViewingResults ? "Viewing Reports..." : "View Report"}
+          </button>
         </div>
       </div>
     );
   }
 
-
-
   if (firstAttempt) {
     return (
       <div className="bg-gray-100 min-h-screen">
-       <Header userName="" userEmail="" />
+        <Header userName="" userEmail="" />
         <div className="m-4">
           <QuestionStepper steps={steps} currentStep={currentStep} />
         </div>
@@ -659,7 +663,11 @@ const QuestionsComponent: React.FC = () => {
         </button>
 
         <button
-          className="mt-3 px-2 py-2 mx-[260px] bg-blue-600 text-white rounded"
+          className={`mt-3 px-2 py-2 mx-[260px] ${
+            selectedOption === null
+              ? "bg-blue-200 cursor-not-allowed"
+              : "bg-blue-600"
+          } text-white rounded`}
           onClick={
             currentFactor &&
             currentQuestionIndex === currentQuestions.length - 1 &&
@@ -668,6 +676,7 @@ const QuestionsComponent: React.FC = () => {
               ? () => setIsFinished(true)
               : handleNextQuestion
           }
+          disabled={selectedOption === null}
         >
           Next Question
         </button>

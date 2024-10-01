@@ -248,4 +248,10 @@ const OverviewPage: React.FC = () => {
   );
 };
 
-export default OverviewPage;
+export default function () {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <OverviewPage />
+    </Suspense>
+  );
+}
