@@ -156,7 +156,7 @@ const SurveyDetailsPage = () => {
 
   const collectionTableHeaders = ['name', 'id']; 
   const snippetTableHeaders = ['name', 'id']
-  const employeeHeaders = ['name', 'department', 'jobTitle', 'email'];
+  const employeeHeaders = ['name', 'department', 'job title', 'email'];
 
   const fetchData = async () => {
     try {
@@ -204,7 +204,7 @@ const SurveyDetailsPage = () => {
           const formattedEmployees = users.map(emp => ({
             name: `${emp.firstName} ${emp.lastName}`,
             department: emp.department || '',
-            jobTitle: emp.jobLevel || '',
+            "job title": emp.jobLevel || '',
             email: emp.email || '',
           }));
 

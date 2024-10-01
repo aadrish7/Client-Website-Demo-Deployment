@@ -215,11 +215,11 @@ const SuperAdminMainPage: React.FC = () => {
   const fetchCompanies = async () => {
     try {
       const { data: companyList } = await client.models.Company.list({});
-      setTableHeaders(() => ["companyName", "adminEmail"]);
+      setTableHeaders(() => ["company name", "admin email"]);
       setTableData(
         companyList.map((collection: any) => ({
-          companyName: collection.companyName,
-          adminEmail: collection.adminEmail,
+          "company name" : collection.companyName,
+          "admin email": collection.adminEmail,
         }))
       );
     } catch (error) {
@@ -310,7 +310,7 @@ const SuperAdminMainPage: React.FC = () => {
                 headers={tableHeaders}
                 data={tableData}
                 handleClick={handleIdClick}
-                underlineColumn="companyname"
+                underlineColumn="company name"
               />
             ) : (
               <p>Loading Table...</p>

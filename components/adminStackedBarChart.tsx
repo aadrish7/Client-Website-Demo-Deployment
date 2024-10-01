@@ -20,7 +20,13 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({ ratings, categories }
         name: rating.label,
         orientation: 'h',
         type: 'bar',
-        marker: { color: rating.color },
+        marker: { 
+          color: rating.color,
+          line: {
+            color: 'white',  // White line separator
+            width: 2         // Adjust width as needed
+          }
+        },
       }))}
       layout={{
         barmode: 'stack',
@@ -54,7 +60,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({ ratings, categories }
         },
       }}
       config={{ displayModeBar: false }}
-      style={{ width: '90%', height: '90%' }}
+      style={{ width: '100%', height: '100%' }}
     />
   );
 };
