@@ -390,7 +390,7 @@ const SurveysPage = () => {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {tableData.map((row, rowIndex) => (
+                    {tableData.map((row: any, rowIndex) => (
                       <tr key={rowIndex}>
                         {tableHeaders.map((header, colIndex) => (
                           <td
@@ -415,6 +415,16 @@ const SurveysPage = () => {
                               >
                                 Edit
                               </button>
+                            ) : header.toLowerCase() === "status" ? (
+                              <span
+                                className={`${
+                                  row[header] === "Started"
+                                    ? "inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                                    : "inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-medium bg-red-100 text-red-800"
+                                }`}
+                              >
+                                {row[header]}
+                              </span>
                             ) : (
                               row[header as keyof typeof row]
                             )}
