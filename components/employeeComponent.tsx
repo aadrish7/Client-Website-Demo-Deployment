@@ -446,8 +446,11 @@ const QuestionsComponent: React.FC = () => {
         }
       }
     }
-
-    return averages;
+    //sort the averages
+    const sortedAverages = Object.fromEntries(
+      Object.entries(averages).sort(([, a], [, b]) => b - a)
+    );
+    return sortedAverages;
   };
 
   if (viewSurveyResults) {
