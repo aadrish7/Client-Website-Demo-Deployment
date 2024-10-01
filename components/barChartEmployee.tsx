@@ -27,7 +27,8 @@ const BarChart: React.FC<BarChartProps> = ({ data }) => {
     "Purpose": '#FFF5D9',             
     "Advocacy": '#FFE5E4',             
     "Flexibility": '#D8F9F8',      
-};
+  };
+
   // Assign colors based on the factor name
   const chartColors = sortedNames.map(name => colorMapping[name] || '#D3D3D3'); 
   const chartLightColors = sortedNames.map(name => lightColorMapping[name] || '#F5F5F5');
@@ -66,7 +67,8 @@ const BarChart: React.FC<BarChartProps> = ({ data }) => {
         },
         xaxis: {
           automargin: true,
-          title: undefined,  
+          title: undefined,
+          tickangle: -45,  // Rotate x-axis labels 45 degrees to the left
         },
         margin: {
           b: 100, 
