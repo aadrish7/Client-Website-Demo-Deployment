@@ -111,7 +111,7 @@ const CreateCompanyPage: React.FC<CreateCompanyPageProps> = ({ onClose }) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-10">
       <div className="bg-white p-6 rounded-md shadow-lg w-full max-w-md">
-        <h2 className="text-lg font-semibold mb-7">Create a New Company</h2>
+        <h2 className="text-lg font-semibold mb-7">Add a company</h2>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="mb-6 mt-4">
             <label className="text-sm block font-medium mb-2">
@@ -128,7 +128,7 @@ const CreateCompanyPage: React.FC<CreateCompanyPageProps> = ({ onClose }) => {
           </div>
           <div className="mb-6 mt-4">
             <label className="text-sm block font-medium mb-2">
-              Admin Email
+              Primary Admin Email
             </label>
             <input
               type="email"
@@ -141,7 +141,7 @@ const CreateCompanyPage: React.FC<CreateCompanyPageProps> = ({ onClose }) => {
           </div>
           <div className="mb-6 mt-4">
             <label className="text-sm block font-medium mb-2">
-              Admin First Name
+              Primary Admin First name
             </label>
             <input
               type="text"
@@ -154,7 +154,7 @@ const CreateCompanyPage: React.FC<CreateCompanyPageProps> = ({ onClose }) => {
           </div>
           <div className="mb-6 mt-4">
             <label className="text-sm block font-medium mb-2">
-              Admin Last Name
+              Primary Admin Last name
             </label>
             <input
               type="text"
@@ -167,7 +167,7 @@ const CreateCompanyPage: React.FC<CreateCompanyPageProps> = ({ onClose }) => {
           </div>
           <div className="mb-6 mt-4">
             <label className="text-sm block font-medium mb-2">
-              Admin Job Title
+              Primary Admin Job Title
             </label>
             <input
               type="text"
@@ -292,7 +292,7 @@ const SuperAdminMainPage: React.FC = () => {
                   }}
                   className="bg-blue-600 text-white px-4 py-2 rounded-md flex items-center space-x-1"
                 >
-                  <span>Create Company Manually</span>
+                  <span>Add Company</span>
                   <span className="text-xl font-bold">+</span>
                 </button>
                 {/* <button
