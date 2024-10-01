@@ -5,6 +5,15 @@ interface PieChartProps {
   data: { [key: string]: number }; // Object with label as key and value as its value
 }
 
+// Light color mapping for the factors
+const colorMapping: { [key: string]: string } = {
+  "Psychological Safety": '#0971CE',
+  "Growth Satisfaction": '#6ED34A',
+  "Purpose": '#FEC229',
+  "Advocacy": '#FF5E57',
+  "Flexibility": '#16CAC3',
+};
+
 const PieChart: React.FC<PieChartProps> = ({ data }) => {
   // Convert object into an array of entries, sort by values in descending order
   const sortedData = Object.entries(data).sort(([, valueA], [, valueB]) => valueB - valueA);
@@ -12,6 +21,9 @@ const PieChart: React.FC<PieChartProps> = ({ data }) => {
   // Separate labels and values
   const labels = sortedData.map(([label]) => label);
   const values = sortedData.map(([, value]) => value);
+
+  // Map colors based on the labels using the lightColorMapping
+  const colors = labels.map(label => colorMapping[label] || '#D3D3D3'); // Default to grey if no color is found
 
   return (
     <>
@@ -23,7 +35,7 @@ const PieChart: React.FC<PieChartProps> = ({ data }) => {
             type: 'pie',
             hole: 0.4, // Doughnut chart
             marker: {
-              colors: ['#3366CC', '#99CC00', '#66CCCC', '#FFCC33', '#FF6666'], // Custom colors
+              colors: colors, // Use the dynamically assigned colors
               line: {
                 color: 'white', // White lines between the slices
                 width: 2, // Adjust the thickness of the lines
