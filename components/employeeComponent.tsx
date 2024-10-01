@@ -111,6 +111,7 @@ const QuestionsComponent: React.FC = () => {
             factor: key,
             score: value || 0,
           });
+          
         
       }
       setIsFinished(()=>false);

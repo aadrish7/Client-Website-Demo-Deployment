@@ -217,6 +217,7 @@ const AdminPage: React.FC = () => {
     const factorImportanceResponsesFiltered = factorImportanceResponses.filter(
       (response) => response.score === 5
     );
+    console.log("5factorImportanceResponsesFiltered", factorImportanceResponsesFiltered);
 
     // Step 2: Count occurrences of each factor
     const factorImportanceCount = factorImportanceResponsesFiltered.reduce(
