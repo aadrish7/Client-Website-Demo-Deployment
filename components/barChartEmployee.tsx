@@ -58,12 +58,12 @@ const BarChart: React.FC<BarChartProps> = ({ data }) => {
       layout={{
         barmode: 'stack',
         yaxis: {
-          title: 'Score',
           range: [0, 5],
+          title: undefined,  // Removed y-axis label
         },
         xaxis: {
-          title: 'Factors',
-          automargin: true,  
+          automargin: true,
+          title: undefined,  // Removed x-axis label
         },
         margin: {
           b: 100, 
