@@ -586,14 +586,15 @@ const QuestionsComponent: React.FC = () => {
             <p>Total Number of Prompts: {totalQuestions}</p>
             <p>Estimated Time Required: 10-15 minutes</p>
           </section>
-
+        </main>
+        <div className="h-20 flex items-center justify-center">
           <button
             onClick={handleFirstAttempt}
             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300"
           >
             Start Survey
           </button>
-        </main>
+        </div>
       </div>
     );
   }
