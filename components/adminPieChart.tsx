@@ -1,4 +1,3 @@
-'use client';
 import React from 'react';
 import Plot from 'react-plotly.js';
 
@@ -22,35 +21,51 @@ const PieChart: React.FC<PieChartProps> = ({ data }) => {
             values: values,
             labels: labels,
             type: 'pie',
-            hole: 0.4, // To make it a doughnut chart
+            hole: 0.4, // Doughnut chart
             marker: {
-              colors: ['#3366CC', '#99CC00', '#66CCCC', '#FFCC33', '#FF6666'], // Corresponding colors
+              colors: ['#3366CC', '#99CC00', '#66CCCC', '#FFCC33', '#FF6666'], // Custom colors
+              line: {
+                color: 'white', // White lines between the slices
+                width: 2, // Adjust the thickness of the lines
+              },
             },
             textinfo: 'percent',
-            hoverinfo: 'label',
+            hoverinfo: 'label+percent',
             textposition: 'inside',
-            // textfont: {
-            //   color: 'white', // Set text color to white
-            // },
+            insidetextorientation: 'auto',
+            textfont: {
+              family: 'Arial', // Font family
+              size: 14, // Font size
+              color: 'white', // Font color
+            },
+            automargin: true,
           },
         ]}
         layout={{
-          title: 'Employee Satisfaction Breakdown',
           showlegend: true,
           legend: {
-            orientation: 'v', // Vertical orientation
-            x: 1, // Move legend to the right
-            y: 0.5, // Center the legend vertically
-            xanchor: 'left', // Align to the left of x=1 (right side of the chart)
+            orientation: 'v', // Vertical legend
+            x: 1, // Positioned to the right
+            y: 0.5, // Centered vertically
+            xanchor: 'left',
+            font: {
+              family: 'Arial', // Font family for the legend
+              size: 12, // Font size for the legend
+              color: '#000000', // Font color for the legend
+            },
+            itemsizing: 'constant', // Ensure legend items are equally sized
+            traceorder: 'normal',
           },
           margin: {
             l: 0,
-            r: 150, // Adds space on the right side for the legend
+            r: 150, // Space for the legend
             t: 0,
             b: 0,
           },
+          height: 300,
+          width: 400,
         }}
-        style={{ width: '85%', height: '85%' }}
+        style={{ width: '100%', height: '100%' }}
       />
     </>
   );
