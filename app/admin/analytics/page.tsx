@@ -692,7 +692,7 @@ const AdminPage: React.FC = () => {
                   />
                 </div>
                 <div className="w-full h-full">
-                  <AdminBarChart data={avgQuesstionScoresArray} />
+                  <AdminBarChart data={avgQuesstionScoresArray} factor={selectedFactor}/>
                 </div>
               </div>
             </div>
