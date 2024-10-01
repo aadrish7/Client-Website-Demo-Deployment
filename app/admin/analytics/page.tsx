@@ -577,6 +577,14 @@ const AdminPage: React.FC = () => {
     "Alignment",
   ];
 
+  const handleAgeChange = (selectedAge: string) => {
+    setFilter((prev) => ({ ...prev, age: selectedAge }));
+  };
+
+  const handleYearsOfServiceChange = (selectedYearsOfService: string) => {
+    setFilter((prev) => ({ ...prev, yearsOfService: selectedYearsOfService }));
+  };
+
   return (
     <div className="h-screen flex flex-col">
       <Header userName="Neil Sims" userEmail="neilsimsemail@example.com" />
@@ -586,70 +594,75 @@ const AdminPage: React.FC = () => {
           <div className="flex mb-4 space-x-4">
             {/* Year of Service Dropdown */}
             <div className="flex items-center">
-              <select
-                className="appearance-none p-3 bg-white border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                onChange={(e) =>
-                  setFilter((prev) => ({
-                    ...prev,
-                    yearsOfService: e.target.value,
-                  }))
-                }
-              >
-                <option value="">Year of Service</option>
-                {yearsOfServiceCategories.map((serviceCategory) => (
-                  <option key={serviceCategory} value={serviceCategory}>
-                    {serviceCategory}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <select
+              className={`p-3 bg-white border rounded-lg shadow-sm focus:outline-none ${
+                filter.yearsOfService
+                  ? "border-blue-600 text-blue-600"
+                  : "border-gray-300"
+              }`}
+              onChange={(e) => handleYearsOfServiceChange(e.target.value)}
+            >
+              <option value="">Year of Service</option>
+              {yearsOfServiceCategories.map((serviceCategory) => (
+                <option key={serviceCategory} value={serviceCategory}>
+                  {serviceCategory}
+                </option>
+              ))}
+            </select>
+          </div>
 
-            {/* Gender Dropdown */}
-            <div className="flex items-center">
-              <select
-                className="appearance-none p-3 bg-white border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                onChange={(e) => handleGenderChange(e.target.value)}
-              >
-                <option value="">Gender</option>
-                {genders.map((gender) => (
-                  <option key={gender} value={gender}>
-                    {gender}
-                  </option>
-                ))}
-              </select>
-            </div>
+          {/* Gender Filter */}
+          <div className="flex items-center">
+            <select
+              className={`p-3 bg-white border rounded-lg shadow-sm focus:outline-none ${
+                filter.gender ? "border-blue-600 text-blue-600" : "border-gray-300"
+              }`}
+              onChange={(e) => handleGenderChange(e.target.value)}
+            >
+              <option value="">Gender</option>
+              {genders.map((gender) => (
+                <option key={gender} value={gender}>
+                  {gender}
+                </option>
+              ))}
+            </select>
+          </div>
 
-            {/* Age Dropdown */}
-            <div className="flex items-center">
-              <select
-                className="appearance-none p-3 bg-white border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                onChange={(e) =>
-                  setFilter((prev) => ({ ...prev, age: e.target.value }))
-                }
-              >
-                <option value="">Age</option>
-                {ageCategories.map((ageCategory) => (
-                  <option key={ageCategory} value={ageCategory}>
-                    {ageCategory}
-                  </option>
-                ))}
-              </select>
-            </div>
+          {/* Age Filter */}
+          <div className="flex items-center">
+            <select
+              className={`p-3 bg-white border rounded-lg shadow-sm focus:outline-none ${
+                filter.age ? "border-blue-600 text-blue-600" : "border-gray-300"
+              }`}
+              onChange={(e) => handleAgeChange(e.target.value)}
+            >
+              <option value="">Age</option>
+              {ageCategories.map((ageCategory) => (
+                <option key={ageCategory} value={ageCategory}>
+                  {ageCategory}
+                </option>
+              ))}
+            </select>
+          </div>
 
-            {/* Department Dropdown */}
-            <div className="flex items-center">
-              <select
-                className="appearance-none p-3 bg-white border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                onChange={(e) => handleDepartmentChange(e.target.value)}
-              >
-                <option value="">Department</option>
-                {departments.map((dept) => (
-                  <option key={dept} value={dept}>
-                    {dept}
-                  </option>
-                ))}
-              </select>
-            </div>
+          {/* Department Filter */}
+          <div className="flex items-center">
+            <select
+              className={`p-3 bg-white border rounded-lg shadow-sm focus:outline-none ${
+                filter.department ? "border-blue-600 text-blue-600" : "border-gray-300"
+              }`}
+              onChange={(e) => handleDepartmentChange(e.target.value)}
+            >
+              <option value="">Department</option>
+              {departments.map((dept) => (
+                <option key={dept} value={dept}>
+                  {dept}
+                </option>
+              ))}
+            </select>
+          </div>
+
+            
           </div>
 
           <div className="border p-4 rounded-sm">
