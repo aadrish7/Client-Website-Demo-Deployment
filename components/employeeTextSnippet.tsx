@@ -1,48 +1,47 @@
-'use client';
-import React, { useEffect, useState } from 'react';
-import { generateClient } from 'aws-amplify/data';
-import { Schema } from '@/amplify/data/resource';
-import { Amplify } from 'aws-amplify';
-import outputs from '@/amplify_outputs.json';
+"use client";
+import React, { useEffect, useState } from "react";
+import { generateClient } from "aws-amplify/data";
+import { Schema } from "@/amplify/data/resource";
+import { Amplify } from "aws-amplify";
+import outputs from "@/amplify_outputs.json";
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
 
 type Props = {
   factors: Record<string, number>;
+  arrOfTextSnippetsId: string[];
+  selectedMetric: string;
 };
 
-type TextSnippet = {
-  factor: string;
-  score: Number;
-  snippetText: string;
-};
-
-const TextSnippetDisplay: React.FC<Props> = ({ factors }) => {
-  const [snippets, setSnippets] = useState<TextSnippet[]>([]);
-  const [matchingSnippets, setMatchingSnippets] = useState<TextSnippet[]>([]);
-
+const TextSnippetDisplay: React.FC<Props> = ({
+  factors,
+  arrOfTextSnippetsId,
+  selectedMetric,
+}) => {
+  const [snippets, setSnippets] = useState<any>([]);
+  const [matchingSnippets, setMatchingSnippets] = useState<any>([]);
 
   const isScoreInRange = (score: number, range: Number): boolean => {
-    // Convert the Number object to a primitive number
-    const rangeValue = range.valueOf(); 
-    
-    // Calculate the min and max range based on the given range value
-    const min = rangeValue - 0.49; // The minimum should be 0.49 less than the range
-    const max = rangeValue + 0.5;  // The maximum should be 0.5 more than the range
-    
-    // Check if the score falls within the calculated min and max range
+    const rangeValue = range.valueOf();
+    const min = rangeValue - 0.49;
+    const max = rangeValue + 0.5;
     return score >= min && score <= max;
   };
-  
 
   useEffect(() => {
     const fetchTextSnippets = async () => {
       try {
-        const { data: snippetList } = await client.models.TextSnippet.list({});
-        setSnippets(snippetList);
+        let snippets = [];
+        for (const snippetId of arrOfTextSnippetsId) {
+          const snippet = await client.models.TextSnippet.get({
+            id: snippetId,
+          });
+          snippets.push(snippet);
+        }
+        setSnippets(snippets);
       } catch (error) {
-        console.error('Failed to fetch text snippets:', error);
+        console.error("Failed to fetch text snippets:", error);
       }
     };
 
@@ -51,34 +50,26 @@ const TextSnippetDisplay: React.FC<Props> = ({ factors }) => {
 
   useEffect(() => {
     if (snippets.length > 0) {
-      // Find matching snippets based on the factor and score
-      const matchedSnippets = snippets.filter((snippet) => {
-        const factorScore = factors[snippet.factor];
-        if (factorScore && isScoreInRange(factorScore, snippet.score)) {
-          return true;
-        }
-        return false;
+      const matchedSnippets = snippets.filter((snippet: any) => {
+        const factorScore = factors[snippet.data.factor];
+        return factorScore && isScoreInRange(factorScore, snippet.data.score);
       });
       setMatchingSnippets(matchedSnippets);
     }
   }, [snippets, factors]);
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold mb-4">Matching Text Snippets</h1>
+    <>
       {matchingSnippets.length > 0 ? (
-        <div className="space-y-4">
-          {matchingSnippets.map((snippet, index) => (
-            <div key={index} className="p-4 border rounded-md shadow-sm">
-              <h2 className="text-lg font-medium">{snippet.factor}</h2>
-              <p className="text-gray-600">{snippet.snippetText}</p>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <p>No matching text snippets found for the provided scores.</p>
-      )}
-    </div>
+        <p className="text-sm text-gray-700 leading-relaxed">
+          {matchingSnippets
+            .filter((snippet: any) => snippet.data.factor === selectedMetric)
+            .map((snippet: any, index: any) => (
+              <span key={index}>{snippet.data.snippetText} </span>
+            ))}
+        </p>
+      ) : null}
+    </>
   );
 };
 

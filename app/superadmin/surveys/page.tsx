@@ -219,8 +219,8 @@ const SurveysPage = () => {
   const [tableData, setTableData] = useState<
     {
       id: string;
-      surveyName: string;
-      collectionId: string;
+      "survey name": string;
+      "collection id": string;
       status: string;
       start: boolean;
     }[]
@@ -295,12 +295,12 @@ const SurveysPage = () => {
       const { data: surveyList } = await client.models.Survey.list({
         filter: { companyId: { eq: companyId } },
       });
-      setTableHeaders(["surveyName", "collectionId", "status", "manage"]);
+      setTableHeaders(["survey name", "collection id", "status", "manage"]);
       setTableData(
         surveyList.map((s) => ({
           id: s.id,
-          surveyName: s.surveyName,
-          collectionId: s.collectionId || "",
+          "survey name": s.surveyName,
+          "collection id": s.collectionId || "",
           status: s.start ? "Started" : "Not Started",
           start: s.start ?? false,
         }))
@@ -396,13 +396,13 @@ const SurveysPage = () => {
                           <td
                             key={colIndex}
                             className={`px-6 py-4 whitespace-nowrap text-sm ${
-                              header.toLowerCase() === "surveyname"
+                              header.toLowerCase() === "survey name"
                                 ? "text-blue-500 font-bold cursor-pointer"
                                 : ""
                             }`}
                             onClick={() => {
-                              if (header.toLowerCase() === "surveyname") {
-                                handleSurveyClick(row.surveyName);
+                              if (header.toLowerCase() === "survey name") {
+                                handleSurveyClick(row["survey name"]);
                               }
                             }}
                           >

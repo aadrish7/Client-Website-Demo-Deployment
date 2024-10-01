@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useLayoutEffect } from "react";
 import { generateClient } from "aws-amplify/data";
 import { Schema } from "@/amplify/data/resource";
 import { Amplify } from "aws-amplify";
@@ -8,24 +8,24 @@ import Header from "@/components/superadminHeader";
 import Sidebar from "@/components/superadminSidebar";
 import DropdownButton from "@/components/dropDownButton";
 import dynamic from "next/dynamic";
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 
 const PieChart = dynamic(() => import("@/components/adminPieChart"), {
   ssr: false,
-  loading: () => <div>Loading Graph...</div>,
+  loading: () => <div className="text-center py-4">Loading Graph...</div>,
 });
 
 const BarChart = dynamic(() => import("@/components/barChartEmployee"), {
   ssr: false,
-  loading: () => <div>Loading Graph...</div>,
+  loading: () => <div className="text-center py-4">Loading Graph...</div>,
 });
 
 const StackedBarChart = dynamic(
   () => import("@/components/adminStackedBarChart"),
   {
     ssr: false,
-    loading: () => <div>Loading Graph...</div>,
+    loading: () => <div className="text-center py-4">Loading Graph...</div>,
   }
 );
 
@@ -33,19 +33,34 @@ const AdminBarChart = dynamic(
   () => import("@/components/adminBarChartQuestions"),
   {
     ssr: false,
-    loading: () => <div>Loading Graph...</div>,
+    loading: () => <div className="text-center py-4">Loading Graph...</div>,
   }
 );
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
+
 type RatingData = {
   label: string;
   values: number[];
   color: string;
 };
+const ageCategories = ["Age 25-35", "Age 35-45", "Age 45+"];
 
 const AdminPage: React.FC = () => {
   const searchParams = useSearchParams();
+  const [listOfEmployees, setListOfEmployees] = useState<any[]>([]);
+  const [filter, setFilter] = useState<{
+    department?: string;
+    gender?: string;
+    age?: string;
+    yearsOfService?: string;
+  }>({ department: "", gender: "", age: "", yearsOfService: "" });
+
+  const ageCategories = ["Age 25-35", "Age 35-45", "Age 45+"];
+  const yearsOfServiceCategories = ["1-3 years", "3-5 years", "5+ years"];
+
+  const [departments, setDepartments] = useState<string[]>([]);
+  const [genders, setGenders] = useState<string[]>([]);
   const [allIndividualSurveyResponses, setAllIndividualSurveyResponses] =
     useState<any[]>([]);
   const [allSurveyResponses, setAllSurveyResponses] = useState<any[]>([]);
@@ -59,9 +74,6 @@ const AdminPage: React.FC = () => {
   const [percentageFactorImportance, setPercentageFactorImportance] = useState<{
     [key: string]: number;
   }>({});
-  const [factorImportancePercentage, setFactorImportancePercentage] = useState<{
-    [key: string]: { [key: string]: number };
-  }>({});
   const [ratingsData, setRatingsData] = useState<RatingData[]>([
     { label: "5", values: [0, 0, 0, 0, 0], color: "#C22D7E" },
     { label: "4", values: [0, 0, 0, 0, 0], color: "#D86393" },
@@ -71,57 +83,72 @@ const AdminPage: React.FC = () => {
   ]);
 
   const router = useRouter();
-
-  const fetchData = async () => {
+  const fetchEmployees = async () => {
     const idOfSurvey = searchParams.get("surveyId") || "";
-    console.log("Params Id", idOfSurvey)
-    const { data: surveys } = await client.models.Survey.list({
+    const { data: employees } = await client.models.User.list({
       filter: {
-        id: {
-          eq: idOfSurvey,
-        },
+        and: [
+          {
+            surveyId: {
+              eq: idOfSurvey,
+            },
+          },
+          {
+            role: {
+              eq: "employee",
+            },
+          },
+        ],
       },
     });
-    if (surveys.length === 0) {
-      console.error("No surveys found for company:");
-      return;
+
+    if (employees && employees.length > 0) {
+      setListOfEmployees(employees);
+      const uniqueDepartments = Array.from(
+        new Set(
+          employees
+            .map((employee) => employee.department)
+            .filter((dept): dept is string => dept !== null && dept !== "")
+        )
+      );
+
+      const uniqueGenders = Array.from(
+        new Set(
+          employees
+            .map((employee) => employee.gender)
+            .filter(
+              (gender): gender is string => gender !== null && gender !== ""
+            )
+        )
+      );
+
+      if (uniqueDepartments.length > 0) {
+        setDepartments(uniqueDepartments);
+      }
+      if (uniqueGenders.length > 0) {
+        setGenders(uniqueGenders);
+      }
     }
-    console.log("params survey", surveys);
-    const survey = surveys[0];
-
-    const { data: surveyResponses } =
-      await client.models.AverageSurveyResults.list({
-        filter: {
-          surveyId: {
-            eq: survey.id,
-          },
-        },
-      });
-
-    const { data: factorImportanceResponses } =
-      await client.models.FactorImportance.list({
-        filter: {
-          surveyId: {
-            eq: survey.id,
-          },
-        },
-      });
-
+  };
+  const preparingDataForStackedBarChart = (
+    factorImportanceResponses: { factor: string; score: number }[],
+    ratingsData: any[]
+  ) => {
+    // Step 1: Count the importance responses
     const EachfactorImportanceIndividualCount =
       factorImportanceResponses.reduce((acc, response) => {
         const { factor, score } = response;
-
-        // Initialize factor object if it doesn't exist
         if (!acc[factor]) {
           acc[factor] = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
         }
-
-        // Increment the count for the respective score
         acc[factor][score] += 1;
 
         return acc;
       }, {} as { [factor: string]: { [score: number]: number } });
 
+    console.log("after step 1", EachfactorImportanceIndividualCount);
+
+    // Step 2: Calculate percentages
     const EachfactorImportanceIndividualPercentage = Object.keys(
       EachfactorImportanceIndividualCount
     ).reduce((acc, factor) => {
@@ -144,48 +171,55 @@ const AdminPage: React.FC = () => {
 
       return acc;
     }, {} as { [factor: string]: { [score: string]: number } });
-    console.log(
-      "Factor Importance Percentage by Score:",
-      EachfactorImportanceIndividualPercentage
-    );
 
-    const factorWithIndexes: any = {
+    console.log("after step 2", EachfactorImportanceIndividualPercentage);
+
+    // Step 3: Map factor scores to ratings data
+    const factorWithIndexes: { [key: string]: number } = {
       "Psychological Safety": 0,
       "Growth Satisfaction": 1,
-      "Purpose" : 2,
-      "Advocacy" : 3,
-      "Alignment" : 4,
+      Purpose: 2,
+      Advocacy: 3,
+      Alignment: 4,
     };
-    //update the RatingsData with the percentage of each factor by matching the label of ratings with the score of each factor
-    const tempratingsData = ratingsData;
-    console.log("tempratingsData before", tempratingsData);
-    //loop over the EachfactorImportanceIndividualPercentage object and update the ratingsData
+
+    if (Object.keys(EachfactorImportanceIndividualPercentage).length === 0) {
+      const defaultratings = [
+        { label: "5", values: [0, 0, 0, 0, 0], color: "#C22D7E" },
+        { label: "4", values: [0, 0, 0, 0, 0], color: "#D86393" },
+        { label: "3", values: [0, 0, 0, 0, 0], color: "#E58DA4" },
+        { label: "2", values: [0, 0, 0, 0, 0], color: "#F4B7C8" },
+        { label: "1", values: [0, 0, 0, 0, 0], color: "#F8D1DD" },
+      ];
+      setRatingsData(defaultratings);
+      return;
+    }
+
     for (const [factor, scores] of Object.entries(
       EachfactorImportanceIndividualPercentage
     )) {
-      //loop over the tempRatingsData, and check where the label of ratingsData matches the key of the scores
-      for (let i = 0; i < tempratingsData.length; i++) {
-        if (tempratingsData[i].label === "5") {
-          tempratingsData[i].values[factorWithIndexes[factor]] = scores["5"];
-        } else if (tempratingsData[i].label === "4") {
-          tempratingsData[i].values[factorWithIndexes[factor]] = scores["4"];
-        } else if (tempratingsData[i].label === "3") {
-          tempratingsData[i].values[factorWithIndexes[factor]] = scores["3"];
-        } else if (tempratingsData[i].label === "2") {
-          tempratingsData[i].values[factorWithIndexes[factor]] = scores["2"];
-        } else if (tempratingsData[i].label === "1") {
-          tempratingsData[i].values[factorWithIndexes[factor]] = scores["1"];
+      for (let i = 0; i < ratingsData.length; i++) {
+        const label = ratingsData[i].label;
+        if (label in scores) {
+          ratingsData[i].values[factorWithIndexes[factor]] = scores[label];
         }
       }
     }
 
-    console.log("tempratingsData after", tempratingsData);
+    console.log("after step 3", ratingsData);
+    setRatingsData(ratingsData);
+  };
 
-    //filtering out the responses with score 5
+  const preparingDataForPercentagePieChart = (
+    factorImportanceResponses: { factor: string; score: number }[]
+  ) => {
+    // Step 1: Filter responses to include only those with a score of 5
     const factorImportanceResponsesFiltered = factorImportanceResponses.filter(
       (response) => response.score === 5
     );
-    //getting the count of each factor
+    console.log("5factorImportanceResponsesFiltered", factorImportanceResponsesFiltered);
+
+    // Step 2: Count occurrences of each factor
     const factorImportanceCount = factorImportanceResponsesFiltered.reduce(
       (acc, response) => {
         if (!acc[response.factor]) {
@@ -197,20 +231,181 @@ const AdminPage: React.FC = () => {
       {} as { [key: string]: number }
     );
 
-    //getting the percentage of each factor
+    // Step 3: Calculate the percentage of each factor
     const totalResponses = factorImportanceResponsesFiltered.length;
     const factorImportancePercentage = Object.keys(
       factorImportanceCount
     ).reduce((acc, factor) => {
-      acc[factor] = parseFloat(
-        ((factorImportanceCount[factor] / totalResponses) * 100).toFixed(2)
-      );
+      acc[factor] = totalResponses
+        ? parseFloat(
+            ((factorImportanceCount[factor] / totalResponses) * 100).toFixed(2)
+          )
+        : 0; // Handle division by zero if totalResponses is 0
       return acc;
     }, {} as { [key: string]: number });
 
+    // Step 4: Update the state with the calculated percentages
     setPercentageFactorImportance(factorImportancePercentage);
+  };
 
-    const { data: indivdualSurveyResponses } =
+  // useEffect(() => {
+  //   if (listOfEmployees.length > 0) {
+  //     let filtered = listOfEmployees;
+  //     if (filter.department) {
+  //       filtered = filtered.filter(emp => emp.department === filter.department);
+  //     }
+  //     if (filter.gender) {
+  //       filtered = filtered.filter(emp => emp.gender === filter.gender);
+  //     }
+  //     console.log("filtered data", filtered);
+  //     setListOfEmployees(filtered);
+  //   }
+  // }, [filter]);
+  const calculateAge = (dob: string) => {
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
+      age--;
+    }
+    return age;
+  };
+
+  const calculateYearsOfService = (hireDate: string) => {
+    const startDate = new Date(hireDate);
+    const today = new Date();
+    let years = today.getFullYear() - startDate.getFullYear();
+    const monthDiff = today.getMonth() - startDate.getMonth();
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < startDate.getDate())
+    ) {
+      years--;
+    }
+    return years;
+  };
+
+  useLayoutEffect(() => {
+    //this will set the employees, gender and department
+    fetchEmployees();
+  }, []);
+
+  const fetchData = async () => {
+    const idOfSurvey = searchParams.get("surveyId") || "";
+    const { data: surveys } = await client.models.Survey.list({
+      filter: {
+        id: {
+          eq: idOfSurvey,
+        },
+      },
+    });
+    if (surveys.length === 0) {
+      console.error("No surveys found for company:");
+      return;
+    }
+    const survey = surveys[0];
+
+    var copyListOfEmployees = [...listOfEmployees];
+    console.log("listOfEmployees before filtering", listOfEmployees);
+
+    if (filter.department !== "" && filter.gender !== "") {
+      let filtered = copyListOfEmployees.filter(
+        (emp) => emp.department === filter.department
+      );
+      filtered = filtered.filter((emp) => emp.gender === filter.gender);
+      copyListOfEmployees = filtered;
+    } else if (filter.department !== "") {
+      let filtered = copyListOfEmployees.filter(
+        (emp) => emp.department === filter.department
+      );
+      copyListOfEmployees = filtered;
+    } else if (filter.gender !== "") {
+      let filtered = copyListOfEmployees.filter(
+        (emp) => emp.gender === filter.gender
+      );
+      copyListOfEmployees = filtered;
+    }
+    if (filter.age) {
+      const ageRange =
+        filter.age === "Age 25-35"
+          ? { min: 25, max: 35 }
+          : filter.age === "Age 35-45"
+          ? { min: 35, max: 45 }
+          : { min: 45, max: 100 }; // Age 45+
+
+      copyListOfEmployees = copyListOfEmployees.filter((emp) => {
+        if (!emp.dob) {
+          return false;
+        }
+        const age = calculateAge(emp.dob);
+        console.log("dob", emp.dob);
+        console.log("age", age);
+        console.log("first name", emp.firstName);
+        return age >= ageRange.min && age <= ageRange.max;
+      });
+    }
+
+    if (filter.yearsOfService) {
+      const serviceRange =
+        filter.yearsOfService === "1-3 years"
+          ? { min: 1, max: 3 }
+          : filter.yearsOfService === "3-5 years"
+          ? { min: 3, max: 5 }
+          : { min: 5, max: 100 }; // 5+ years
+
+      copyListOfEmployees = copyListOfEmployees.filter((emp) => {
+        const yearsOfService = calculateYearsOfService(emp.hireDate);
+        return (
+          yearsOfService >= serviceRange.min &&
+          yearsOfService <= serviceRange.max
+        );
+      });
+    }
+
+    console.log("listOfEmployees after filtering", copyListOfEmployees);
+
+    const { data: beforeFiltersurveyResponses } =
+      await client.models.AverageSurveyResults.list({
+        filter: {
+          surveyId: {
+            eq: survey.id,
+          },
+        },
+      });
+
+    //Average Survey Responses
+    const surveyResponses = beforeFiltersurveyResponses.filter((response) =>
+      copyListOfEmployees.some((emp) => emp.id === response.userId)
+    );
+
+    console.log("AveragesurveyResponses", surveyResponses);
+
+    const { data: beforeFilterfactorImportanceResponses } =
+      await client.models.FactorImportance.list({
+        filter: {
+          surveyId: {
+            eq: survey.id,
+          },
+        },
+      });
+
+    //Factor Importance Responses
+    const factorImportanceResponses =
+      beforeFilterfactorImportanceResponses.filter((response) =>
+        copyListOfEmployees.some((emp) => emp.id === response.userId)
+      );
+
+    console.log("factorImportanceResponses", factorImportanceResponses);
+
+    preparingDataForStackedBarChart(factorImportanceResponses, ratingsData);
+
+    preparingDataForPercentagePieChart(factorImportanceResponses);
+
+    const { data: beforeFilteringindivdualSurveyResponses } =
       await client.models.SurveyResults.list({
         filter: {
           surveyId: {
@@ -218,6 +413,13 @@ const AdminPage: React.FC = () => {
           },
         },
       });
+
+    const indivdualSurveyResponses =
+      beforeFilteringindivdualSurveyResponses.filter((response) =>
+        copyListOfEmployees.some((emp) => emp.id === response.userId)
+      );
+
+    console.log("indivdualSurveyResponses123", indivdualSurveyResponses);
 
     const tempIndividualSurveyResponses: any[] = [];
     indivdualSurveyResponses.forEach((response) => {
@@ -231,7 +433,10 @@ const AdminPage: React.FC = () => {
         );
       }
     });
+    console.log("tempIndividualSurveyResponses", tempIndividualSurveyResponses);
     setAllIndividualSurveyResponses(tempIndividualSurveyResponses);
+    // const currentFactor = selectedFactor;
+    // setSelectedFactor(()=>currentFactor);
 
     const allResponses: any[] = [];
     surveyResponses.forEach((response) => {
@@ -270,12 +475,12 @@ const AdminPage: React.FC = () => {
     if (searchParams.has("surveyId")) {
       fetchData();
     }
-  }, []);
+  }, [listOfEmployees, filter]);
 
   useEffect(() => {
     const handleFactorChange = () => {
       if (allIndividualSurveyResponses.length === 0) {
-        console.warn("No individual survey responses available yet.");
+        setAvgQuestionScoresArray({});
         return;
       }
 
@@ -292,7 +497,6 @@ const AdminPage: React.FC = () => {
         }
       }
 
-      //for each individual question id, go through allIndividualSurveyResponses array, and for the selected factor, get the score for that question and in at the end take the average for each questionId
       const questionScores: any = {};
       questionIds.forEach((questionId) => {
         let totalScore = 0;
@@ -311,21 +515,58 @@ const AdminPage: React.FC = () => {
         questionScores[questionId] = totalScore / count;
       });
 
-      console.log("avgquestionScores", questionScores);
       setAvgQuestionScoresArray(questionScores);
     };
 
     handleFactorChange();
   }, [selectedFactor, allIndividualSurveyResponses]);
 
+  const handleDepartmentChange = (selectedDepartment: string) => {
+    setAvgQuestionScoresArray(() => ({}));
+    setRatingsData(() => [
+      { label: "5", values: [0, 0, 0, 0, 0], color: "#C22D7E" },
+      { label: "4", values: [0, 0, 0, 0, 0], color: "#D86393" },
+      { label: "3", values: [0, 0, 0, 0, 0], color: "#E58DA4" },
+      { label: "2", values: [0, 0, 0, 0, 0], color: "#F4B7C8" },
+      { label: "1", values: [0, 0, 0, 0, 0], color: "#F8D1DD" },
+    ]);
+    setPercentageFactorImportance(() => ({}));
+    setAverageScores(() => ({}));
+
+    setFilter((prev) => ({ ...prev, department: selectedDepartment }));
+  };
+
+  const handleGenderChange = (selectedGender: string) => {
+    setAvgQuestionScoresArray(() => ({}));
+    setRatingsData(() => [
+      { label: "5", values: [0, 0, 0, 0, 0], color: "#C22D7E" },
+      { label: "4", values: [0, 0, 0, 0, 0], color: "#D86393" },
+      { label: "3", values: [0, 0, 0, 0, 0], color: "#E58DA4" },
+      { label: "2", values: [0, 0, 0, 0, 0], color: "#F4B7C8" },
+      { label: "1", values: [0, 0, 0, 0, 0], color: "#F8D1DD" },
+    ]);
+    setPercentageFactorImportance(() => ({}));
+    setAverageScores(() => ({}));
+
+    setFilter((prev) => ({ ...prev, gender: selectedGender }));
+  };
+
   const navItems = [
     {
       label: "📦 Overview",
       active: false,
-      href : "/admin",
+      href: `/admin/overview?surveyId=${searchParams.get("surveyId")}`,
     },
-    { label: "📊 Analytics", active: true, href: `/admin/analytics?surveyId=${searchParams.get('surveyId')}` },
-    { label: "🏢 Employees", active: false, href: `/admin/employees?surveyId=${searchParams.get('surveyId')}` },
+    {
+      label: "📊 Analytics",
+      active: true,
+      href: `/admin/analytics?surveyId=${searchParams.get("surveyId")}`,
+    },
+    {
+      label: "🏢 Employees",
+      active: false,
+      href: `/admin/employees?surveyId=${searchParams.get("surveyId")}`,
+    },
   ].filter((item) => item !== undefined);
 
   const categories = [
@@ -341,9 +582,77 @@ const AdminPage: React.FC = () => {
       <Header userName="Neil Sims" userEmail="neilsimsemail@example.com" />
       <div className="flex flex-1">
         <Sidebar navItems={navItems} />
-        <div className="w-4/5 p-8 bg-gray-50">
-          <h1 className="text-2xl font-semibold mb-6">Analytics</h1>
-          <div className="border p-4">
+        <div className="w-4/5 p-3 bg-gray-50">
+          <div className="flex mb-4 space-x-4">
+            {/* Year of Service Dropdown */}
+            <div className="flex items-center">
+              <select
+                className="appearance-none p-3 bg-white border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                onChange={(e) =>
+                  setFilter((prev) => ({
+                    ...prev,
+                    yearsOfService: e.target.value,
+                  }))
+                }
+              >
+                <option value="">Year of Service</option>
+                {yearsOfServiceCategories.map((serviceCategory) => (
+                  <option key={serviceCategory} value={serviceCategory}>
+                    {serviceCategory}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Gender Dropdown */}
+            <div className="flex items-center">
+              <select
+                className="appearance-none p-3 bg-white border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                onChange={(e) => handleGenderChange(e.target.value)}
+              >
+                <option value="">Gender</option>
+                {genders.map((gender) => (
+                  <option key={gender} value={gender}>
+                    {gender}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Age Dropdown */}
+            <div className="flex items-center">
+              <select
+                className="appearance-none p-3 bg-white border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                onChange={(e) =>
+                  setFilter((prev) => ({ ...prev, age: e.target.value }))
+                }
+              >
+                <option value="">Age</option>
+                {ageCategories.map((ageCategory) => (
+                  <option key={ageCategory} value={ageCategory}>
+                    {ageCategory}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Department Dropdown */}
+            <div className="flex items-center">
+              <select
+                className="appearance-none p-3 bg-white border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                onChange={(e) => handleDepartmentChange(e.target.value)}
+              >
+                <option value="">Department</option>
+                {departments.map((dept) => (
+                  <option key={dept} value={dept}>
+                    {dept}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="border p-4 rounded-sm">
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div className="flex flex-col items-center w-full h-[400px] border-2 border-white rounded-sm p-4 bg-white">
                 <h2 className="text-sm font-semibold mb-2">

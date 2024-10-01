@@ -45,7 +45,7 @@ export default function SignInPage() {
       else if (result.isSignedIn){
         const userattributes = await fetchUserAttributes();
         //set the login state with the user attributes
-        setLoginState(form.elements.email.value, userattributes["custom:role"] ?? "");
+        setLoginState(userattributes["email"]??"", userattributes["custom:role"] ?? "");
         router.push("/");
       }
       else{

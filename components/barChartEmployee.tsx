@@ -40,6 +40,9 @@ const BarChart: React.FC<BarChartProps> = ({ data }) => {
           marker: { color: chartColors },
           text: scores.map(score => score.toFixed(2)),
           textposition: 'auto',
+          textfont: {
+            color: 'white',
+          },
           showlegend: false,  
         },
         {
@@ -50,12 +53,10 @@ const BarChart: React.FC<BarChartProps> = ({ data }) => {
           marker: { color: chartLightColors },
           hoverinfo: 'none',
           showlegend: false,  
-          
         },
       ]}
       layout={{
         barmode: 'stack',
-      
         yaxis: {
           title: 'Score',
           range: [0, 5],

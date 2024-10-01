@@ -308,11 +308,7 @@ const EmployeesPage: React.FC = () => {
 
   return (
     <div className="h-screen flex flex-col">
-      <Header userName="Neil Sims" userEmail="neilsimsemail@example.com" />
-      <div className="flex flex-1">
-        <Sidebar navItems={navItems} />
-        <div className="w-4/5 p-8 bg-gray-50">
-        <div className="bg-white p-4">
+        <div className="w-full p-8 bg-white">
           <h1 className="text-2xl font-semibold mb-6">Employees</h1>
           <div className="flex justify-between items-center mb-4">
             {/* Left Side - Two Buttons */}
@@ -492,8 +488,6 @@ const EmployeesPage: React.FC = () => {
           </div>
         </div>
       </div>
-      </div>
-    </div>
   );
 };
 

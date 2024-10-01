@@ -3,8 +3,8 @@ import React from 'react';
 interface TableProps {
   headers: string[];
   data: Record<string, string>[];
-  underlineColumn: string; // Name of the column to be underlined
-  handleClick: (value: string) => void; // Function to handle click on the underlined column
+  underlineColumn: string;
+  handleClick: (value: string) => void;
 }
 
 const Table: React.FC<TableProps> = ({ headers, data, underlineColumn, handleClick }) => {

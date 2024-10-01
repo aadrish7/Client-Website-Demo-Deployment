@@ -10,11 +10,9 @@ import Sidebar from '@/components/superadminSidebar';
 import Table from '@/components/table';
 import { Schema } from '@/amplify/data/resource';
 import { Suspense } from 'react';
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
-// Configure Amplify
 Amplify.configure(outputs);
-
-// Generate the client with Schema typing
 const client = generateClient<Schema>();
 
 import Papa from 'papaparse';
@@ -47,6 +45,8 @@ interface UserData {
 const EmployeeUploadPopup: React.FC<EmployeeUploadPopupProps> = ({ surveyId, companyId, onClose, onEmployeesCreated }) => {
   const [users, setUsers] = useState<UserData[]>([]);
   const [errorMessage, setErrorMessage] = useState('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
   // Function to handle file upload and parse CSV
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -76,6 +76,7 @@ const EmployeeUploadPopup: React.FC<EmployeeUploadPopupProps> = ({ surveyId, com
         }));
         console.log('Parsed data:', parsedData);
         setUsers(parsedData);
+        setSelectedFile(()=>file);
       },
       error: (error) => {
         setErrorMessage('Error parsing CSV file: ' + error.message);
@@ -86,13 +87,16 @@ const EmployeeUploadPopup: React.FC<EmployeeUploadPopupProps> = ({ surveyId, com
   // Function to create users in the database
   const createUserCollections = async () => {
     try {
+      setLoading(true);
       for (const user of users) {
+        const formattedDOB = user.dob ? new Date(user.dob).toISOString().split('T')[0] : null;
+        const formattedHireDate = user.hireDate ? new Date(user.hireDate).toISOString().split('T')[0] : null;
         const {data: clients} = await client.models.User.create({
           firstName: user.firstName,
           lastName: user.lastName,
           email: user.email,
-          // dob: user.dob,
-          // hireDate: user.hireDate,
+          dob: formattedDOB,
+          hireDate: formattedHireDate,
           gender: user.gender,
           ethnicity: user.ethnicity,
           manager: user.manager,
@@ -105,12 +109,11 @@ const EmployeeUploadPopup: React.FC<EmployeeUploadPopupProps> = ({ surveyId, com
           surveyId: surveyId, // Store surveyId
           role: 'employee',
         });
-        console.log("user", user)
-        console.log("client", clients)
       }
       alert('Employees created successfully!');
       onEmployeesCreated();
-      onClose(); // Close the modal after success
+      setLoading(false);
+      onClose(); 
     } catch (error) {
       console.error('Error creating users:', error);
       setErrorMessage('Error creating employees');
@@ -119,13 +122,40 @@ const EmployeeUploadPopup: React.FC<EmployeeUploadPopupProps> = ({ surveyId, com
 
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center">
-      <div className="bg-white p-8 rounded-md w-1/3">
+      <div className="bg-white p-8 rounded-md w-full max-w-lg">
         <h2 className="text-xl font-semibold mb-4">Upload CSV to Create Employees</h2>
-        <input type="file" accept=".csv" onChange={handleFileUpload} className="mb-4" />
+
+        <div
+          className="border-2 border-dashed border-gray-300 p-6 rounded-md flex flex-col items-center justify-center mb-4 cursor-pointer"
+          onClick={() => document.getElementById('csvFileInput')?.click()}
+        >
+          <i className="fas fa-file-csv text-5xl text-gray-500"></i>
+          <label className="text-lg mt-4 text-gray-700 cursor-pointer">
+            Click to upload or drag and drop
+          </label>
+          <input
+            id="csvFileInput"
+            type="file"
+            accept=".csv"
+            onChange={handleFileUpload}
+            style={{ display: 'none' }}
+          />
+          {selectedFile && (
+            <p className="text-green-600 mt-2">{selectedFile.name} selected.</p>
+          )}
+        </div>
+
         {errorMessage && <p className="text-red-500 mb-4">{errorMessage}</p>}
+
         <div className="flex justify-end space-x-2">
-          <button className="bg-blue-600 text-white px-4 py-2 rounded-md" onClick={createUserCollections}>
-            Create Employees
+        <button
+            className={`bg-blue-600 text-white px-4 py-2 rounded-md ${
+              !selectedFile || loading ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+            onClick={createUserCollections}
+            disabled={!selectedFile || loading} // Disable if no file or loading
+          >
+            {loading ? 'Creating Employees...' : 'Create Employees'}
           </button>
           <button className="bg-gray-600 text-white px-4 py-2 rounded-md" onClick={onClose}>
             Cancel
@@ -140,7 +170,6 @@ const EmployeeUploadPopup: React.FC<EmployeeUploadPopupProps> = ({ surveyId, com
 const SurveyDetailsPage = () => {
   const router = useRouter();
   const handleCollectionClick = (collectionName: string) => {
-    console.log("here")
     const newPath = `collection/collection-details?name=${encodeURIComponent(collectionName)}`;
     
   };
@@ -160,7 +189,7 @@ const SurveyDetailsPage = () => {
 
   const collectionTableHeaders = ['name', 'id']; 
   const snippetTableHeaders = ['name', 'id']
-  const employeeHeaders = ['name', 'department', 'jobTitle', 'email'];
+  const employeeHeaders = ['name', 'department', 'job title', 'email'];
 
   const fetchData = async () => {
     try {
@@ -208,7 +237,7 @@ const SurveyDetailsPage = () => {
           const formattedEmployees = users.map(emp => ({
             name: `${emp.firstName} ${emp.lastName}`,
             department: emp.department || '',
-            jobTitle: emp.jobLevel || '',
+            "job title": emp.jobLevel || '',
             email: emp.email || '',
           }));
 

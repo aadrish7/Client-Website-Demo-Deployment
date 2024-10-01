@@ -143,12 +143,12 @@ const SuperAdminMainPage: React.FC = () => {
   const fetchTextSnippets = async () => {
     try {
       const { data: textSnippetList } = await client.models.TextSnippet.list({});
-      setTableHeaders(() => ['factor', 'score', 'snippetText']);
+      setTableHeaders(() => ['factor', 'score', 'snippet text']);
       setTableData(
         textSnippetList.map((snippet: any) => ({
           factor: snippet.factor,
           score: snippet.score,
-          snippetText: snippet.snippetText,
+          "snippet text": snippet.snippetText,
         }))
       );
     } catch (error) {

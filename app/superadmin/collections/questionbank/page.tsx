@@ -180,10 +180,10 @@ const QuestionsPage: React.FC = () => {
     try {
       const { userId } = await getCurrentUser();
       const { data: questionList } = await client.models.Question.list({});
-      setTableHeaders(() => ["factor", "questionText"]);
+      setTableHeaders(() => ["factor", "question text"]);
       setTableData(questionList.map((question) => ({
         factor: question.factor || '',
-        questionText: question.questionText || '',
+        "question text": question.questionText || '',
         options: question.options ? question.options.join(', ') : 'None',
       })));
     } catch (error) {
