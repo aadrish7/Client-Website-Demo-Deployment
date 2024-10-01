@@ -66,7 +66,7 @@ const AdminPage: React.FC = () => {
         },
       },
     });
-    router.push(`/admin/analytics?surveyId=${surveyData[0].id}`);
+    router.push(`/admin/overview?surveyId=${surveyData[0].id}`);
   };
 
   return (

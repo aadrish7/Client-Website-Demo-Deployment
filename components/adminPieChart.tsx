@@ -50,7 +50,7 @@ const PieChart: React.FC<PieChartProps> = ({ data }) => {
             b: 0,
           },
         }}
-        style={{ width: '95%', height: '95%' }}
+        style={{ width: '85%', height: '85%' }}
       />
     </>
   );

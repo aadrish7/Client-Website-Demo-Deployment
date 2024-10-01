@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useLayoutEffect } from "react";
 import { generateClient } from "aws-amplify/data";
 import { Schema } from "@/amplify/data/resource";
 import { Amplify } from "aws-amplify";
@@ -44,6 +44,7 @@ type RatingData = {
   values: number[];
   color: string;
 };
+const ageCategories = ["Age 25-35", "Age 35-45", "Age 45+"];
 
 const AdminPage: React.FC = () => {
   const searchParams = useSearchParams();
@@ -51,7 +52,13 @@ const AdminPage: React.FC = () => {
   const [filter, setFilter] = useState<{
     department?: string;
     gender?: string;
-  }>({ department: "", gender: "" });
+    age?: string;
+    yearsOfService?: string;
+  }>({ department: "", gender: "", age: "", yearsOfService: "" });
+
+  const ageCategories = ["Age 25-35", "Age 35-45", "Age 45+"];
+  const yearsOfServiceCategories = ["1-3 years", "3-5 years", "5+ years"];
+
   const [departments, setDepartments] = useState<string[]>([]);
   const [genders, setGenders] = useState<string[]>([]);
   const [allIndividualSurveyResponses, setAllIndividualSurveyResponses] =
@@ -253,8 +260,35 @@ const AdminPage: React.FC = () => {
   //     setListOfEmployees(filtered);
   //   }
   // }, [filter]);
+  const calculateAge = (dob: string) => {
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
+      age--;
+    }
+    return age;
+  };
 
-  useEffect(() => {
+  const calculateYearsOfService = (hireDate: string) => {
+    const startDate = new Date(hireDate);
+    const today = new Date();
+    let years = today.getFullYear() - startDate.getFullYear();
+    const monthDiff = today.getMonth() - startDate.getMonth();
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < startDate.getDate())
+    ) {
+      years--;
+    }
+    return years;
+  };
+
+  useLayoutEffect(() => {
     //this will set the employees, gender and department
     fetchEmployees();
   }, []);
@@ -293,6 +327,42 @@ const AdminPage: React.FC = () => {
         (emp) => emp.gender === filter.gender
       );
       copyListOfEmployees = filtered;
+    }
+    if (filter.age) {
+      const ageRange =
+        filter.age === "Age 25-35"
+          ? { min: 25, max: 35 }
+          : filter.age === "Age 35-45"
+          ? { min: 35, max: 45 }
+          : { min: 45, max: 100 }; // Age 45+
+
+      copyListOfEmployees = copyListOfEmployees.filter((emp) => {
+        if (!emp.dob) {
+          return false;
+        }
+        const age = calculateAge(emp.dob);
+        console.log("dob", emp.dob);
+        console.log("age", age);
+        console.log("first name", emp.firstName);
+        return age >= ageRange.min && age <= ageRange.max;
+      });
+    }
+
+    if (filter.yearsOfService) {
+      const serviceRange =
+        filter.yearsOfService === "1-3 years"
+          ? { min: 1, max: 3 }
+          : filter.yearsOfService === "3-5 years"
+          ? { min: 3, max: 5 }
+          : { min: 5, max: 100 }; // 5+ years
+
+      copyListOfEmployees = copyListOfEmployees.filter((emp) => {
+        const yearsOfService = calculateYearsOfService(emp.hireDate);
+        return (
+          yearsOfService >= serviceRange.min &&
+          yearsOfService <= serviceRange.max
+        );
+      });
     }
 
     console.log("listOfEmployees after filtering", copyListOfEmployees);
@@ -484,7 +554,7 @@ const AdminPage: React.FC = () => {
     {
       label: "📦 Overview",
       active: false,
-      href: "/admin",
+      href: `/admin/overview?surveyId=${searchParams.get("surveyId")}`,
     },
     {
       label: "📊 Analytics",
@@ -513,30 +583,68 @@ const AdminPage: React.FC = () => {
         <Sidebar navItems={navItems} />
         <div className="w-4/5 p-3 bg-gray-50">
           <div className="flex mb-4 space-x-4">
+            {/* Year of Service Dropdown */}
             <div className="flex items-center">
-              <label className="mr-2">Department:</label>
               <select
-                className="p-2 border border-gray-300 rounded-md"
-                onChange={(e) => handleDepartmentChange(e.target.value)}
+                className="appearance-none p-3 bg-white border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                onChange={(e) =>
+                  setFilter((prev) => ({
+                    ...prev,
+                    yearsOfService: e.target.value,
+                  }))
+                }
               >
-                <option value="">All</option>
-                {departments.map((dept) => (
-                  <option key={dept} value={dept}>
-                    {dept}
+                <option value="">Year of Service</option>
+                {yearsOfServiceCategories.map((serviceCategory) => (
+                  <option key={serviceCategory} value={serviceCategory}>
+                    {serviceCategory}
                   </option>
                 ))}
               </select>
             </div>
+
+            {/* Gender Dropdown */}
             <div className="flex items-center">
-              <label className="mr-2">Gender</label>
               <select
-                className="p-2 border border-gray-300 rounded-md"
+                className="appearance-none p-3 bg-white border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 onChange={(e) => handleGenderChange(e.target.value)}
               >
-                <option value="">All</option>
+                <option value="">Gender</option>
                 {genders.map((gender) => (
                   <option key={gender} value={gender}>
                     {gender}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Age Dropdown */}
+            <div className="flex items-center">
+              <select
+                className="appearance-none p-3 bg-white border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                onChange={(e) =>
+                  setFilter((prev) => ({ ...prev, age: e.target.value }))
+                }
+              >
+                <option value="">Age</option>
+                {ageCategories.map((ageCategory) => (
+                  <option key={ageCategory} value={ageCategory}>
+                    {ageCategory}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Department Dropdown */}
+            <div className="flex items-center">
+              <select
+                className="appearance-none p-3 bg-white border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                onChange={(e) => handleDepartmentChange(e.target.value)}
+              >
+                <option value="">Department</option>
+                {departments.map((dept) => (
+                  <option key={dept} value={dept}>
+                    {dept}
                   </option>
                 ))}
               </select>
