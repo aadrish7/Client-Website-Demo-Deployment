@@ -25,7 +25,7 @@ const CreateSnippetSetModal: React.FC<{
   useEffect(() => {
     const fetchTextSnippets = async () => {
       try {
-        const { data: snippetList } = await client.models.TextSnippet.list({});
+        const { data: snippetList } = await client.models.OverviewTextSnippet.list({});
         setTextSnippets(
           snippetList.map((snippet) => ({
             id: snippet.id,
@@ -44,7 +44,7 @@ const CreateSnippetSetModal: React.FC<{
     setIsCreating(true);
     try {
       const snippetIds = textSnippets.map((snippet) => snippet.id);
-      await client.models.SnippetSet.create({
+      await client.models.OverviewSnippetSet.create({
         name,
         tags,
         textSnippets: snippetIds,
@@ -126,7 +126,7 @@ const SnippetSetsPage: React.FC = () => {
 
   const fetchSnippetSets = async () => {
     try {
-      const { data: snippetSetList } = await client.models.SnippetSet.list({});
+      const { data: snippetSetList } = await client.models.OverviewSnippetSet.list({});
       setTableHeaders(() => ["name", "tags", "textSnippets"]);
       setTableData(
         snippetSetList.map((set) => ({
@@ -157,28 +157,29 @@ const SnippetSetsPage: React.FC = () => {
       },
     {
       label: '📦 Snippets',
-      active: true,
-      subItems: [
-        { label: '📋 Snippet Bank', active: false, href: '/superadmin/snippets' },
-        { label: '📦 Snippet Set', active: true, href: '/superadmin/snippets/snippetset' }
-      ]
-    },
-    {
-      label: "📦 Overview Snippets",
       active: false,
       subItems: [
-        {
-          label: "📋 Snippet Bank",
-          active: false,
-          href: "/superadmin/overviewsnippets",
-        },
-        {
-          label: "📦 Snippet Set",
-          active: false,
-          href: "/superadmin/overviewsnippets/overviewsnippetset",
-        },
-      ],
+        { label: '📋 Snippet Bank', active: false, href: '/superadmin/snippets' },
+        { label: '📦 Snippet Set', active: false, href: '/superadmin/snippets/snippetset' }
+      ]
     },
+    
+  {
+    label: "📦 Overview Snippets",
+    active: true,
+    subItems: [
+      {
+        label: "📋 Snippet Bank",
+        active: false,
+        href: "/superadmin/overviewsnippets",
+      },
+      {
+        label: "📦 Snippet Set",
+        active: true,
+        href: "/superadmin/overviewsnippets/overviewsnippetset",
+      },
+    ],
+  },
     { label: '🏢 Company', active: false, href: '/superadmin' },
     { label: '📊 Analytics', active: false, href: '/analytics' },
   ].filter(item => item !== undefined);
@@ -186,7 +187,7 @@ const SnippetSetsPage: React.FC = () => {
   const handleModalClose = () => setIsModalOpen(false);
 
   const handleSnippetSetClick = (setName: string) => {
-    router.push(`snippetset/details?name=${encodeURIComponent(setName)}`);
+    router.push(`overviewsnippetset/details?name=${encodeURIComponent(setName)}`);
   };
 
   const handleCreateSnippetSet = () => {
@@ -205,7 +206,7 @@ const SnippetSetsPage: React.FC = () => {
         {/* Main Page Content */}
         <div className="w-4/5 p-8">
           {/* Page Header */}
-          <h1 className="text-2xl font-semibold mb-6">Snippet Sets</h1>
+          <h1 className="text-2xl font-semibold mb-6">Overview Snippet Sets</h1>
 
           <div className="border p-4">
             <div className="flex items-center mb-4 justify-end">

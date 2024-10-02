@@ -159,9 +159,24 @@ const CollectionsPage: React.FC = () => {
         { label: '📦 Snippet Set', active: false, href: '/superadmin/snippets/snippetset' }
       ]
     },
+    {
+      label: "📦 Overview Snippets",
+      active: false,
+      subItems: [
+        {
+          label: "📋 Snippet Bank",
+          active: false,
+          href: "/superadmin/overviewsnippets",
+        },
+        {
+          label: "📦 Snippet Set",
+          active: false,
+          href: "/superadmin/overviewsnippets/overviewsnippetset",
+        },
+      ],
+    },
     { label: '🏢 Company', active: false, href: '/superadmin' },
     { label: '📊 Analytics', active: false, href: '/analytics' },
-    { label: '💬 Help', active: false, href: '/help' }
   ].filter(item => item !== undefined);
 
   const handleModalClose = () => setIsModalOpen(false);
