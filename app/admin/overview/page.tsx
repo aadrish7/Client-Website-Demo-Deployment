@@ -36,6 +36,16 @@ const OverviewPage: React.FC = () => {
   const [averageScores, setAverageScores] = useState<{ [key: string]: number }>(
     {}
   );
+  //array of strings
+  const [matchingSnippets, setMatchingSnippets] = useState<any>([]);
+
+  const isScoreInRange = (score: number, range: Number): boolean => {
+    const rangeValue = range.valueOf();
+    const min = rangeValue - 0.49;
+    const max = rangeValue + 0.5;
+    return score >= min && score <= max;
+  };
+
 
 
   const preparingDataForPercentagePieChart = (
@@ -124,6 +134,8 @@ const OverviewPage: React.FC = () => {
       },
     });
 
+   
+
     preparingDataForPercentagePieChart(factorImportanceResponses)
 
     const {data : averageSurveyResponses} =  await client.models.AverageSurveyResults.list({
@@ -172,8 +184,36 @@ const OverviewPage: React.FC = () => {
   useEffect(() => {
     if (searchParams.has("surveyId")) {
       fetchData();
+
     }
   });
+  const getSnippets = async () => {
+    const { data: overviewSnippets } = await client.models.OverviewTextSnippet.list({});
+
+    if (overviewSnippets.length === 0) {
+      console.error("No snippets found for company:");
+      return;
+    }
+    return overviewSnippets;
+  }
+  useEffect(() => {
+    const findMatchingSnippets = async () => {
+
+    
+      if (Object.keys(averageScores).length > 0) {
+        const snippets = await getSnippets();
+        if (!snippets) {
+          console.error("No snippets found for company:");
+          return;
+        }
+        const matchedSnippets = snippets.filter((snippet: any) => {
+          const factorScore = averageScores[snippet.factor];
+          return factorScore && isScoreInRange(factorScore, snippet.score);
+        });
+        setMatchingSnippets(matchedSnippets); }}
+    findMatchingSnippets();
+    
+  }, [averageScores]);
 
   const navItems = [
     {
@@ -193,20 +233,6 @@ const OverviewPage: React.FC = () => {
     },
   ].filter((item) => item !== undefined);
 
-  const employeeSatisfactionData = {
-    "Very Satisfied": 40,
-    Satisfied: 30,
-    Neutral: 15,
-    Dissatisfied: 10,
-    "Very Dissatisfied": 5,
-  };
-  const performanceData = {
-    Teamwork: 4.5,
-    Communication: 3.8,
-    "Problem-Solving": 4.2,
-    Leadership: 4.0,
-    Creativity: 3.5,
-  };
   return (
     <div className="h-screen flex flex-col">
       <Header userName="Neil Sims" userEmail="neilsimsemail@example.com" />
@@ -247,18 +273,9 @@ const OverviewPage: React.FC = () => {
             {/* Paragraph Summary */}
             <div className="text-gray-600 text-sm">
               <p>
-                Your company seems to be excelling in fostering Advocacy and
-                Psychological Safety among employees, with Psychological Safety
-                being the top priority for 34% of employees and Advocacy
-                receiving the highest average score of 3.4. However, despite
-                this, Purpose has the lowest average score of 2.67, indicating a
-                potential area for improvement. Growth Satisfaction and
-                Alignment, both rated as most important by 20% of employees,
-                received an average score of 3, suggesting these factors are
-                important but may need more attention to fully align with
-                employee expectations. The company could benefit from focusing
-                more on Purpose, Growth Satisfaction, and Alignment to better
-                meet the overall needs and values of their workforce.
+              {matchingSnippets.map((snippet: any, index: any) => (
+                <span key={index}>{snippet.snippetText} {" "}</span>
+              ))}
               </p>
             </div>
           </div>

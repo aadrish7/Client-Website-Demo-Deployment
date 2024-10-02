@@ -29,7 +29,7 @@ const SnippetSetDetails: React.FC = () => {
     const fetchSnippetSet = async () => {
       try {
         
-        const { data: snippetSets } = await client.models.SnippetSet.list({});
+        const { data: snippetSets } = await client.models.OverviewSnippetSet.list({});
         const foundSet = snippetSets.find((set) => set.name === snippetSetName);
         if (foundSet) {
           setSnippetSet({
@@ -44,7 +44,7 @@ const SnippetSetDetails: React.FC = () => {
           const fetchedTextSnippets = await Promise.all(
             foundSet.textSnippets?.filter(Boolean)?.map(async (snippetId) => {
               const { data: textSnippets } =
-                await client.models.TextSnippet.list({
+                await client.models.OverviewTextSnippet.list({
                   filter: {
                     id: { eq: snippetId || "" },
                   },
@@ -104,7 +104,7 @@ const SnippetSetDetails: React.FC = () => {
     },
     {
       label: "📦 Snippets",
-      active: true,
+      active: false,
       subItems: [
         {
           label: "📋 Snippet Bank",
@@ -113,27 +113,28 @@ const SnippetSetDetails: React.FC = () => {
         },
         {
           label: "📦 Snippet Set",
-          active: true,
+          active: false,
           href: "/superadmin/snippets/snippetset",
         },
       ],
     },
-    {
-      label: "📦 Overview Snippets",
-      active: false,
-      subItems: [
-        {
-          label: "📋 Snippet Bank",
-          active: false,
-          href: "/superadmin/overviewsnippets",
-        },
-        {
-          label: "📦 Snippet Set",
-          active: false,
-          href: "/superadmin/overviewsnippets/overviewsnippetset",
-        },
-      ],
-    },
+    
+  {
+    label: "📦 Overview Snippets",
+    active: true,
+    subItems: [
+      {
+        label: "📋 Snippet Bank",
+        active: false,
+        href: "/superadmin/overviewsnippets",
+      },
+      {
+        label: "📦 Snippet Set",
+        active: true,
+        href: "/superadmin/overviewsnippets/overviewsnippetset",
+      },
+    ],
+  },
     { label: "🏢 Company", active: false, href: "/superadmin" },
     { label: "📊 Analytics", active: false, href: "/analytics" },
   ].filter((item) => item !== undefined);

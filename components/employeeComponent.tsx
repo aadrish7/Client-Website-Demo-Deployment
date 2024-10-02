@@ -10,6 +10,7 @@ import ProgressBar from "./progressBar";
 import MetricsBreakdown from "./employeeMetricsBreakdown";
 import { fetchUserAttributes } from "aws-amplify/auth";
 import Header from "@/components/superadminHeader";
+import useUserStore from "@/store/userStore";
 const BarChart = dynamic(() => import("@/components/barChartEmployee"), {
   ssr: false,
   loading: () => <div>Loading Graph...</div>,
@@ -39,6 +40,8 @@ interface SelectionState {
   [key: string]: number | null;
 }
 const QuestionsComponent: React.FC = () => {
+  const [snippets, setSnippets] = useState<any>([]);
+  const [matchingSnippets, setMatchingSnippets] = useState<any>([]);
   const [questionsByFactor, setQuestionsByFactor] = useState<QuestionsByFactor>(
     {}
   );
@@ -68,7 +71,7 @@ const QuestionsComponent: React.FC = () => {
   const [isViewingResults, setIsViewingResults] = useState<boolean>(false);
 
   const steps = ["Create Account", "Assessment", "Survey Results"];
-
+  const email = useUserStore((state) => state.userEmail);
   async function handleFinish() {
     console.log("in handle finish")
     const updatedSelections: Record<
@@ -119,6 +122,13 @@ const QuestionsComponent: React.FC = () => {
       console.error("Error saving data:", error);
     }
   }
+
+  const isScoreInRange = (score: number, range: Number): boolean => {
+    const rangeValue = range.valueOf();
+    const min = rangeValue - 0.49;
+    const max = rangeValue + 0.5;
+    return score >= min && score <= max;
+  };
 
   const handleSelection = (category: string, value: number) => {
     const newSelectedValues = Object.fromEntries(
@@ -187,6 +197,12 @@ const QuestionsComponent: React.FC = () => {
       }
 
       const survey = SurveyList[0];
+
+      const {data : Overview_Snippets} = await client.models.OverviewTextSnippet.list({
+      });
+
+      setSnippets(Overview_Snippets);
+
       if (!survey.id) {
         throw new Error("Survey ID is missing");
       }
@@ -452,6 +468,17 @@ const QuestionsComponent: React.FC = () => {
     );
     return sortedAverages;
   };
+  useEffect(() => {
+    if (viewSurveyResults) {
+      const averageSurveyResults = calculateAverages(userSelections);
+      if (snippets.length > 0) {
+        const matchedSnippets = snippets.filter((snippet: any) => {
+          const factorScore = averageSurveyResults[snippet.factor];
+          return factorScore && isScoreInRange(factorScore, snippet.score);
+        });
+        setMatchingSnippets(matchedSnippets); }
+    }
+  }, [viewSurveyResults]);
 
   if (viewSurveyResults) {
     return (
@@ -462,7 +489,7 @@ const QuestionsComponent: React.FC = () => {
         </div>
         <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">
-            Hi <span className="text-blue-600">Jackson!</span> Here is your
+            Hi <span className="text-blue-600">{email}!</span> Here is your
             survey result.
           </h2>
 
@@ -471,14 +498,9 @@ const QuestionsComponent: React.FC = () => {
           <div className="mt-6">
             <h3 className="text-lg font-semibold text-gray-800">Overview</h3>
             <p className="text-gray-600 mt-2">
-              Your survey results show that you feel comfortable and safe being
-              yourself at work, which is a strong foundation. There's an
-              opportunity to enhance your personal growth and find more
-              challenges that excite you. While you already have some support
-              from your manager, discovering more meaning in your work and
-              finding a better balance between work and personal life could
-              really boost your overall satisfaction. With a few tweaks, you
-              could feel even more fulfilled and motivated.
+              {matchingSnippets.map((snippet: any, index: any) => (
+                <span key={index}>{snippet.snippetText} {" "}</span>
+              ))}
             </p>
             <MetricsBreakdown
               averages={calculateAverages(userSelections)}

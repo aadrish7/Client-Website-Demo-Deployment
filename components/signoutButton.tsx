@@ -1,12 +1,10 @@
-"use client";
-
 import { useRouter } from "next/navigation";
 import { signOut } from "aws-amplify/auth";
 import { useState } from "react";
 import useUserStore from "@/store/userStore";
 
-//component to handle the signout button
-export default function SignOutButton() {
+//component to handle signout functionality with clickable span
+export default function SignOutText() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -18,7 +16,7 @@ export default function SignOutButton() {
     try {
       await signOut();
       setLogoutState();
-      router.push("/auth/signin"); 
+      router.push("/auth/signin");
     } catch (error) {
       setError('Failed to sign out. Please try again.');
     } finally {
@@ -27,11 +25,14 @@ export default function SignOutButton() {
   };
 
   return (
-    <div>
-      <button className = "bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition duration-300"onClick={handleSignOut} disabled={loading}>
-        {loading ? 'Signing out...' : 'Sign Out'}
-      </button>
-      {error && <p>{error}</p>}
-    </div>
+    
+      <span
+        className="text-blue-600 cursor-pointer hover:underline"
+        onClick={handleSignOut}
+        style={{ pointerEvents: loading ? 'none' : 'auto' }}
+      >
+        {loading ? 'Signing out...' : 'Sign out'}
+      </span>
+    
   );
 }

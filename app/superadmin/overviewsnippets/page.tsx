@@ -47,7 +47,7 @@ const CreateTextSnippet: React.FC<CreateTextSnippetProps> = ({ onClose }) => {
         return;
       }
 
-      await client.models.TextSnippet.create({
+      await client.models.OverviewTextSnippet.create({
         factor,
         score: Number(score),
         snippetText,
@@ -152,7 +152,7 @@ const SuperAdminMainPage: React.FC = () => {
   const handleIdClick = (id: string) => {};
   const fetchTextSnippets = async () => {
     try {
-      const { data: textSnippetList } = await client.models.TextSnippet.list(
+      const { data: textSnippetList } = await client.models.OverviewTextSnippet.list(
         {}
       );
       setTableHeaders(() => ["factor", "score", "snippet text"]);
@@ -199,7 +199,7 @@ const SuperAdminMainPage: React.FC = () => {
         try {
           for (const row of data) {
             const { factor, score, text: snippetText } = row;
-            await client.models.TextSnippet.create({
+            await client.models.OverviewTextSnippet.create({
               factor,
               score: Number(score),
               snippetText,
@@ -258,19 +258,19 @@ const SuperAdminMainPage: React.FC = () => {
           {
             label: "📋 Snippet Bank",
             active: true,
-            href: "/superadmin/snippets",
+            href: "/superadmin/overviewsnippets",
           },
           {
             label: "📦 Snippet Set",
             active: false,
-            href: "/superadmin/snippets/snippetset",
+            href: "/superadmin/overviewsnippets/overviewsnippetset",
           },
         ],
       },
     { label: "🏢 Company", active: false, href: "/superadmin" },
     { label: "📊 Analytics", active: false, href: "/analytics" },
-    { label: "💬 Help", active: false, href: "/help" },
   ].filter((item) => item !== undefined);
+  
 
   return (
     <div className="h-screen flex flex-col">
@@ -278,7 +278,7 @@ const SuperAdminMainPage: React.FC = () => {
       <div className="flex flex-1">
         <Sidebar navItems={navItems} />
         <div className="w-4/5 p-8">
-          <h1 className="text-2xl font-semibold mb-6">Snippet Bank</h1>
+          <h1 className="text-2xl font-semibold mb-6">Overview Snippets Bank</h1>
 
           <div className="border p-4">
             <div className="flex items-center mb-4 justify-end">
