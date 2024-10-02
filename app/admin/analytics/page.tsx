@@ -1,5 +1,10 @@
 "use client";
-import React, { useState, useEffect, useLayoutEffect } from "react";
+import React, {
+  useState,
+  useEffect,
+  useLayoutEffect,
+  ChangeEvent,
+} from "react";
 import { generateClient } from "aws-amplify/data";
 import { Schema } from "@/amplify/data/resource";
 import { Amplify } from "aws-amplify";
@@ -28,7 +33,93 @@ const StackedBarChart = dynamic(
     loading: () => <div className="text-center py-4">Loading Graph...</div>,
   }
 );
+type MultiSelectDropdownProps = {
+  label: string;
+  options: string[];
+  selectedOptions: any;
+  onChange: (selected: string[]) => void;
+};
 
+const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({
+  label,
+  options,
+  selectedOptions,
+  onChange,
+}) => {
+  const [isOpen, setIsOpen] = useState(false); // State to control dropdown open/close
+
+  const handleCheckboxChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const { value, checked } = event.target;
+    if (checked) {
+      onChange([...selectedOptions, value]);
+    } else {
+      onChange(selectedOptions.filter((option: any) => option !== value));
+    }
+  };
+
+  const toggleDropdown = () => {
+    setIsOpen(!isOpen); // Toggle dropdown visibility
+  };
+
+  // Dynamically determine styles based on selected options
+  const isSingleOptionSelected = selectedOptions.length === 1;
+  const isMultipleOptionsSelected = selectedOptions.length > 1;
+
+  const buttonClasses = isSingleOptionSelected
+    ? "text-blue-500 border-blue-500"
+    : isMultipleOptionsSelected
+    ? "bg-blue-500 text-white border-blue-500"
+    : "text-gray-700 border-gray-300";
+
+  return (
+    <div className="relative inline-block text-left w-full">
+      <div>
+        {/* Dropdown Button */}
+        <button
+          type="button"
+          className={`inline-flex justify-between w-3/4 mx-1 rounded-md border shadow-sm px-4 py-2 text-sm font-medium ${buttonClasses}`}
+          onClick={toggleDropdown}
+        >
+          {label}
+          <svg
+            className={`ml-2 h-5 w-5 transition-transform ${
+              isOpen ? "rotate-180" : ""
+            }`}
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path
+              fillRule="evenodd"
+              d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+              clipRule="evenodd"
+            />
+          </svg>
+        </button>
+      </div>
+
+      {/* Dropdown menu */}
+      {isOpen && (
+        <div className="origin-top-right absolute z-10 mt-2 w-full rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
+          <div className="py-1">
+            {options.map((option) => (
+              <label key={option} className="flex items-center px-4 py-2">
+                <input
+                  type="checkbox"
+                  value={option}
+                  checked={selectedOptions.includes(option)}
+                  onChange={handleCheckboxChange}
+                />
+                <span className="ml-2">{option}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 const AdminBarChart = dynamic(
   () => import("@/components/adminBarChartQuestions"),
   {
@@ -50,11 +141,16 @@ const AdminPage: React.FC = () => {
   const searchParams = useSearchParams();
   const [listOfEmployees, setListOfEmployees] = useState<any[]>([]);
   const [filter, setFilter] = useState<{
-    department?: string;
-    gender?: string;
-    age?: string;
-    yearsOfService?: string;
-  }>({ department: "", gender: "", age: "", yearsOfService: "" });
+    department?: string[];
+    gender?: string[];
+    age?: string[];
+    yearsOfService?: string[];
+  }>({
+    department: [],
+    gender: [],
+    age: [],
+    yearsOfService: [],
+  });
 
   const ageCategories = ["Age 25-35", "Age 35-45", "Age 45+"];
   const yearsOfServiceCategories = ["1-3 years", "3-5 years", "5+ years"];
@@ -83,6 +179,28 @@ const AdminPage: React.FC = () => {
   ]);
 
   const router = useRouter();
+
+  const resetChartData = () => {
+    setRatingsData([
+      { label: "5", values: [0, 0, 0, 0, 0], color: "#C22D7E" },
+      { label: "4", values: [0, 0, 0, 0, 0], color: "#D86393" },
+      { label: "3", values: [0, 0, 0, 0, 0], color: "#E58DA4" },
+      { label: "2", values: [0, 0, 0, 0, 0], color: "#F4B7C8" },
+      { label: "1", values: [0, 0, 0, 0, 0], color: "#F8D1DD" },
+    ]);
+    setPercentageFactorImportance({});
+    setAverageScores({});
+    setAvgQuestionScoresArray({});
+  };
+
+  useEffect(() => {
+    if (searchParams.has("surveyId")) {
+      // Reset the chart data before fetching new data
+      resetChartData();
+      fetchData();
+    }
+  }, [filter, searchParams]);
+
   const fetchEmployees = async () => {
     const idOfSurvey = searchParams.get("surveyId") || "";
     const { data: employees } = await client.models.User.list({
@@ -217,7 +335,10 @@ const AdminPage: React.FC = () => {
     const factorImportanceResponsesFiltered = factorImportanceResponses.filter(
       (response) => response.score === 5
     );
-    console.log("5factorImportanceResponsesFiltered", factorImportanceResponsesFiltered);
+    console.log(
+      "5factorImportanceResponsesFiltered",
+      factorImportanceResponsesFiltered
+    );
 
     // Step 2: Count occurrences of each factor
     const factorImportanceCount = factorImportanceResponsesFiltered.reduce(
@@ -312,57 +433,53 @@ const AdminPage: React.FC = () => {
     var copyListOfEmployees = [...listOfEmployees];
     console.log("listOfEmployees before filtering", listOfEmployees);
 
-    if (filter.department !== "" && filter.gender !== "") {
-      let filtered = copyListOfEmployees.filter(
-        (emp) => emp.department === filter.department
+    if (
+      filter.department &&
+      Array.isArray(filter.department) &&
+      filter.department.length > 0
+    ) {
+      copyListOfEmployees = copyListOfEmployees.filter((emp) =>
+        filter.department?.includes(emp.department)
       );
-      filtered = filtered.filter((emp) => emp.gender === filter.gender);
-      copyListOfEmployees = filtered;
-    } else if (filter.department !== "") {
-      let filtered = copyListOfEmployees.filter(
-        (emp) => emp.department === filter.department
-      );
-      copyListOfEmployees = filtered;
-    } else if (filter.gender !== "") {
-      let filtered = copyListOfEmployees.filter(
-        (emp) => emp.gender === filter.gender
-      );
-      copyListOfEmployees = filtered;
     }
-    if (filter.age) {
-      const ageRange =
-        filter.age === "Age 25-35"
-          ? { min: 25, max: 35 }
-          : filter.age === "Age 35-45"
-          ? { min: 35, max: 45 }
-          : { min: 45, max: 100 }; // Age 45+
 
+    if (
+      filter.gender &&
+      Array.isArray(filter.gender) &&
+      filter.gender.length > 0
+    ) {
+      copyListOfEmployees = copyListOfEmployees.filter((emp) =>
+        filter.gender?.includes(emp.gender)
+      );
+    }
+
+    if (filter.age && Array.isArray(filter.age) && filter.age.length > 0) {
       copyListOfEmployees = copyListOfEmployees.filter((emp) => {
-        if (!emp.dob) {
-          return false;
-        }
         const age = calculateAge(emp.dob);
-        console.log("dob", emp.dob);
-        console.log("age", age);
-        console.log("first name", emp.firstName);
-        return age >= ageRange.min && age <= ageRange.max;
+        return filter.age?.some((ageRange) => {
+          if (ageRange === "Age 25-35") return age >= 25 && age <= 35;
+          if (ageRange === "Age 35-45") return age >= 35 && age <= 45;
+          if (ageRange === "Age 45+") return age >= 45;
+          return false;
+        });
       });
     }
 
-    if (filter.yearsOfService) {
-      const serviceRange =
-        filter.yearsOfService === "1-3 years"
-          ? { min: 1, max: 3 }
-          : filter.yearsOfService === "3-5 years"
-          ? { min: 3, max: 5 }
-          : { min: 5, max: 100 }; // 5+ years
-
+    if (
+      filter.yearsOfService &&
+      Array.isArray(filter.yearsOfService) &&
+      filter.yearsOfService.length > 0
+    ) {
       copyListOfEmployees = copyListOfEmployees.filter((emp) => {
         const yearsOfService = calculateYearsOfService(emp.hireDate);
-        return (
-          yearsOfService >= serviceRange.min &&
-          yearsOfService <= serviceRange.max
-        );
+        return filter.yearsOfService?.some((serviceRange) => {
+          if (serviceRange === "1-3 years")
+            return yearsOfService >= 1 && yearsOfService <= 3;
+          if (serviceRange === "3-5 years")
+            return yearsOfService >= 3 && yearsOfService <= 5;
+          if (serviceRange === "5+ years") return yearsOfService >= 5;
+          return false;
+        });
       });
     }
 
@@ -521,36 +638,6 @@ const AdminPage: React.FC = () => {
     handleFactorChange();
   }, [selectedFactor, allIndividualSurveyResponses]);
 
-  const handleDepartmentChange = (selectedDepartment: string) => {
-    setAvgQuestionScoresArray(() => ({}));
-    setRatingsData(() => [
-      { label: "5", values: [0, 0, 0, 0, 0], color: "#C22D7E" },
-      { label: "4", values: [0, 0, 0, 0, 0], color: "#D86393" },
-      { label: "3", values: [0, 0, 0, 0, 0], color: "#E58DA4" },
-      { label: "2", values: [0, 0, 0, 0, 0], color: "#F4B7C8" },
-      { label: "1", values: [0, 0, 0, 0, 0], color: "#F8D1DD" },
-    ]);
-    setPercentageFactorImportance(() => ({}));
-    setAverageScores(() => ({}));
-
-    setFilter((prev) => ({ ...prev, department: selectedDepartment }));
-  };
-
-  const handleGenderChange = (selectedGender: string) => {
-    setAvgQuestionScoresArray(() => ({}));
-    setRatingsData(() => [
-      { label: "5", values: [0, 0, 0, 0, 0], color: "#C22D7E" },
-      { label: "4", values: [0, 0, 0, 0, 0], color: "#D86393" },
-      { label: "3", values: [0, 0, 0, 0, 0], color: "#E58DA4" },
-      { label: "2", values: [0, 0, 0, 0, 0], color: "#F4B7C8" },
-      { label: "1", values: [0, 0, 0, 0, 0], color: "#F8D1DD" },
-    ]);
-    setPercentageFactorImportance(() => ({}));
-    setAverageScores(() => ({}));
-
-    setFilter((prev) => ({ ...prev, gender: selectedGender }));
-  };
-
   const navItems = [
     {
       label: "📦 Overview",
@@ -577,92 +664,55 @@ const AdminPage: React.FC = () => {
     "Alignment",
   ];
 
-  const handleAgeChange = (selectedAge: string) => {
-    setFilter((prev) => ({ ...prev, age: selectedAge }));
-  };
-
-  const handleYearsOfServiceChange = (selectedYearsOfService: string) => {
-    setFilter((prev) => ({ ...prev, yearsOfService: selectedYearsOfService }));
-  };
-
   return (
     <div className="h-screen flex flex-col">
       <Header userName="Neil Sims" userEmail="neilsimsemail@example.com" />
       <div className="flex flex-1">
         <Sidebar navItems={navItems} />
         <div className="w-4/5 p-3 bg-gray-50">
-          <div className="flex mb-4 space-x-4">
+          <div className="flex mb-4 gap-1">
             {/* Year of Service Dropdown */}
-            <div className="flex items-center">
-            <select
-              className={`p-3 bg-white border rounded-lg shadow-sm focus:outline-none ${
-                filter.yearsOfService
-                  ? "border-blue-600 text-blue-600"
-                  : "border-gray-300"
-              }`}
-              onChange={(e) => handleYearsOfServiceChange(e.target.value)}
-            >
-              <option value="">Year of Service</option>
-              {yearsOfServiceCategories.map((serviceCategory) => (
-                <option key={serviceCategory} value={serviceCategory}>
-                  {serviceCategory}
-                </option>
-              ))}
-            </select>
-          </div>
+            <MultiSelectDropdown
+              label="Department"
+              options={departments}
+              selectedOptions={filter.department}
+              onChange={(selectedDepartments: any) =>
+                setFilter((prev) => ({
+                  ...prev,
+                  department: selectedDepartments,
+                }))
+              }
+            />
 
-          {/* Gender Filter */}
-          <div className="flex items-center">
-            <select
-              className={`p-3 bg-white border rounded-lg shadow-sm focus:outline-none ${
-                filter.gender ? "border-blue-600 text-blue-600" : "border-gray-300"
-              }`}
-              onChange={(e) => handleGenderChange(e.target.value)}
-            >
-              <option value="">Gender</option>
-              {genders.map((gender) => (
-                <option key={gender} value={gender}>
-                  {gender}
-                </option>
-              ))}
-            </select>
-          </div>
+            <MultiSelectDropdown
+              label="Gender"
+              options={genders}
+              selectedOptions={filter.gender}
+              onChange={(selectedGenders: any) =>
+                setFilter((prev) => ({ ...prev, gender: selectedGenders }))
+              }
+            />
 
-          {/* Age Filter */}
-          <div className="flex items-center">
-            <select
-              className={`p-3 bg-white border rounded-lg shadow-sm focus:outline-none ${
-                filter.age ? "border-blue-600 text-blue-600" : "border-gray-300"
-              }`}
-              onChange={(e) => handleAgeChange(e.target.value)}
-            >
-              <option value="">Age</option>
-              {ageCategories.map((ageCategory) => (
-                <option key={ageCategory} value={ageCategory}>
-                  {ageCategory}
-                </option>
-              ))}
-            </select>
-          </div>
+            <MultiSelectDropdown
+              label="Age"
+              options={ageCategories}
+              selectedOptions={filter.age}
+              onChange={(selectedAges: any) =>
+                setFilter((prev) => ({ ...prev, age: selectedAges }))
+              }
+            />
 
-          {/* Department Filter */}
-          <div className="flex items-center">
-            <select
-              className={`p-3 bg-white border rounded-lg shadow-sm focus:outline-none ${
-                filter.department ? "border-blue-600 text-blue-600" : "border-gray-300"
-              }`}
-              onChange={(e) => handleDepartmentChange(e.target.value)}
-            >
-              <option value="">Department</option>
-              {departments.map((dept) => (
-                <option key={dept} value={dept}>
-                  {dept}
-                </option>
-              ))}
-            </select>
-          </div>
-
-            
+            <MultiSelectDropdown
+              label="Years of Service"
+              options={yearsOfServiceCategories}
+              selectedOptions={filter.yearsOfService}
+              onChange={(selectedYearsOfService: any) =>
+                setFilter((prev) => ({
+                  ...prev,
+                  yearsOfService: selectedYearsOfService,
+                }))
+              }
+            />
           </div>
 
           <div className="border p-4 rounded-sm">
@@ -705,7 +755,10 @@ const AdminPage: React.FC = () => {
                   />
                 </div>
                 <div className="w-full h-full">
-                  <AdminBarChart data={avgQuesstionScoresArray} factor={selectedFactor}/>
+                  <AdminBarChart
+                    data={avgQuesstionScoresArray}
+                    factor={selectedFactor}
+                  />
                 </div>
               </div>
             </div>

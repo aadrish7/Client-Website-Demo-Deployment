@@ -25,6 +25,9 @@ const AdminPage: React.FC = () => {
         email: {
           eq: userAttributes.email,
         },
+        role:{
+          eq: "admin"
+        }
       },
     });
     if (usersdata.length === 0) {
