@@ -1,5 +1,3 @@
-'use client';
-
 import React from 'react';
 import Plot from 'react-plotly.js';
 
@@ -13,21 +11,25 @@ const BarChart: React.FC<BarChartProps> = ({ data }) => {
   const sortedNames = Object.keys(data).sort((a, b) => data[b] - data[a]);
   const scores = sortedNames.map(name => data[name]);
   const remainingScores = sortedNames.map(name => 5 - data[name]);
-  const colors = ['#FF7F7F', '#4D9FFF', '#90EE90', '#40E0D0', '#FFD700'];
-  const lightColors = ['#FFE5E5', '#E5F2FF', '#E5FFE5', '#E5FFFF', '#FFFDE5'];
 
-  const colorMap = sortedNames.reduce((acc, name, index) => {
-    acc[name] = colors[index % colors.length];
-    return acc;
-  }, {} as { [key: string]: string });
+  const colorMapping: { [key: string]: string } = {
+    "Psychological Safety": '#0971CE',
+    "Growth Satisfaction": '#6ED34A',
+    "Purpose": '#FEC229',
+    "Advocacy": '#FF5E57',
+    "Flexibility": '#16CAC3',
+  };
 
-  const lightColorMap = sortedNames.reduce((acc, name, index) => {
-    acc[name] = lightColors[index % lightColors.length];
-    return acc;
-  }, {} as { [key: string]: string });
+  const lightColorMapping: { [key: string]: string } = {
+    "Psychological Safety": '#E0F0FC', 
+    "Growth Satisfaction": '#EAFCD9',  
+    "Purpose": '#FFF5D9',             
+    "Advocacy": '#FFE5E4',             
+    "Flexibility": '#D8F9F8',      
+  };
 
-  const chartColors = sortedNames.map(name => colorMap[name]);
-  const chartLightColors = sortedNames.map(name => lightColorMap[name]);
+  const chartColors = sortedNames.map(name => colorMapping[name] || '#D3D3D3'); 
+  const chartLightColors = sortedNames.map(name => lightColorMapping[name] || '#F5F5F5');
 
   return (
     <Plot
@@ -58,12 +60,13 @@ const BarChart: React.FC<BarChartProps> = ({ data }) => {
       layout={{
         barmode: 'stack',
         yaxis: {
-          title: 'Score',
           range: [0, 5],
+          title: undefined, 
         },
         xaxis: {
-          title: 'Factors',
-          automargin: true,  
+          automargin: true,
+          title: undefined,
+          tickangle: -45,  
         },
         margin: {
           b: 100, 

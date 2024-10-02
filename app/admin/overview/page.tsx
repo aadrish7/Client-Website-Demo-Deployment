@@ -11,6 +11,7 @@ import dynamic from "next/dynamic";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import AdminEmployeeComponent from "@/components/adminEmployeeComponent";
+import { data } from '../../../amplify/data/resource';
 
 const PieChart = dynamic(() => import("@/components/adminPieChart"), {
   ssr: false,
@@ -27,6 +28,8 @@ const client = generateClient<Schema>();
 
 const OverviewPage: React.FC = () => {
   const searchParams = useSearchParams();
+  const [surveyName, setSurveyName] = useState<string>("");
+  const [companyName, setComoanyName] = useState<string>("");
   const [percentageFactorImportance, setPercentageFactorImportance] = useState<{
     [key: string]: number;
   }>({});
@@ -89,6 +92,28 @@ const OverviewPage: React.FC = () => {
       return;
     }
     const survey = surveys[0];
+    setSurveyName(survey.surveyName);
+   if (!survey.companyId) {
+      console.error("No company found for survey:", survey);
+      return;
+    } 
+    const { data: companies } = await client.models.Company.list({
+      filter: {
+        id: {
+          eq: survey.companyId,
+        },
+      },
+    });
+    if (companies.length === 0) {
+      console.error("No companies found for survey:", survey);
+      return;
+    }
+    const company = companies[0];
+    if (!company.companyName) {
+      console.error("No company name found for company:", company);
+      return;
+    }
+    setComoanyName(company.companyName);
 
     const { data: factorImportanceResponses } =
     await client.models.FactorImportance.list({
@@ -190,10 +215,10 @@ const OverviewPage: React.FC = () => {
         <div className="w-4/5 p-3 bg-gray-50 flex flex-col">
           {/* Section with charts and summary paragraph */}
           <div className="bg-white p-6 rounded-lg shadow-lg mb-6">
-            <h1 className="text-[20px] font-bold mb-6">
-              Hi <span className="text-blue-500">Company A</span>! Here is your
-              company survey summary.
-            </h1>
+            {surveyName.length > 0 ?(<h1 className="text-[20px] font-bold mb-6">
+              Hi <span className="text-blue-500">{companyName}</span>! Here is your
+              {" "}<span className="text-blue-500">{surveyName} </span> survey summary.
+            </h1>) : (<h1 className="text-[20px] font-bold mb-6"></h1>)}
 
             <div className="flex mb-6">
               {/* Pie Chart Section */}

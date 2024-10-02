@@ -70,7 +70,7 @@ const QuestionsComponent: React.FC = () => {
   const steps = ["Create Account", "Assessment", "Survey Results"];
 
   async function handleFinish() {
-    setIsViewingResults(() => true);
+    console.log("in handle finish")
     const updatedSelections: Record<
       string,
       { questionId: string | undefined; selection: string }[]
@@ -111,11 +111,10 @@ const QuestionsComponent: React.FC = () => {
             score: value || 0,
           });
       }
-      setIsFinished(() => false);
-      setIsViewingResults(() => false);
+
+      setIsFinished(() => true);
       // setCurrentQuestionNumber((prev) => prev + 1);
       setCurrentStep((currentStep) => currentStep + 1);
-      setViewSurveyResults(() => true);
     } catch (error) {
       console.error("Error saving data:", error);
     }
@@ -135,12 +134,14 @@ const QuestionsComponent: React.FC = () => {
     });
   };
 
-  const handleFactorImportanceButton = () => {
+  const handleFactorImportanceButton = async() => {
     if (Object.values(selectedValues).includes(null)) {
       alert("Please rate all categories before proceeding");
       return;
     }
+    await handleFinish();
     setFactorImportanceBool(() => false);
+    setIsFinished(() => true);
   };
 
   const getQuestions = async () => {
@@ -277,7 +278,7 @@ const QuestionsComponent: React.FC = () => {
 
       const validQuestions = questionList.filter((q) => q !== null);
 
-      setTotalQuestions(() => validQuestions.length);
+      setTotalQuestions(() => validQuestions.length+1);
 
       const questionsByFactor: QuestionsByFactor = {};
       validQuestions.forEach((question: any) => {
@@ -375,7 +376,6 @@ const QuestionsComponent: React.FC = () => {
 
   const handleFirstAttempt = () => {
     setFirstAttempt(() => false);
-    setFactorImportanceBool(() => true);
   };
 
   const handleNextQuestion = () => {
@@ -383,7 +383,6 @@ const QuestionsComponent: React.FC = () => {
     if (!selectedOption) return;
 
     const factorQuestions = questionsByFactor[currentFactor];
-
     // Save the selected option before moving to the next question
     if (selectedOption !== null) {
       setUserSelections((prevSelections) => {
@@ -423,7 +422,8 @@ const QuestionsComponent: React.FC = () => {
         setSelectedOption(existingSelection); // Set the previously selected option or null
         setCurrentQuestionNumber((prev) => prev + 1);
       } else {
-        setIsFinished(true);
+        console.warn("No more questions available.");
+        setFactorImportanceBool(() => true);
         setCurrentQuestionNumber((prev) => prev + 1);
         setCurrentStep((currentStep) => currentStep + 1);
       }
@@ -446,8 +446,11 @@ const QuestionsComponent: React.FC = () => {
         }
       }
     }
-
-    return averages;
+    //sort the averages
+    const sortedAverages = Object.fromEntries(
+      Object.entries(averages).sort(([, a], [, b]) => b - a)
+    );
+    return sortedAverages;
   };
 
   if (viewSurveyResults) {
@@ -536,7 +539,7 @@ const QuestionsComponent: React.FC = () => {
             className={`bg-blue-600 text-white rounded px-2 py-2 ${
               isViewingResults ? "opacity-50 cursor-not-allowed" : ""
             }`}
-            onClick={handleFinish}
+            onClick={() => setViewSurveyResults(() => true)}
             disabled={isViewingResults}
           >
             {isViewingResults ? "Viewing Reports..." : "View Report"}
@@ -586,14 +589,15 @@ const QuestionsComponent: React.FC = () => {
             <p>Total Number of Prompts: {totalQuestions}</p>
             <p>Estimated Time Required: 10-15 minutes</p>
           </section>
-
+        </main>
+        <div className="h-20 flex items-center justify-center">
           <button
             onClick={handleFirstAttempt}
             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300"
           >
             Start Survey
           </button>
-        </main>
+        </div>
       </div>
     );
   }
@@ -606,6 +610,8 @@ const QuestionsComponent: React.FC = () => {
           onSelectionChange={handleSelection}
           factorImportanceBool={factorImportanceBool}
           onButtonClick={handleFactorImportanceButton}
+          currentQuestionNumber={currentQuestionNumber}
+          totalQuestions={totalQuestions}
         />
       </>
     );
@@ -673,7 +679,7 @@ const QuestionsComponent: React.FC = () => {
             currentQuestionIndex === currentQuestions.length - 1 &&
             Object.keys(questionsByFactor).indexOf(currentFactor) ===
               Object.keys(questionsByFactor).length - 1
-              ? () => setIsFinished(true)
+              ? handleNextQuestion
               : handleNextQuestion
           }
           disabled={selectedOption === null}
