@@ -72,7 +72,7 @@ const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({
     : "text-gray-700 border-gray-300";
 
   return (
-    <div className="relative inline-block text-left w-full">
+    <div className="relative inline-block text-left w-3/5">
       <div>
         {/* Dropdown Button */}
         <button
@@ -670,7 +670,7 @@ const AdminPage: React.FC = () => {
       <div className="flex flex-1">
         <Sidebar navItems={navItems} />
         <div className="w-4/5 p-3 bg-gray-50">
-          <div className="flex mb-4 gap-1">
+          <div className="flex mb-4 gap-0.5">
             {/* Year of Service Dropdown */}
             <MultiSelectDropdown
               label="Department"
