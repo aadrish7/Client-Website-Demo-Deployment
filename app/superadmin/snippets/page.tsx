@@ -242,8 +242,7 @@ const SuperAdminMainPage: React.FC = () => {
       ],
     },
     { label: '🏢 Company', active: false, href: '/superadmin' },
-    { label: '📊 Analytics', active: false, href: '/analytics' },
-    { label: '💬 Help', active: false, href: '/help' }
+    { label: "📊 Analytics", active: true, href: "/superadmin/analytics" },
   ].filter(item => item !== undefined); 
 
   return (

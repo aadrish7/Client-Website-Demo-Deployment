@@ -283,7 +283,7 @@ const SuperAdminMainPage: React.FC = () => {
     },
 
     { label: "🏢 Company", active: true, href: "/superadmin" },
-    { label: "📊 Analytics", active: false, href: "/analytics" },
+    { label: "📊 Analytics", active: true, href: "/superadmin/analytics" },
   ].filter((item) => item !== undefined);
 
   const handleClosePopUp = () => {
