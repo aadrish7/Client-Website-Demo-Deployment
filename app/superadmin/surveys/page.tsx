@@ -370,7 +370,7 @@ const SurveysPage = () => {
       ],
     },
     { label: "🏢 Company", active: true, href: "/superadmin" },
-    { label: "📊 Analytics", active: true, href: "/superadmin/analytics" },
+    { label: "📊 Analytics", active: false, href: "/superadmin/analytics" },
   ].filter((item) => item !== undefined);
 
   return (
