@@ -186,7 +186,7 @@ const OverviewPage: React.FC = () => {
       fetchData();
 
     }
-  });
+  }, [searchParams]);
   const getSnippets = async () => {
     const { data: overviewSnippets } = await client.models.OverviewTextSnippet.list({});
 

@@ -72,8 +72,9 @@ const QuestionsComponent: React.FC = () => {
 
   const steps = ["Create Account", "Assessment", "Survey Results"];
   const email = useUserStore((state) => state.userEmail);
+
   async function handleFinish() {
-    console.log("in handle finish")
+    console.log("in handle finish");
     const updatedSelections: Record<
       string,
       { questionId: string | undefined; selection: string }[]
@@ -144,7 +145,7 @@ const QuestionsComponent: React.FC = () => {
     });
   };
 
-  const handleFactorImportanceButton = async() => {
+  const handleFactorImportanceButton = async () => {
     if (Object.values(selectedValues).includes(null)) {
       alert("Please rate all categories before proceeding");
       return;
@@ -198,8 +199,8 @@ const QuestionsComponent: React.FC = () => {
 
       const survey = SurveyList[0];
 
-      const {data : Overview_Snippets} = await client.models.OverviewTextSnippet.list({
-      });
+      const { data: Overview_Snippets } =
+        await client.models.OverviewTextSnippet.list({});
 
       setSnippets(Overview_Snippets);
 
@@ -238,18 +239,48 @@ const QuestionsComponent: React.FC = () => {
       );
       setArrOfSnippetIds(() => validSnippetIds);
 
-      // const { data: AverageSurveyResults } =
-      //   await client.models.AverageSurveyResults.list({
-      //     filter: {
-      //       surveyId: { eq: survey.id },
-      //       userId: { eq: finalUser.id },
-      //     },
-      //   });
+      const { data: averageSurveyResponses } =
+        await client.models.AverageSurveyResults.list({
+          filter: {
+            surveyId: { eq: survey.id },
+            userId: { eq: finalUser.id },
+          },
+        });
 
-      // if (AverageSurveyResults && AverageSurveyResults.length > 0) {
-      //   setNoQuestions(true);
-      //   return null;
-      // }
+      if (averageSurveyResponses && averageSurveyResponses.length > 0) {
+        const allanswersjson = averageSurveyResponses[0].averageScorejson;
+        if (!allanswersjson) {
+          throw new Error("No answers found in average survey results");
+        }
+        const allResponses: any[] = [];
+        averageSurveyResponses.forEach((response) => {
+          if (typeof response.averageScorejson === "string") {
+            const surveyResponse = JSON.parse(response.averageScorejson);
+            allResponses.push(surveyResponse);
+          } else {
+            console.error(
+              "Invalid type for averageScorejson:",
+              typeof response.averageScorejson
+            );
+          }
+        });
+        //convert into userSelections type
+        const userSelections: UserSelections = {};
+        allResponses.forEach((response) => {
+          for (const key in response) {
+            if (!userSelections[key]) {
+              userSelections[key] = [];
+            }
+            userSelections[key].push(response[key]);
+          }
+        });
+        console.log("userSelections", userSelections);
+
+        setCurrentStep((currentStep) => currentStep + 1);
+        setUserSelections(() => userSelections);
+        setViewSurveyResults(() => true);
+        return null;
+      }
 
       const { data: collections } = await client.models.Collection.list({
         filter: {
@@ -294,7 +325,7 @@ const QuestionsComponent: React.FC = () => {
 
       const validQuestions = questionList.filter((q) => q !== null);
 
-      setTotalQuestions(() => validQuestions.length+1);
+      setTotalQuestions(() => validQuestions.length + 1);
 
       const questionsByFactor: QuestionsByFactor = {};
       validQuestions.forEach((question: any) => {
@@ -478,8 +509,9 @@ const QuestionsComponent: React.FC = () => {
           const factorScore = averageSurveyResults[snippet.factor];
           return factorScore && isScoreInRange(factorScore, snippet.score);
         });
-      
-        setMatchingSnippets(matchedSnippets.reverse()); }
+
+        setMatchingSnippets(matchedSnippets.reverse());
+      }
     }
   }, [viewSurveyResults]);
 
@@ -502,7 +534,7 @@ const QuestionsComponent: React.FC = () => {
             <h3 className="text-lg font-semibold text-gray-800">Overview</h3>
             <p className="text-gray-600 mt-2">
               {matchingSnippets.map((snippet: any, index: any) => (
-                <span key={index}>{snippet.snippetText} {" "}</span>
+                <span key={index}>{snippet.snippetText} </span>
               ))}
             </p>
             <MetricsBreakdown
@@ -533,9 +565,12 @@ const QuestionsComponent: React.FC = () => {
 
   if (!currentFactor) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-100">
-        <div className="text-gray-600 text-lg font-medium">
-          Loading questions...
+      <div className="bg-gray-100 min-h-screen">
+        <Header userName="" userEmail="" />
+        <div className="flex items-center justify-center h-screen bg-gray-100">
+          <div className="text-gray-600 text-lg font-medium">
+            Loading questions...
+          </div>
         </div>
       </div>
     );
@@ -591,7 +626,7 @@ const QuestionsComponent: React.FC = () => {
             <p className="text-gray-700">
               This assessment is not a measure of competence, it's a measure of{" "}
               <strong>engagement</strong> -- the more honest you are, the more
-              the results will can be applied to improve the culture around you.
+              the results can be applied to improve the culture around you.
             </p>
           </section>
 
