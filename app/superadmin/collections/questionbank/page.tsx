@@ -231,7 +231,7 @@ const QuestionsPage: React.FC = () => {
       ],
     },
     { label: '🏢 Company', active: false, href: '/superadmin' },
-    { label: "📊 Analytics", active: true, href: "/superadmin/analytics" },
+    { label: "📊 Analytics", active: false, href: "/superadmin/analytics" },
   ].filter(item => item !== undefined);
 
   const handleModalClose = () => setIsModalOpen(false);

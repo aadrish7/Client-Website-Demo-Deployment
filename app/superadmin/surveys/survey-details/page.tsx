@@ -292,7 +292,7 @@ const SurveyDetailsPage = () => {
     },
     
     { label: '🏢 Company', active: true, href: '/superadmin' },
-    { label: "📊 Analytics", active: true, href: "/superadmin/analytics" },
+    { label: "📊 Analytics", active: false, href: "/superadmin/analytics" },
   ];
 
   const handleEmployeesCreated = () => {
