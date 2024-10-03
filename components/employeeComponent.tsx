@@ -471,12 +471,15 @@ const QuestionsComponent: React.FC = () => {
   useEffect(() => {
     if (viewSurveyResults) {
       const averageSurveyResults = calculateAverages(userSelections);
+      console.log("averageSurveyResults", averageSurveyResults);
+
       if (snippets.length > 0) {
         const matchedSnippets = snippets.filter((snippet: any) => {
           const factorScore = averageSurveyResults[snippet.factor];
           return factorScore && isScoreInRange(factorScore, snippet.score);
         });
-        setMatchingSnippets(matchedSnippets); }
+      
+        setMatchingSnippets(matchedSnippets.reverse()); }
     }
   }, [viewSurveyResults]);
 
