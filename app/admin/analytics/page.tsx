@@ -135,7 +135,7 @@ type RatingData = {
   values: number[];
   color: string;
 };
-const ageCategories = ["Age 25-35", "Age 35-45", "Age 45+"];
+const ageCategories = ["Age 18-24", "Age 25-35", "Age 35-45", "Age 45+"];
 
 const AdminPage: React.FC = () => {
   const searchParams = useSearchParams();
@@ -152,7 +152,7 @@ const AdminPage: React.FC = () => {
     yearsOfService: [],
   });
 
-  const ageCategories = ["Age 25-35", "Age 35-45", "Age 45+"];
+  const ageCategories = ["Age 18-24", "Age 25-35", "Age 35-45", "Age 45+"];
   const yearsOfServiceCategories = ["1-3 years", "3-5 years", "5+ years"];
 
   const [departments, setDepartments] = useState<string[]>([]);
@@ -457,6 +457,7 @@ const AdminPage: React.FC = () => {
       copyListOfEmployees = copyListOfEmployees.filter((emp) => {
         const age = calculateAge(emp.dob);
         return filter.age?.some((ageRange) => {
+          if (ageRange === "Age 18-24") return age >= 18 && age <= 24;
           if (ageRange === "Age 25-35") return age >= 25 && age <= 35;
           if (ageRange === "Age 35-45") return age >= 35 && age <= 45;
           if (ageRange === "Age 45+") return age >= 45;
@@ -464,6 +465,7 @@ const AdminPage: React.FC = () => {
         });
       });
     }
+    
 
     if (
       filter.yearsOfService &&
