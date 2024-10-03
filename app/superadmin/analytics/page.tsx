@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { generateClient } from "aws-amplify/data";
 import { Schema } from "@/amplify/data/resource";
 import { Amplify } from "aws-amplify";
@@ -144,4 +144,10 @@ const Analytics = () => {
 }
 
 
-export default Analytics;
+export default function(){
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <Analytics />
+    </Suspense>
+  )
+}

@@ -10,6 +10,7 @@ import Header from "@/components/superadminHeader";
 import { fetchUserAttributes } from "aws-amplify/auth";
 import Sidebar from "@/components/superadminSidebar";
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
 
 Amplify.configure(outputs);
@@ -216,4 +217,10 @@ const AdminPage: React.FC = () => {
   );
 };
 
-export default AdminPage;
+export default function(){
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AdminPage />
+    </Suspense>
+  )
+}
