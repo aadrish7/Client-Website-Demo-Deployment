@@ -31,6 +31,10 @@ const BarChart: React.FC<BarChartProps> = ({ data }) => {
   const chartColors = sortedNames.map(name => colorMapping[name] || '#D3D3D3'); 
   const chartLightColors = sortedNames.map(name => lightColorMapping[name] || '#F5F5F5');
 
+  const coloredTickText = sortedNames.map(
+    name => `<span style="color:${colorMapping[name] || '#000'}">${name}</span>`
+  );
+
   return (
     <Plot
       data={[
@@ -45,6 +49,7 @@ const BarChart: React.FC<BarChartProps> = ({ data }) => {
           textfont: {
             color: 'white',
           },
+          hoverinfo: 'none', // Disable hover information for the 'Score' bars
           showlegend: false,  
         },
         {
@@ -53,7 +58,7 @@ const BarChart: React.FC<BarChartProps> = ({ data }) => {
           type: 'bar',
           name: 'Remaining',
           marker: { color: chartLightColors },
-          hoverinfo: 'none',
+          hoverinfo: 'none', // Disable hover information for the 'Remaining' bars
           showlegend: false,  
         },
       ]}
@@ -66,6 +71,8 @@ const BarChart: React.FC<BarChartProps> = ({ data }) => {
         xaxis: {
           automargin: true,
           title: undefined,
+          tickvals: sortedNames,
+          ticktext: coloredTickText,
           tickangle: -45,  
         },
         margin: {
@@ -73,6 +80,7 @@ const BarChart: React.FC<BarChartProps> = ({ data }) => {
         },
         showlegend: false, 
       }}
+      config={{ displayModeBar: false }} 
       style={{ width: '100%', height: '100%' }}
     />
   );

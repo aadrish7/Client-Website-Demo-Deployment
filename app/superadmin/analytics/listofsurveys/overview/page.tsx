@@ -642,20 +642,56 @@ const AdminPage: React.FC = () => {
 
   const navItems = [
     {
-      label: "📦 Overview",
+      label: "📦 Collections",
       active: false,
-      href: `/admin/overview?surveyId=${searchParams.get("surveyId")}`,
+      subItems: [
+        {
+          label: "📋 Question Bank",
+          active: false,
+          href: "/superadmin/collections/questionbank",
+        },
+        {
+          label: "📦 Collection",
+          active: false,
+          href: "/superadmin/collections/collection",
+        },
+      ],
     },
     {
-      label: "📊 Analytics",
-      active: true,
-      href: `/admin/analytics?surveyId=${searchParams.get("surveyId")}`,
+      label: "📦 Snippets",
+      active: false,
+      subItems: [
+        {
+          label: "📋 Snippet Bank",
+          active: false,
+          href: "/superadmin/snippets",
+        },
+        {
+          label: "📦 Snippet Set",
+          active: false,
+          href: "/superadmin/snippets/snippetset",
+        },
+      ],
     },
     {
-      label: "🏢 Employees",
+      label: "📦 Overview Snippets",
       active: false,
-      href: `/admin/employees?surveyId=${searchParams.get("surveyId")}`,
+      subItems: [
+        {
+          label: "📋 Snippet Bank",
+          active: false,
+          href: "/superadmin/overviewsnippets",
+        },
+        {
+          label: "📦 Snippet Set",
+          active: false,
+          href: "/superadmin/overviewsnippets/overviewsnippetset",
+        },
+      ],
     },
+
+    { label: "🏢 Company", active: false, href: "/superadmin" },
+    { label: "📊 Analytics", active: true, href: "/superadmin/analytics" },
   ].filter((item) => item !== undefined);
 
   const categories = [

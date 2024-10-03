@@ -115,7 +115,7 @@ export default function SignInPage() {
               />
             </div>
 
-            <div className="mb-3">
+            {/* <div className="mb-3">
               <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="role">
                 Select your role
               </label>
@@ -130,7 +130,7 @@ export default function SignInPage() {
                 <option value="employee">Employee</option>
                 <option value="superadmin">Super Admin</option>
               </select>
-            </div>
+            </div> */}
 
             {errorMessage && (
               <p className="text-red-500 text-sm mb-3">{errorMessage}</p>

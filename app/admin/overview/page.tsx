@@ -186,7 +186,7 @@ const OverviewPage: React.FC = () => {
       fetchData();
 
     }
-  });
+  }, [searchParams]);
   const getSnippets = async () => {
     const { data: overviewSnippets } = await client.models.OverviewTextSnippet.list({});
 
@@ -198,19 +198,32 @@ const OverviewPage: React.FC = () => {
   }
   useEffect(() => {
     const findMatchingSnippets = async () => {
-
-    
       if (Object.keys(averageScores).length > 0) {
+        // Convert the averageScores object to an array of entries and sort it by the score value
+        const sortedScores = Object.entries(averageScores).sort(([, scoreA], [, scoreB]) => scoreB - scoreA);
+
+        console.log("sortedScores", sortedScores);
+    
+        // Fetch the snippets
         const snippets = await getSnippets();
         if (!snippets) {
           console.error("No snippets found for company:");
           return;
         }
+    
+        // Filter snippets based on sortedScores
         const matchedSnippets = snippets.filter((snippet: any) => {
-          const factorScore = averageScores[snippet.factor];
+          // Find the factorScore from the sorted averageScores
+          const factorScoreEntry = sortedScores.find(([factor]) => factor === snippet.factor);
+          const factorScore = factorScoreEntry ? factorScoreEntry[1] : null;
           return factorScore && isScoreInRange(factorScore, snippet.score);
         });
-        setMatchingSnippets(matchedSnippets); }}
+    
+        // Reverse the matchedSnippets and set them
+        setMatchingSnippets(matchedSnippets);
+      }
+    };
+    
     findMatchingSnippets();
     
   }, [averageScores]);
