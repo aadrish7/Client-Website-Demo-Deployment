@@ -24,17 +24,45 @@ const CSVUploadModal: React.FC<{
     null
   );
   const [isCreating, setIsCreating] = useState(false);
+  const [error, setError] = useState<string | null>(null); // Track errors
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setError(null); // Reset error on new file selection
     const file = event.target.files?.[0];
     if (!file) return;
+
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
       complete: (result) => {
-        const data = result.data as { Factor: string; Questions: string }[];
-        const groupedQuestions = groupQuestionsByFactor(data);
-        setParsedData(groupedQuestions);
+        // Check for parsing errors
+        if (result.errors.length > 0) {
+          console.error(result.errors); // Log for debugging
+          setError("Error parsing the CSV file. Please check the file format.");
+          return;
+        }
+
+        // Validate the parsed data
+        try {
+          const data = result.data as { Factor: string; Questions: string }[];
+
+          // Check if CSV has the required columns and non-empty rows
+          if (data.length === 0 || !data[0].Factor || !data[0].Questions) {
+            setError(
+              "Invalid CSV format. Ensure the CSV contains 'Factor' and 'Questions' columns."
+            );
+            return;
+          }
+
+          const groupedQuestions = groupQuestionsByFactor(data);
+          setParsedData(groupedQuestions);
+        } catch (err) {
+          setError("Error processing the CSV data.");
+        }
+      },
+      error: (error) => {
+        // Handle file reading errors
+        setError("Error reading the CSV file. Please try again.");
       },
     });
   };
@@ -55,8 +83,16 @@ const CSVUploadModal: React.FC<{
   const handleCreate = async () => {
     if (parsedData) {
       setIsCreating(true);
-      await onUpload(parsedData);
-      setIsCreating(false);
+      setError(null); // Reset error before starting upload
+      try {
+        await onUpload(parsedData);
+      } catch (err) {
+        setError("Error uploading the data. Please try again.");
+      } finally {
+        setIsCreating(false);
+      }
+    } else {
+      setError("No data available to upload.");
     }
   };
 
@@ -64,6 +100,10 @@ const CSVUploadModal: React.FC<{
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-10">
       <div className="bg-white p-6 rounded-md shadow-lg w-full max-w-md max-h-[80vh] overflow-y-auto">
         <h2 className="text-lg font-semibold mb-7">Upload Questions CSV</h2>
+
+        {/* Display error message if any */}
+        {error && <p className="text-red-600 mb-4">{error}</p>}
+
         <input
           type="file"
           accept=".csv"
@@ -96,6 +136,9 @@ const CSVUploadModal: React.FC<{
     </div>
   );
 };
+
+
+
 
 const EditQuestionModal: React.FC<{
   question: any;
