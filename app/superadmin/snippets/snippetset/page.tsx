@@ -133,19 +133,19 @@ const SnippetSetsPage: React.FC = () => {
   const [tableHeaders, setTableHeaders] = useState<string[]>([]);
   const [tableData, setTableData] = useState<Record<string, string>[]>([]);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const router = useRouter();
 
+  // Fetch snippet sets from the server
   const fetchSnippetSets = async () => {
     try {
       const { data: snippetSetList } = await client.models.SnippetSet.list({});
-      setTableHeaders(() => ["name", "tags", "number"]);
+      setTableHeaders(["name", "tags", "number"]);
       setTableData(
         snippetSetList.map((set) => ({
           name: set.name || "",
           tags: set.tags || "",
-          "number": set.textSnippets
-            ? set.textSnippets.length.toString()
-            : "0", 
+          number: set.textSnippets ? set.textSnippets.length.toString() : "0",
         }))
       );
     } catch (error) {
@@ -157,60 +157,18 @@ const SnippetSetsPage: React.FC = () => {
     fetchSnippetSets();
   }, []);
 
-  const navItems = [
-    {
-      label: "📦 Collections",
-      active: false,
-      subItems: [
-        {
-          label: "📋 Question Bank",
-          active: false,
-          href: "/superadmin/collections/questionbank",
-        },
-        {
-          label: "📦 Collection",
-          active: false,
-          href: "/superadmin/collections/collection",
-        },
-      ],
-    },
-    {
-      label: "📦 Snippets",
-      active: true,
-      subItems: [
-        {
-          label: "📋 Snippet Bank",
-          active: false,
-          href: "/superadmin/snippets",
-        },
-        {
-          label: "📦 Snippet Set",
-          active: true,
-          href: "/superadmin/snippets/snippetset",
-        },
-      ],
-    },
-    {
-      label: "📦 Overview Snippets",
-      active: false,
-      subItems: [
-        {
-          label: "📋 Snippet Bank",
-          active: false,
-          href: "/superadmin/overviewsnippets",
-        },
-        {
-          label: "📦 Snippet Set",
-          active: false,
-          href: "/superadmin/overviewsnippets/overviewsnippetset",
-        },
-      ],
-    },
-    { label: "🏢 Company", active: false, href: "/superadmin" },
-    { label: "📊 Analytics", active: false, href: "/superadmin/analytics" },
-  ].filter((item) => item !== undefined);
-
-  const handleModalClose = () => setIsModalOpen(false);
+  // Sorting function for Tags column
+  const handleSortTags = () => {
+    const sortedData = [...tableData].sort((a, b) => {
+      if (sortDirection === "asc") {
+        return a.tags.localeCompare(b.tags);
+      } else {
+        return b.tags.localeCompare(a.tags);
+      }
+    });
+    setTableData(sortedData);
+    setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+  };
 
   const handleSnippetSetClick = (setName: string) => {
     router.push(`snippetset/details?name=${encodeURIComponent(setName)}`);
@@ -218,7 +176,7 @@ const SnippetSetsPage: React.FC = () => {
 
   const handleCreateSnippetSet = () => {
     setIsModalOpen(false);
-    fetchSnippetSets(); // Refresh the table after creating a snippet set
+    fetchSnippetSets();
   };
 
   return (
@@ -236,12 +194,58 @@ const SnippetSetsPage: React.FC = () => {
 
           <div className="border p-4">
             {tableData && tableHeaders ? (
-              <Table
-                headers={tableHeaders}
-                data={tableData}
-                handleClick={handleSnippetSetClick}
-                underlineColumn="name"
-              />
+              <div className="overflow-x-auto border border-gray-200 rounded-md">
+                <table className="min-w-full bg-white divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      {tableHeaders.map((header, index) => (
+                        <th
+                          key={index}
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          {header === "tags" ? (
+                            <div className="flex items-center">
+                              Tags
+                              <button
+                                className="ml-2"
+                                onClick={handleSortTags}
+                                title="Sort Tags"
+                              >
+                                {sortDirection === "asc" ? "↑" : "↓"}
+                              </button>
+                            </div>
+                          ) : (
+                            header
+                          )}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {tableData.map((row, rowIndex) => (
+                      <tr key={rowIndex}>
+                        {tableHeaders.map((header, colIndex) => (
+                          <td
+                            key={colIndex}
+                            className={`px-6 py-4 whitespace-nowrap text-sm ${
+                              header.toLowerCase() === "name"
+                                ? "text-blue-500 font-bold cursor-pointer"
+                                : ""
+                            }`}
+                            onClick={() => {
+                              if (header.toLowerCase() === "name") {
+                                handleSnippetSetClick(row[header]);
+                              }
+                            }}
+                          >
+                            {row[header]}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             ) : (
               <p>Loading Snippet Sets...</p>
             )}
@@ -252,7 +256,7 @@ const SnippetSetsPage: React.FC = () => {
       {/* Modal for creating a new snippet set */}
       {isModalOpen && (
         <CreateSnippetSetModal
-          onClose={handleModalClose}
+          onClose={() => setIsModalOpen(false)}
           onCreate={handleCreateSnippetSet}
         />
       )}

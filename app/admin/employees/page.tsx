@@ -5,7 +5,7 @@ import { Schema } from "@/amplify/data/resource";
 import { Amplify } from "aws-amplify";
 import outputs from "@/amplify_outputs.json";
 import Header from "@/components/superadminHeader";
-import Sidebar from "@/components/superadminSidebar";
+import Sidebar from "@/components/adminSideBar";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import Breadcrumb from "@/components/breadCrumb";
@@ -311,7 +311,7 @@ const EmployeesPage: React.FC = () => {
     <div className="h-screen flex flex-col">
       <Header userName="Neil Sims" userEmail="neilsimsemail@example.com" />
       <div className="flex flex-1">
-        <Sidebar navItems={navItems} />
+        <Sidebar activePath="/admin/employees" />
         <div className="w-4/5 p-8 bg-gray-50">
         <Breadcrumb/>
         <div className="bg-white p-4">
