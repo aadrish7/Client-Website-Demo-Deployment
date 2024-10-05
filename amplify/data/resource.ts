@@ -1,4 +1,5 @@
 import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
+import { disable } from "aws-amplify/analytics";
 
 /*== STEP 1 ===============================================================
 The section below creates a Todo database table with a "content" field. Try
@@ -72,6 +73,7 @@ const schema = a.schema({
       factor: a.string().required(),
       questionText: a.string().required(),
       options: a.string().array(),
+      disabled: a.boolean().default(false),
     })
     .authorization((allow) => [allow.publicApiKey()]),
 
@@ -98,6 +100,7 @@ const schema = a.schema({
       factor: a.string().required(),
       score: a.integer().required(),
       snippetText: a.string().required(),
+      type : a.enum(["admin", "employee", "normal"]),
     })
     .authorization((allow) => [allow.publicApiKey()]),
   

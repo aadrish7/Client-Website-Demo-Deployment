@@ -12,14 +12,15 @@ type Props = {
   factors: Record<string, number>;
   arrOfTextSnippetsId: string[];
   selectedMetric: string;
+  snippets: any[];
 };
 
 const TextSnippetDisplay: React.FC<Props> = ({
   factors,
   arrOfTextSnippetsId,
   selectedMetric,
+  snippets,
 }) => {
-  const [snippets, setSnippets] = useState<any>([]);
   const [matchingSnippets, setMatchingSnippets] = useState<any>([]);
 
   const isScoreInRange = (score: number, range: Number): boolean => {
@@ -30,29 +31,10 @@ const TextSnippetDisplay: React.FC<Props> = ({
   };
 
   useEffect(() => {
-    const fetchTextSnippets = async () => {
-      try {
-        let snippets = [];
-        for (const snippetId of arrOfTextSnippetsId) {
-          const snippet = await client.models.TextSnippet.get({
-            id: snippetId,
-          });
-          snippets.push(snippet);
-        }
-        setSnippets(snippets);
-      } catch (error) {
-        console.error("Failed to fetch text snippets:", error);
-      }
-    };
-
-    fetchTextSnippets();
-  }, []);
-
-  useEffect(() => {
     if (snippets.length > 0) {
       const matchedSnippets = snippets.filter((snippet: any) => {
-        const factorScore = factors[snippet.data.factor];
-        return factorScore && isScoreInRange(factorScore, snippet.data.score);
+        const factorScore = factors[snippet[0].factor];
+        return factorScore && isScoreInRange(factorScore, snippet[0].score);
       });
       setMatchingSnippets(matchedSnippets);
     }
@@ -63,9 +45,13 @@ const TextSnippetDisplay: React.FC<Props> = ({
       {matchingSnippets.length > 0 ? (
         <p className="text-sm text-gray-700 leading-relaxed">
           {matchingSnippets
-            .filter((snippet: any) => snippet.data.factor === selectedMetric)
+            .filter(
+              (snippet: any) =>
+                snippet[0].type === "normal" &&
+                snippet[0].factor === selectedMetric
+            )
             .map((snippet: any, index: any) => (
-              <span key={index}>{snippet.data.snippetText} </span>
+              <span key={index}>{snippet[0].snippetText} </span>
             ))}
         </p>
       ) : null}

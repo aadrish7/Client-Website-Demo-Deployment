@@ -188,7 +188,13 @@ const OverviewPage: React.FC = () => {
     }
   }, [searchParams]);
   const getSnippets = async () => {
-    const { data: overviewSnippets } = await client.models.OverviewTextSnippet.list({});
+    const { data: overviewSnippets } = await client.models.TextSnippet.list({
+      filter:{
+        type : {
+          eq : "admin"
+        }
+      }
+    });
 
     if (overviewSnippets.length === 0) {
       console.error("No snippets found for company:");

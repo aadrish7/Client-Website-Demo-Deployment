@@ -1,8 +1,7 @@
 import React from 'react';
-import Image from "@/public/logo.jpg"
+import Image from "@/public/logo.jpg";
 import useUserStore from "@/store/userStore";
 import SignOutButton from "@/components/signoutButton";
-import CustomButton from "@/components/customButton"
 import { useRouter } from "next/navigation";
 
 interface HeaderProps {
@@ -18,15 +17,21 @@ const AdminHeader: React.FC<HeaderProps> = ({ userName, userEmail }) => {
 
   userName = userRole || "";
   userEmail = email || "";
+
+  const handleLogoClick = () => {
+    router.push('/');
+  };
+
   return (
     <div className="w-full bg-white p-6 h-16 flex justify-between items-center border">
-    <img src={Image.src} alt="Logo" className="mr-4" width={60} height={60}/>
-    <div className="flex flex-col items-end text-gray-600 space-y-2 flex-grow">
-      <span className="font-bold">{userName}-[<SignOutButton/>]</span>
-      <span>{userEmail}</span>
+      <div onClick={handleLogoClick} className="cursor-pointer">
+        <img src={Image.src} alt="Logo" className="mr-4" width={60} height={60} />
+      </div>
+      <div className="flex flex-col items-end text-gray-600 space-y-2 flex-grow">
+        <span className="font-bold">{userName} - [<SignOutButton />]</span>
+        <span>{userEmail}</span>
+      </div>
     </div>
-  </div>
-  
   );
 };
 

@@ -229,8 +229,8 @@ const EmployeesPage: React.FC = () => {
       department: surveyResponse?.department || "",
       email: surveyResponse?.email || "",
       status: attemptedSurveyUserIds.includes(surveyResponse.id)
-        ? "Attempted"
-        : "Not Attempted",
+        ? "Completed"
+        : "Not Started",
     }));
     setTableData(employees);
     setFilteredData(employees);
@@ -280,9 +280,9 @@ const EmployeesPage: React.FC = () => {
   };
 
   const getStatusStyle = (status: string) => {
-    if (status === "Attempted") {
+    if (status === "Completed") {
       return "inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-medium bg-green-100 text-green-800";
-    } else if (status === "Not Attempted") {
+    } else if (status === "Not Started") {
       return "inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-medium bg-red-100 text-red-800";
     }
     return "";

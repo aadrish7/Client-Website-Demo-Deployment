@@ -23,7 +23,9 @@ const CreateCollectionModal: React.FC<{ onClose: () => void; onCreate: () => voi
     useEffect(() => {
       const fetchQuestions = async () => {
         try {
-          const { data: questionList } = await client.models.Question.list({});
+          const { data: questionList } = await client.models.Question.list({
+            filter: { disabled: { eq: false } },
+          });
           setQuestions(questionList.map((question) => ({
             ...question,
             options: question.options as string[] | null,
@@ -53,6 +55,8 @@ const CreateCollectionModal: React.FC<{ onClose: () => void; onCreate: () => voi
         setIsCreating(false);
       }
     };
+
+    
   
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-10">
@@ -138,6 +142,8 @@ const CollectionsPage: React.FC = () => {
           console.error('Error:', error);
         }
       };
+
+  
   useEffect(() => {
     fetchCollections();
   }, []);

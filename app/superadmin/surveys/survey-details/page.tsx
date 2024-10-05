@@ -16,6 +16,7 @@ Amplify.configure(outputs);
 const client = generateClient<Schema>();
 
 import Papa from 'papaparse';
+import Breadcrumb from '@/components/breadCrumb';
 
 interface EmployeeUploadPopupProps {
   surveyId: string;
@@ -305,6 +306,7 @@ const SurveyDetailsPage = () => {
       <div className="flex flex-1">
         <Sidebar navItems={navItems} />
         <div className="w-4/5 p-8">
+          <Breadcrumb />
           <h1 className="text-2xl font-semibold mb-6">{surveyName}</h1>
           <div className="flex space-x-4">
             <div className="border p-4 w-1/2">

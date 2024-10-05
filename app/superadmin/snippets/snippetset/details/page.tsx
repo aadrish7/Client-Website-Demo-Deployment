@@ -13,14 +13,22 @@ import { Suspense } from "react";
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
 
+// Define a type for text snippet details
+type TextSnippetDetails = {
+  factor: string;
+  score: number;
+  snippetText: string;
+  type: "normal" | "admin" | "employee" | null | undefined; // Added type
+};
+
 const SnippetSetDetails: React.FC = () => {
   const [snippetSet, setSnippetSet] = useState<{
     name: string;
     textSnippets: string[];
   }>({ name: "", textSnippets: [] });
-  const [textSnippetsDetails, setTextSnippetsDetails] = useState<
-    { factor: string; score: number; snippetText: string }[]
-  >([]);
+
+  const [textSnippetsDetails, setTextSnippetsDetails] = useState<TextSnippetDetails[]>([]); // Use type here
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const snippetSetName = searchParams.get("name");
@@ -28,40 +36,39 @@ const SnippetSetDetails: React.FC = () => {
   useEffect(() => {
     const fetchSnippetSet = async () => {
       try {
-        
         const { data: snippetSets } = await client.models.SnippetSet.list({});
         const foundSet = snippetSets.find((set) => set.name === snippetSetName);
         if (foundSet) {
           setSnippetSet({
-            name: foundSet.name ?? "", 
-            textSnippets:
-              foundSet.textSnippets?.filter(
-                (snippet): snippet is string => snippet !== null
-              ) ?? [], // Filter out null values
+            name: foundSet.name ?? "",
+            textSnippets: foundSet.textSnippets?.filter(
+              (snippet): snippet is string => snippet !== null
+            ) ?? [], // Filter out null values
           });
 
           // Fetch text snippets based on the IDs present in textSnippets array of the SnippetSet
           const fetchedTextSnippets = await Promise.all(
             foundSet.textSnippets?.filter(Boolean)?.map(async (snippetId) => {
-              const { data: textSnippets } =
-                await client.models.TextSnippet.list({
-                  filter: {
-                    id: { eq: snippetId || "" },
-                  },
-                });
+              const { data: textSnippets } = await client.models.TextSnippet.list({
+                filter: {
+                  id: { eq: snippetId || "" },
+                },
+              });
               const textSnippet = textSnippets[0];
               return {
                 factor: textSnippet?.factor,
                 score: textSnippet?.score,
                 snippetText: textSnippet?.snippetText,
+                type: textSnippet?.type, // Include type in the response
               };
             }) ?? []
           );
 
           const snippets = fetchedTextSnippets.map((snippet) => ({
-            factor: snippet?.factor ?? "", 
-            score: snippet?.score ?? 0, 
-            snippetText: snippet?.snippetText ?? "", 
+            factor: snippet?.factor ?? "",
+            score: snippet?.score ?? 0,
+            snippetText: snippet?.snippetText ?? "",
+            type: snippet?.type ?? "normal", // Fallback type
           }));
 
           setTextSnippetsDetails(snippets);
@@ -82,8 +89,7 @@ const SnippetSetDetails: React.FC = () => {
     "Snippet Text": snippet.snippetText,
   }));
 
-  const handleSnippetClick = (snippetText: string) => {
-  };
+  const handleSnippetClick = (snippetText: string) => {};
 
   const navItems = [
     {
