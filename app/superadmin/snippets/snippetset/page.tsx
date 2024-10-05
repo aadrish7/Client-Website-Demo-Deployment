@@ -132,14 +132,14 @@ const SnippetSetsPage: React.FC = () => {
   const fetchSnippetSets = async () => {
     try {
       const { data: snippetSetList } = await client.models.SnippetSet.list({});
-      setTableHeaders(() => ["name", "tags", "textSnippets"]);
+      setTableHeaders(() => ["name", "tags", "number"]);
       setTableData(
         snippetSetList.map((set) => ({
           name: set.name || "",
           tags: set.tags || "",
-          textSnippets: set.textSnippets
+          "number": set.textSnippets
             ? set.textSnippets.length.toString()
-            : "0", // Number of text snippets
+            : "0", 
         }))
       );
     } catch (error) {
