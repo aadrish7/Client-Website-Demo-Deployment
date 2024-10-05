@@ -12,9 +12,116 @@ import Table from "@/components/table";
 import Papa from "papaparse";
 import { FaEdit, FaTrash } from "react-icons/fa";
 import { IoIosList } from "react-icons/io";
+import { FaChevronDown } from "react-icons/fa";
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
+
+const CreateCollectionModal: React.FC<{ onClose: () => void; onCreate: () => void }> = ({ onClose, onCreate }) => {
+  const [name, setName] = useState<string>('');
+  const [tags, setTags] = useState<string>('');
+  const [questions, setQuestions] = useState<{ factor: string; questionText: string; options: string[] | null; id: string; createdAt: string; updatedAt: string; }[]>([]);
+  const [isCreating, setIsCreating] = useState<boolean>(false);
+
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        const { data: questionList } = await client.models.Question.list({
+          filter: { disabled: { eq: false } },
+        });
+        setQuestions(questionList.map((question) => ({
+          ...question,
+          options: question.options as string[] | null,
+        }))); 
+      } catch (error) {
+        console.error('Failed to fetch questions', error);
+      }
+    };
+
+    fetchQuestions();
+  }, []);
+
+  const handleSubmit = async () => {
+    setIsCreating(true);
+    try {
+      const questionIds = questions.map((question) => question.id);
+      
+      await client.models.Collection.create({
+        name,
+        tags,
+        questions: questionIds,
+      });
+      onCreate();  // Close modal and trigger refresh
+    } catch (error) {
+      console.error('Failed to create collection', error);
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  
+
+  return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-10">
+      <div className="bg-white p-6 rounded-md shadow-lg w-full max-w-md">
+        <h2 className="text-lg font-semibold mb-7">Create New Collection</h2>
+    
+        {/* Name Input */}
+        <div className="mb-6 mt-4">
+          <label className="block text-sm font-medium mb-2">Name</label>
+          <input
+            type="text"
+            className="border border-gray-300 rounded p-2 w-full bg-gray-100 text-sm"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Enter collection name"
+            disabled={isCreating}
+          />
+        </div>
+    
+        {/* Tags Input */}
+        <div className="mb-6 mt-4">
+          <label className="block text-sm font-medium mb-2">Tags</label>
+          <input
+            type="text"
+            className="border border-gray-300 rounded p-2 w-full bg-gray-100 text-sm"
+            value={tags}
+            onChange={(e) => setTags(e.target.value)}
+            placeholder="Enter collection tags"
+            disabled={isCreating}
+          />
+        </div>
+    
+        {/* Questions Information */}
+        <div className="mb-6 mt-4">
+          <label className="block text-sm font-medium mb-2">Questions</label>
+          <p>{questions.length} questions will be added to this collection by default.</p>
+        </div>
+    
+        {/* Buttons */}
+        <div className="flex justify-center mt-4">
+          <button 
+            onClick={onClose} 
+            className="bg-gray-500 text-white px-4 py-2 rounded-md mr-2"
+            disabled={isCreating}
+          >
+            Cancel
+          </button>
+          <button 
+            onClick={handleSubmit} 
+            className={`bg-blue-600 text-white px-4 py-2 rounded-md ${
+              isCreating ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+            disabled={isCreating}
+          >
+            {isCreating ? 'Creating...' : 'Create'}
+          </button>
+        </div>
+      </div>
+    </div>
+    
+  );
+};
 
 const CSVUploadModal: React.FC<{
   onClose: () => void;
@@ -337,6 +444,8 @@ const QuestionsPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isCSVModalOpen, setIsCSVModalOpen] = useState<boolean>(false);
   const [editingQuestion, setEditingQuestion] = useState<any | null>(null);
+  const [dropdownOpen, setDropdownOpen] = useState<boolean>(false); // State for dropdown
+  const [isCollectionModalOpen, setIsCollectionModalOpen] = useState<boolean>(false);
 
   const handleEdit = (question: any) => {
     setEditingQuestion(question); // Show the edit modal with the selected question
@@ -347,6 +456,19 @@ const QuestionsPage: React.FC = () => {
     setEditingQuestion(null);
     fetchQuestions(); // Refetch questions after saving
   };
+
+
+  
+
+  const handleCreateCollection = () => {
+    // After creating a new collection, refetch the collections and close the modal
+    setIsCollectionModalOpen(false);
+    // You can refetch the collections here or handle updating the state as needed
+    fetchQuestions();  // To refresh the table after collection creation
+  };
+
+
+
 
   const fetchQuestions = async () => {
     try {
@@ -387,7 +509,7 @@ const QuestionsPage: React.FC = () => {
 
   const navItems = [
     {
-      label: " Collections",
+      label: "📦 Collections",
       active: true,
       subItems: [
         {
@@ -442,18 +564,13 @@ const QuestionsPage: React.FC = () => {
   const handleCSVModalClose = () => setIsCSVModalOpen(false);
 
   const handleCreateQuestion = () => {
-    // After creating a new question, refetch the questions and close the modal
     setIsModalOpen(false);
-    // We can refetch the questions here or handle updating the state as needed
     fetchQuestions(); // To refresh the table after question creation
   };
 
   const handleCSVUpload = async (groupedQuestions: Map<string, string[]>) => {
     try {
-      // Convert Map to an array of entries for iteration
-      for (const [factor, questions] of Array.from(
-        groupedQuestions.entries()
-      )) {
+      for (const [factor, questions] of Array.from(groupedQuestions.entries())) {
         for (const questionText of questions) {
           await client.models.Question.create({
             factor,
@@ -472,104 +589,137 @@ const QuestionsPage: React.FC = () => {
 
   const handleDelete = async (question: any) => {
     try {
-      // Disable the question
       await client.models.Question.update({
         id: question.id,
-        disabled: true, // Mark the question as disabled
+        disabled: true,
       });
-
-      // Refetch the questions to update the UI
       fetchQuestions();
     } catch (error) {
       console.error("Failed to delete the question", error);
     }
   };
 
-  return (
-    <div className="h-screen flex flex-col">
-      <Header userName="Neil Sims" userEmail="neilsimsemail@example.com" />
-      <div className="flex flex-1">
-        <Sidebar navItems={navItems} />
-        <div className="w-4/5 p-8">
-          <h1 className="text-2xl font-semibold mb-6">Question Bank</h1>
+  const handleDropdownToggle = () => {
+    setDropdownOpen((prev) => !prev);
+  };
 
-          <div className="border p-4">
-            <div className="flex items-center mb-4 justify-end">
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-md flex items-center space-x-1"
-              >
-                <span>Create New Question</span>
-                <span className="text-xl font-bold">+</span>
-              </button>
-              <button
-                onClick={() => setIsCSVModalOpen(true)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-md flex items-center space-x-1 ml-2"
-              >
-                <span>Upload CSV Question</span>
-              </button>
+  return ( <div className="h-screen flex flex-col">
+  <Header userName="Neil Sims" userEmail="neilsimsemail@example.com" />
+  <div className="flex flex-1">
+    <Sidebar navItems={navItems} />
+    <div className="w-4/5 p-8">
+      <h1 className="text-2xl font-semibold mb-6">Question Bank</h1>
+
+      <div className="border p-4">
+        <div className="flex items-center mb-4 justify-end space-x-2">
+          {/* Create Collection Button */}
+          <button
+            className="bg-blue-600 text-white px-4 py-2 rounded-md"
+            onClick={() => setIsCollectionModalOpen(true)}
+          >
+            Create Collection
+          </button>
+
+          {/* Add a Question Dropdown */}
+          <div className="relative">
+                <button
+                  className="bg-blue-600 text-white px-4 py-2 rounded-md flex items-center"
+                  onClick={handleDropdownToggle}
+                >
+                  <span>Add a Question</span>
+                  <FaChevronDown className="ml-2" /> {/* Dropdown icon */}
+                </button>
+                {dropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white shadow-md rounded-md z-10">
+                    <button
+                      className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-200"
+                      onClick={() => {
+                        setIsModalOpen(true);
+                        setDropdownOpen(false);
+                      }}
+                    >
+                      Manual
+                    </button>
+                    <button
+                      className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-200"
+                      onClick={() => {
+                        setIsCSVModalOpen(true);
+                        setDropdownOpen(false);
+                      }}
+                    >
+                      CSV
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
-            {tableData && tableHeaders ? (
-              <div className="overflow-x-auto border border-gray-200 rounded-md">
-                <table className="min-w-full bg-white divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      {tableHeaders.map((header, index) => (
-                        <th
-                          key={index}
-                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                        >
-                          {header}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {tableData.map((row, rowIndex) => (
-                      <tr key={rowIndex}>
-                        {tableHeaders.map((header, colIndex) => (
-                          <td
-                            key={colIndex}
-                            className={`px-6 py-4 whitespace-nowrap text-sm`}
-                          >
-                            {row[header]}
-                          </td>
-                        ))}
-                      </tr>
+        {tableData && tableHeaders ? (
+          <div className="overflow-x-auto border border-gray-200 rounded-md">
+            <table className="min-w-full bg-white divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  {tableHeaders.map((header, index) => (
+                    <th
+                      key={index}
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      {header}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {tableData.map((row, rowIndex) => (
+                  <tr key={rowIndex}>
+                    {tableHeaders.map((header, colIndex) => (
+                      <td
+                        key={colIndex}
+                        className={`px-6 py-4 whitespace-nowrap text-sm`}
+                      >
+                        {row[header]}
+                      </td>
                     ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <p>Loading Questions...</p>
-            )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        </div>
+        ) : (
+          <p>Loading Questions...</p>
+        )}
       </div>
-
-      {/* Modal for creating a new question */}
-      {isModalOpen && (
-        <CreateQuestionModal
-          onClose={handleModalClose}
-          onCreate={handleCreateQuestion}
-        />
-      )}
-      {isCSVModalOpen && (
-        <CSVUploadModal
-          onClose={handleCSVModalClose}
-          onUpload={handleCSVUpload}
-        />
-      )}
-      {editingQuestion && (
-        <EditQuestionModal
-          question={editingQuestion}
-          onClose={() => setEditingQuestion(null)}
-          onSave={handleEditSave}
-        />
-      )}
     </div>
-  );
+  </div>
+
+  {isCollectionModalOpen && (
+    <CreateCollectionModal
+      onClose={() => setIsCollectionModalOpen(false)}
+      onCreate={handleCreateCollection} // Callback to refresh the data
+    />
+  )}
+
+  {isModalOpen && (
+    <CreateQuestionModal
+      onClose={handleModalClose}
+      onCreate={handleCreateQuestion}
+    />
+  )}
+  {isCSVModalOpen && (
+    <CSVUploadModal
+      onClose={handleCSVModalClose}
+      onUpload={handleCSVUpload}
+    />
+  )}
+  {editingQuestion && (
+    <EditQuestionModal
+      question={editingQuestion}
+      onClose={() => setEditingQuestion(null)}
+      onSave={handleEditSave}
+    />
+  )}
+</div>
+)
 };
 
 export default QuestionsPage;

@@ -213,12 +213,12 @@ const CollectionsPage: React.FC = () => {
           <h1 className="text-2xl font-semibold mb-6">Collections</h1>
 
           <div className="border p-4">
-            <div className="flex items-center mb-4 justify-end">
+            {/* <div className="flex items-center mb-4 justify-end">
               <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 text-white px-4 py-2 rounded-md flex items-center space-x-1">
                 <span>Create New Collection</span>
                 <span className="text-xl font-bold">+</span>
               </button>
-            </div>
+            </div> */}
 
             {tableData && tableHeaders ? (
               <Table headers={tableHeaders} data={tableData} handleClick={handleCollectionClick} underlineColumn="name" />
