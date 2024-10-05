@@ -9,6 +9,7 @@ import Header from '@/components/superadminHeader';
 import Sidebar from '@/components/superadminSidebar';
 import Table from '@/components/table';   
 import { Suspense } from "react"; 
+import { disable } from 'aws-amplify/analytics';
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
@@ -22,7 +23,7 @@ const CollectionDetailPage: React.FC = () => {
   const collectionName = searchParams.get('name') || '';
   const [tableHeaders, setTableHeaders] = useState<string[]>(["factor", "questionText"]);
   const [questions, setQuestions] = useState<
-    { factor: string; questionText: string; options: Nullable<string>[] | null; readonly id: string; readonly createdAt: string; readonly updatedAt: string; }[]
+    { disabled: Boolean;factor: string; questionText: string; options: Nullable<string>[] | null; readonly id: string; readonly createdAt: string; readonly updatedAt: string; }[]
   >([]); // Updated type definition
 
   const [collection, setCollection] = useState<{ name: string; tags: string; questions: string[] } | null>(null);
@@ -55,7 +56,9 @@ const CollectionDetailPage: React.FC = () => {
             );
 
             // Filter out null values
-            const validQuestions = fetchedQuestions.filter((q): q is { factor: string; questionText: string; options: Nullable<string>[] | null; readonly id: string; readonly createdAt: string; readonly updatedAt: string; } => q !== null); // Updated type guard
+            const validQuestions = fetchedQuestions.filter((q): q is { disabled : boolean; factor: string; questionText: string; options: Nullable<string>[] | null; readonly id: string; readonly createdAt: string; readonly updatedAt: string; } => q !== null); // Updated type guard
+            //filter thosw who have disable equal to false
+            
             setQuestions(validQuestions);
           }
         } catch (error) {
