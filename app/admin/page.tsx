@@ -9,6 +9,7 @@ import outputs from "@/amplify_outputs.json";
 import Header from "@/components/superadminHeader";
 import { fetchUserAttributes } from "aws-amplify/auth";
 import { data } from "../../amplify/data/resource";
+import Breadcrumb from "@/components/breadCrumb";
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
@@ -118,6 +119,7 @@ const AdminPage: React.FC = () => {
       <Header userName="Neil Sims" userEmail="neilsimsemail@example.com" />
       <div className="flex flex-1 justify-center">
         <div className="w-4/5 p-8">
+        <Breadcrumb/>
           <h1 className="text-2xl font-semibold mb-6">List of Surveys</h1>
           <div className="border p-4">
             <div className="flex items-center mb-4 justify-end">

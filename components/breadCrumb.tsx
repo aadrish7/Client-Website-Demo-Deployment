@@ -1,3 +1,4 @@
+'use client'
 import React, { useState, useMemo } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 
@@ -6,22 +7,17 @@ const Breadcrumb: React.FC = () => {
   const pathname = usePathname(); // Get the current path
   const searchParams = useSearchParams(); // Get the current search parameters
 
-  // Split the current path into segments, and filter out any empty strings
+  // Split the current path into segments and filter out any empty strings
   const pathArray = useMemo(() => pathname.split('/').filter((segment) => segment), [pathname]);
 
   // Define state to store search params for each breadcrumb segment
   const [breadcrumbParams, setBreadcrumbParams] = useState<{ [key: string]: string }>({});
 
-  // Return nothing if there is only one breadcrumb item
-  if (pathArray.length <= 1) {
-    return null; // Don't render breadcrumb if there is only one item
-  }
-
   // Function to generate the URL for each breadcrumb segment, preserving stored query params for each segment
   const generateBreadcrumbURL = (index: number) => {
     const newPath = '/' + pathArray.slice(0, index + 1).join('/');
 
-    // Get the stored search params for the current segment, or use an empty string if not stored
+    // Retrieve the stored search params for the current segment, or use an empty string if not stored
     const paramsString = breadcrumbParams[newPath] || '';
     const params = new URLSearchParams(paramsString);
 
@@ -36,12 +32,17 @@ const Breadcrumb: React.FC = () => {
     // Always store the current params for the clicked segment
     setBreadcrumbParams((prevParams) => ({
       ...prevParams,
-      [segmentPath]: currentParams, // Always update the params for the current segment
+      [segmentPath]: currentParams, // Update the params for the current segment
     }));
 
     // Navigate to the breadcrumb URL
     router.push(breadcrumbURL);
   };
+
+  // Return nothing if there is only one breadcrumb item (root)
+  if (pathArray.length <= 1) {
+    return null; // Don't render breadcrumb if there is only one item
+  }
 
   return (
     <nav aria-label="breadcrumb" className="mb-4">

@@ -8,6 +8,7 @@ import Header from "@/components/superadminHeader";
 import Sidebar from "@/components/superadminSidebar";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import Breadcrumb from "@/components/breadCrumb";
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
@@ -312,6 +313,7 @@ const EmployeesPage: React.FC = () => {
       <div className="flex flex-1">
         <Sidebar navItems={navItems} />
         <div className="w-4/5 p-8 bg-gray-50">
+        <Breadcrumb/>
         <div className="bg-white p-4">
           <h1 className="text-2xl font-semibold mb-6">Employees</h1>
           <div className="flex justify-between items-center mb-4">

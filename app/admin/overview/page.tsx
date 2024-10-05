@@ -12,6 +12,7 @@ import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import AdminEmployeeComponent from "@/components/adminEmployeeComponent";
 import { data } from '../../../amplify/data/resource';
+import Breadcrumb from "@/components/breadCrumb";
 
 const PieChart = dynamic(() => import("@/components/adminPieChart"), {
   ssr: false,
@@ -258,6 +259,7 @@ const OverviewPage: React.FC = () => {
       <div className="flex flex-1">
         <Sidebar navItems={navItems} />
         <div className="w-4/5 p-3 bg-gray-50 flex flex-col">
+        <Breadcrumb/>
           {/* Section with charts and summary paragraph */}
           <div className="bg-white p-6 rounded-lg shadow-lg mb-6">
             {surveyName.length > 0 ?(<h1 className="text-[20px] font-bold mb-6">

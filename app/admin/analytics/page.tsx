@@ -15,6 +15,7 @@ import DropdownButton from "@/components/dropDownButton";
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import Breadcrumb from "@/components/breadCrumb";
 
 const PieChart = dynamic(() => import("@/components/adminPieChart"), {
   ssr: false,
@@ -672,6 +673,7 @@ const AdminPage: React.FC = () => {
       <div className="flex flex-1">
         <Sidebar navItems={navItems} />
         <div className="w-4/5 p-3 bg-gray-50">
+        <Breadcrumb/>
           <div className="flex mb-4 gap-0.5">
             {/* Year of Service Dropdown */}
             <MultiSelectDropdown

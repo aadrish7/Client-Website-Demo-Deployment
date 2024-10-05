@@ -11,6 +11,7 @@ import { fetchUserAttributes } from "aws-amplify/auth";
 import Sidebar from "@/components/superadminSidebar";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import Breadcrumb from "@/components/breadCrumb";
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
@@ -190,6 +191,7 @@ const AdminPage: React.FC = () => {
       <div className="flex flex-1 justify-center">
         <Sidebar navItems={navItems} />
         <div className="w-4/5 p-8">
+          <Breadcrumb />
           <h1 className="text-2xl font-semibold mb-6">List of Surveys</h1>
           <div className="border p-4">
             <div className="flex items-center mb-4 justify-end">
