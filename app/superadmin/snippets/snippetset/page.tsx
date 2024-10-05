@@ -27,7 +27,13 @@ const CreateSnippetSetModal: React.FC<{
   useEffect(() => {
     const fetchTextSnippets = async () => {
       try {
-        const { data: snippetList } = await client.models.TextSnippet.list({});
+        const { data: snippetList } = await client.models.TextSnippet.list({
+          filter : {
+            disabled: {
+              eq: false
+            }
+          }
+        });
         setTextSnippets(
           snippetList.map((snippet) => ({
             id: snippet.id,

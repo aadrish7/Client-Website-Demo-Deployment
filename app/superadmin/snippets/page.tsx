@@ -9,8 +9,8 @@ import Header from "@/components/superadminHeader";
 import Sidebar from "@/components/superadminSidebar";
 import Table from "@/components/table";
 import Papa from "papaparse";
-import { FaChevronDown } from "react-icons/fa";
 import { create } from "zustand";
+import { FaChevronDown, FaEdit, FaTrash } from "react-icons/fa";
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
@@ -18,6 +18,149 @@ const client = generateClient<Schema>();
 interface CreateTextSnippetProps {
   onClose: () => void;
 }
+
+const EditSnippetModal: React.FC<{ snippet: any; onClose: () => void; onSave: () => void }> = ({
+  snippet,
+  onClose,
+  onSave,
+}) => {
+  const [factor, setFactor] = useState<string>(snippet.factor);
+  const [score, setScore] = useState<string>(snippet.score);
+  const [snippetText, setSnippetText] = useState<string>(snippet.snippetText);
+  const [type, setType] = useState<"normal" | "admin" | "employee" | null>(snippet.type);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const factors = ["Advocacy", "Psychological Safety", "Flexibility", "Growth Satisfaction", "Purpose"];
+  const types = ["normal", "employee", "admin"];
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    setLoading(true);
+
+    try {
+      if (!factor || !score || !snippetText || !type) {
+        setErrorMessage("All fields are required.");
+        setLoading(false);
+        return;
+      }
+
+      // Update the snippet in Amplify
+      await client.models.TextSnippet.update({
+        id: snippet.id,
+        factor,
+        score: Number(score),
+        snippetText,
+        type,
+      });
+
+      setSuccessMessage("Text Snippet updated successfully!");
+      setLoading(false);
+      onSave(); // Trigger callback to refresh the data
+    } catch (error) {
+      console.error("Failed to update text snippet", error);
+      setErrorMessage("Failed to update text snippet. Please try again.");
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-10">
+      <div className="w-full max-w-md p-6 bg-white rounded-md shadow-lg">
+        <h1 className="text-lg font-semibold mb-7">Edit Text Snippet</h1>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">Factor</label>
+            <select
+              value={factor}
+              onChange={(e) => setFactor(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded bg-gray-100 text-sm"
+              required
+            >
+              <option value="" disabled>
+                Select a factor
+              </option>
+              {factors.map((item, index) => (
+                <option key={index} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Type</label>
+            <select
+              value={type || ""} // Default value when type is null
+              onChange={(e) =>
+                setType(e.target.value as "normal" | "admin" | "employee")
+              } // Type casting
+              className="w-full p-2 border border-gray-300 rounded bg-gray-100 text-sm"
+              required
+            >
+              <option value="" disabled>
+                Select a type
+              </option>
+              {types.map((item, index) => (
+                <option key={index} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Score</label>
+            <input
+              type="text"
+              value={score}
+              onChange={(e) => setScore(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded bg-gray-100 text-sm"
+              placeholder="Enter score"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Snippet Text</label>
+            <textarea
+              value={snippetText}
+              onChange={(e) => setSnippetText(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded bg-gray-100 text-sm"
+              placeholder="Enter snippet text"
+              rows={4}
+              required
+            ></textarea>
+          </div>
+
+          <div className="flex justify-center">
+            <button
+              onClick={onClose}
+              className="bg-gray-500 text-white px-4 py-2 rounded-md mr-2"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="bg-blue-600 text-white px-4 py-2 rounded-md"
+              disabled={loading}
+            >
+              {loading ? "Saving..." : "Save Snippet"}
+            </button>
+          </div>
+
+          {errorMessage && <p className="text-red-500">{errorMessage}</p>}
+          {successMessage && <p className="text-black">{successMessage}</p>}
+        </form>
+      </div>
+    </div>
+  );
+};
+
 
 const CreateSnippetSetModal: React.FC<{
   onClose: () => void;
@@ -33,7 +176,9 @@ const CreateSnippetSetModal: React.FC<{
   useEffect(() => {
     const fetchTextSnippets = async () => {
       try {
-        const { data: snippetList } = await client.models.TextSnippet.list({});
+        const { data: snippetList } = await client.models.TextSnippet.list({
+          filter: { disabled: { eq: false } },
+        });
         setTextSnippets(
           snippetList.map((snippet) => ({
             id: snippet.id,
@@ -280,14 +425,17 @@ const CreateTextSnippet: React.FC<CreateTextSnippetProps> = ({ onClose }) => {
   );
 };
 
+
+
 const SuperAdminMainPage: React.FC = () => {
   const [tableHeaders, setTableHeaders] = useState<string[]>([]);
-  const [tableData, setTableData] = useState<Record<string, string>[]>([]);
+  const [tableData, setTableData] = useState<Record<string, any>[]>([]);
   const [showCsvPopup, setShowCsvPopup] = useState(false);
   const [showManualCreationPopup, setShowManualCreationPopup] = useState(false);
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isSnippetDropdownOpen, setIsSnippetDropdownOpen] = useState(false); // State for dropdown
+  const [editSnippet, setEditSnippet] = useState<any | null>(null);
   const [createSnippetSetModalOpen, setCreateSnippetSetModalOpen] =
     useState(false); // State for modal
   const router = useRouter();
@@ -299,16 +447,30 @@ const SuperAdminMainPage: React.FC = () => {
   const fetchTextSnippets = async () => {
     try {
       const { data: textSnippetList } = await client.models.TextSnippet.list(
-        {}
+        {
+          filter: { disabled: { eq: false } },
+        }
       );
       console.log("textSnippetList:", textSnippetList);
-      setTableHeaders(() => ["factor", "score", "type", "snippet text"]); // Added type to table headers
+      setTableHeaders(() => ["factor", "score", "type", "snippet text", "manage"]); // Added type to table headers
       setTableData(
         textSnippetList.map((snippet: any) => ({
           factor: snippet.factor,
           score: snippet.score,
           "snippet text": snippet.snippetText,
           type: snippet.type, // Added type to table data
+          manage: (
+            <div className="flex space-x-4">
+              <FaEdit
+                onClick={() => setEditSnippet(snippet)} // Show edit modal
+                className="cursor-pointer text-blue-600"
+              />
+              <FaTrash
+                onClick={() => handleDelete(snippet)} // Handle delete
+                className="cursor-pointer text-red-600"
+              />
+            </div>
+          ),
         }))
       );
     } catch (error) {
@@ -320,6 +482,26 @@ const SuperAdminMainPage: React.FC = () => {
   useEffect(() => {
     fetchTextSnippets();
   }, []);
+
+  const handleDelete = async (snippet: any) => {
+    try {
+
+      await client.models.TextSnippet.update({
+        id: snippet.id,
+        disabled: true, 
+      });
+
+
+      fetchTextSnippets();
+    } catch (error) {
+      console.error("Failed to delete snippet", error);
+    }
+  };
+
+  const handleEditSave = () => {
+    setEditSnippet(null); // Close edit modal
+    fetchTextSnippets(); // Refresh the table after saving
+  };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
@@ -539,6 +721,15 @@ const SuperAdminMainPage: React.FC = () => {
           onCreate={() => setCreateSnippetSetModalOpen(false)}
         />
       )}
+
+{editSnippet && (
+        <EditSnippetModal
+          snippet={editSnippet}
+          onClose={() => setEditSnippet(null)}
+          onSave={handleEditSave}
+        />
+      )}
+
     </div>
   );
 };

@@ -101,7 +101,8 @@ const schema = a.schema({
       score: a.integer().required(),
       snippetText: a.string().required(),
       type : a.enum(["admin", "employee", "normal"]),
-    })
+      disabled: a.boolean().default(false)
+,    })
     .authorization((allow) => [allow.publicApiKey()]),
   
   OverviewTextSnippet: a
