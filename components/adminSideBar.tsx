@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { NavItem, navItems } from '@/constants/navItems'; // Import your navItems from centralized file
+import { NavItem, navItems } from '@/constants/adminNavItems'; // Import your navItems from centralized file
 
 interface SidebarProps {
   activePath: string; // Now we just pass the active path

@@ -16,6 +16,7 @@ Amplify.configure(outputs);
 const client = generateClient<Schema>();
 
 import Papa from 'papaparse';
+import Breadcrumb from '@/components/breadCrumb';
 
 interface EmployeeUploadPopupProps {
   surveyId: string;
@@ -170,7 +171,8 @@ const EmployeeUploadPopup: React.FC<EmployeeUploadPopupProps> = ({ surveyId, com
 const SurveyDetailsPage = () => {
   const router = useRouter();
   const handleCollectionClick = (collectionName: string) => {
-    const newPath = `collection/collection-details?name=${encodeURIComponent(collectionName)}`;
+    const newPath = `/superadmin/collections/collection/collection-details?name=${encodeURIComponent(collectionName)}`;
+    router.push(newPath);
     
   };
   const searchParams = useSearchParams();
@@ -254,7 +256,7 @@ const SurveyDetailsPage = () => {
   }, [surveyName, companyId]);
 
   const handleIdClick = (id: string) => {
-    console.log('Clicked ID:', id);
+    router.push(`/superadmin/snippets/snippetset/details?name=${id}`);
   };
 
   const navItems = [
@@ -303,8 +305,9 @@ const SurveyDetailsPage = () => {
     <div className="h-screen flex flex-col">
       <Header userName="Neil Sims" userEmail="neilsimsemail@example.com" />
       <div className="flex flex-1">
-        <Sidebar navItems={navItems} />
+      <Sidebar activePath="/superadmin" />
         <div className="w-4/5 p-8">
+          <Breadcrumb />
           <h1 className="text-2xl font-semibold mb-6">{surveyName}</h1>
           <div className="flex space-x-4">
             <div className="border p-4 w-1/2">

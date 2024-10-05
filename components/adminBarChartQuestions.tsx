@@ -7,7 +7,7 @@ type BarChartProps = {
   data: {
     [key: string]: number;
   };
-  factor : string;
+  factor: string;
 };
 
 const colorMapping: { [key: string]: string } = {
@@ -26,8 +26,7 @@ const lightColorMapping: { [key: string]: string } = {
   "Flexibility": '#D8F9F8',
 };
 
-const adminBarChart: React.FC<BarChartProps> = ({ data , factor}) => {
-  console.log('data', data);
+const adminBarChart: React.FC<BarChartProps> = ({ data, factor }) => {
   const sortedNames = Object.keys(data).sort((a, b) => data[b] - data[a]).slice(0, 3);
   const scores = sortedNames.map(name => data[name]);
   const remainingScores = sortedNames.map(name => 5 - data[name]);
@@ -50,6 +49,7 @@ const adminBarChart: React.FC<BarChartProps> = ({ data , factor}) => {
           text: scores.map(score => score.toFixed(2)),
           textposition: 'auto',
           showlegend: false,
+          hoverinfo: 'none', // Disable hover interaction for this trace
         },
         {
           x: safeNames,
@@ -57,7 +57,7 @@ const adminBarChart: React.FC<BarChartProps> = ({ data , factor}) => {
           type: 'bar',
           name: 'Remaining',
           marker: { color: lightColors },
-          hoverinfo: 'none',
+          hoverinfo: 'none', // Disable hover interaction for this trace
           showlegend: false,
         },
       ]}
@@ -73,8 +73,14 @@ const adminBarChart: React.FC<BarChartProps> = ({ data , factor}) => {
           b: 100,
         },
         showlegend: false,
+        hovermode: false, // Disable hover interaction for the entire chart
       }}
-      style={{ width: '100%', height: '100%' }}
+      config={{
+        displaylogo: false, // Removes the "Made with Plotly" logo
+        modeBarButtonsToRemove: ['toImage'], // Removes the "Download plot as PNG" button
+        displayModeBar: false, // Removes the mode bar with zoom and pan options
+      }}
+      style={{ width: '100%', height: '100%', cursor: 'default' }} // Ensures cursor remains default (no "+" sign)
     />
   );
 };

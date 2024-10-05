@@ -199,10 +199,41 @@ const QuestionsComponent: React.FC = () => {
 
       const survey = SurveyList[0];
 
-      const { data: Overview_Snippets } =
-        await client.models.OverviewTextSnippet.list({});
+      const snippetSetId = survey.snippetSetId;
+      if (!snippetSetId) {
+        throw new Error("Survey's snippet set ID is missing");
+      }
 
-      setSnippets(Overview_Snippets);
+      const { data: SnippetSet } = await client.models.SnippetSet.list({
+        filter: {
+          id: { eq: snippetSetId },
+        },
+      });
+
+      const ArrOfSnippetIds = SnippetSet[0].textSnippets;
+
+      if (!ArrOfSnippetIds || ArrOfSnippetIds.length === 0) {
+        throw new Error(
+          `No text snippets found in snippet set with ID: ${snippetSetId}`
+        );
+      }
+
+      var finalSnippetData: any = [];
+
+      for (const id of ArrOfSnippetIds) {
+        if (!id) {
+          console.warn("Encountered a null snippet ID");
+          return null;
+        }
+
+        const { data: snippetData } = await client.models.TextSnippet.list({
+          filter: {
+            id: { eq: id },
+          },
+        });
+        finalSnippetData.push(snippetData);
+      }
+      setSnippets(() => finalSnippetData);
 
       if (!survey.id) {
         throw new Error("Survey ID is missing");
@@ -502,18 +533,29 @@ const QuestionsComponent: React.FC = () => {
   useEffect(() => {
     if (viewSurveyResults) {
       const averageSurveyResults = calculateAverages(userSelections);
-      console.log("averageSurveyResults", averageSurveyResults);
-
+  
       if (snippets.length > 0) {
-        const matchedSnippets = snippets.filter((snippet: any) => {
-          const factorScore = averageSurveyResults[snippet.factor];
-          return factorScore && isScoreInRange(factorScore, snippet.score);
+        // Filter the snippets based on factorScore and score range
+        let matchedSnippets = snippets.filter((snippet: any) => {
+          if (snippet[0].type !== "normal" && snippet[0].type !== "admin") {
+            const factorScore = averageSurveyResults[snippet[0].factor];
+            return factorScore && isScoreInRange(factorScore, snippet[0].score);
+          }
         });
-
-        setMatchingSnippets(matchedSnippets.reverse());
+  
+        // Sort the matched snippets based on the order of factors in averageSurveyResults
+        matchedSnippets = matchedSnippets.sort((a: any, b: any) => {
+          const factorA = a[0].factor;
+          const factorB = b[0].factor;
+          return Object.keys(averageSurveyResults).indexOf(factorA) - Object.keys(averageSurveyResults).indexOf(factorB);
+        });
+  
+        // Reverse the sorted snippets if needed
+        setMatchingSnippets(matchedSnippets);
       }
     }
   }, [viewSurveyResults]);
+  
 
   if (viewSurveyResults) {
     return (
@@ -532,14 +574,22 @@ const QuestionsComponent: React.FC = () => {
           <BarChart data={calculateAverages(userSelections)} />
           <div className="mt-6">
             <h3 className="text-lg font-semibold text-gray-800">Overview</h3>
-            <p className="text-gray-600 mt-2">
-              {matchingSnippets.map((snippet: any, index: any) => (
-                <span key={index}>{snippet.snippetText} </span>
-              ))}
-            </p>
+            {matchingSnippets.length > 0 &&
+              matchingSnippets.map((snippet: any, index: any) => {
+                if (snippet[0].type === "employee") {
+                  return (
+                    <span className="text-gray-600 mt-2" key={index}>
+                      {snippet[0].snippetText}{" "}
+                    </span>
+                  );
+                }
+                return null; 
+              })}
+
             <MetricsBreakdown
               averages={calculateAverages(userSelections)}
               arrOfTextSnippetsId={arrOfSnippetIds}
+              snippets={snippets}
             />
           </div>
         </div>

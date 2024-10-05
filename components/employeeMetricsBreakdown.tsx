@@ -5,6 +5,7 @@ import TextSnippetDisplay from "./employeeTextSnippet";
 interface MetricsBreakdownProps {
   averages: Record<string, number>;
   arrOfTextSnippetsId: string[];
+  snippets : any[],
 }
 
 type CategoryColors = {
@@ -14,6 +15,7 @@ type CategoryColors = {
 const MetricsBreakdown: React.FC<MetricsBreakdownProps> = ({
   averages,
   arrOfTextSnippetsId,
+  snippets,
 }) => {
   const metricNames = Object.keys(averages);
   const [selectedMetric, setSelectedMetric] = useState(metricNames[0]); // Default to the first metric
@@ -74,6 +76,7 @@ const MetricsBreakdown: React.FC<MetricsBreakdownProps> = ({
           factors={averages}
           arrOfTextSnippetsId={arrOfTextSnippetsId}
           selectedMetric={selectedMetric}
+          snippets={snippets}
         />
 
         {/* 

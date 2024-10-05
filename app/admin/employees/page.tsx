@@ -5,9 +5,10 @@ import { Schema } from "@/amplify/data/resource";
 import { Amplify } from "aws-amplify";
 import outputs from "@/amplify_outputs.json";
 import Header from "@/components/superadminHeader";
-import Sidebar from "@/components/superadminSidebar";
+import Sidebar from "@/components/adminSideBar";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import Breadcrumb from "@/components/breadCrumb";
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
@@ -229,8 +230,8 @@ const EmployeesPage: React.FC = () => {
       department: surveyResponse?.department || "",
       email: surveyResponse?.email || "",
       status: attemptedSurveyUserIds.includes(surveyResponse.id)
-        ? "Attempted"
-        : "Not Attempted",
+        ? "Completed"
+        : "Not Started",
     }));
     setTableData(employees);
     setFilteredData(employees);
@@ -280,9 +281,9 @@ const EmployeesPage: React.FC = () => {
   };
 
   const getStatusStyle = (status: string) => {
-    if (status === "Attempted") {
+    if (status === "Completed") {
       return "inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-medium bg-green-100 text-green-800";
-    } else if (status === "Not Attempted") {
+    } else if (status === "Not Started") {
       return "inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-medium bg-red-100 text-red-800";
     }
     return "";
@@ -310,8 +311,9 @@ const EmployeesPage: React.FC = () => {
     <div className="h-screen flex flex-col">
       <Header userName="Neil Sims" userEmail="neilsimsemail@example.com" />
       <div className="flex flex-1">
-        <Sidebar navItems={navItems} />
+        <Sidebar activePath="/admin/employees" />
         <div className="w-4/5 p-8 bg-gray-50">
+        <Breadcrumb/>
         <div className="bg-white p-4">
           <h1 className="text-2xl font-semibold mb-6">Employees</h1>
           <div className="flex justify-between items-center mb-4">

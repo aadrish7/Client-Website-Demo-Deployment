@@ -1,4 +1,5 @@
 import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
+import { disable } from "aws-amplify/analytics";
 
 /*== STEP 1 ===============================================================
 The section below creates a Todo database table with a "content" field. Try
@@ -61,17 +62,12 @@ const schema = a.schema({
     })
     .authorization((allow) => [allow.publicApiKey()]),
 
-  OverviewSnippet: a
-    .model({
-      snippetName: a.string(),
-    })
-    .authorization((allow) => [allow.publicApiKey()]),
-
   Question: a
     .model({
       factor: a.string().required(),
       questionText: a.string().required(),
       options: a.string().array(),
+      disabled: a.boolean().default(false),
     })
     .authorization((allow) => [allow.publicApiKey()]),
 
@@ -98,16 +94,11 @@ const schema = a.schema({
       factor: a.string().required(),
       score: a.integer().required(),
       snippetText: a.string().required(),
-    })
+      type : a.enum(["admin", "employee", "normal"]),
+      disabled: a.boolean().default(false)
+,    })
     .authorization((allow) => [allow.publicApiKey()]),
-  
-  OverviewTextSnippet: a
-    .model({
-      factor: a.string().required(),
-      score: a.integer().required(),
-      snippetText: a.string().required(),
-    })
-    .authorization((allow) => [allow.publicApiKey()]),
+
 
   SnippetSet: a
     .model({
@@ -117,13 +108,6 @@ const schema = a.schema({
     })
     .authorization((allow) => [allow.publicApiKey()]),
   
-  OverviewSnippetSet: a
-    .model({
-      name: a.string(),
-      tags: a.string(),
-      textSnippets: a.string().array(),
-    })
-    .authorization((allow) => [allow.publicApiKey()]),
 
   FactorImportance: a
     .model({

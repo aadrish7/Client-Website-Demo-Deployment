@@ -8,7 +8,7 @@ import { Amplify } from 'aws-amplify';
 import Header from '@/components/superadminHeader'; 
 import Sidebar from '@/components/superadminSidebar';
 import Table from '@/components/table';   
-import { Suspense } from "react"; 
+import { Suspense } from "react";
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
@@ -22,7 +22,7 @@ const CollectionDetailPage: React.FC = () => {
   const collectionName = searchParams.get('name') || '';
   const [tableHeaders, setTableHeaders] = useState<string[]>(["factor", "questionText"]);
   const [questions, setQuestions] = useState<
-    { factor: string; questionText: string; options: Nullable<string>[] | null; readonly id: string; readonly createdAt: string; readonly updatedAt: string; }[]
+    { disabled: boolean; factor: string; questionText: string; options: Nullable<string>[] | null; readonly id: string; readonly createdAt: string; readonly updatedAt: string; }[]
   >([]); // Updated type definition
 
   const [collection, setCollection] = useState<{ name: string; tags: string; questions: string[] } | null>(null);
@@ -54,8 +54,17 @@ const CollectionDetailPage: React.FC = () => {
               })
             );
 
-            // Filter out null values
-            const validQuestions = fetchedQuestions.filter((q): q is { factor: string; questionText: string; options: Nullable<string>[] | null; readonly id: string; readonly createdAt: string; readonly updatedAt: string; } => q !== null); // Updated type guard
+            // Filter out null values and ensure only those with disabled: false are included
+            const validQuestions = fetchedQuestions.filter((q): q is {
+              disabled: boolean;
+              factor: string;
+              questionText: string;
+              options: Nullable<string>[] | null;
+              readonly id: string;
+              readonly createdAt: string;
+              readonly updatedAt: string;
+            } => q !== null && !q.disabled); // Only include questions where disabled is false
+            
             setQuestions(validQuestions);
           }
         } catch (error) {
@@ -67,94 +76,56 @@ const CollectionDetailPage: React.FC = () => {
     }
   }, [collectionName]);
 
-  const navItems = [
-    {
-        label: '📦 Collections',
-        active: true,
-        subItems: [
-          { label: '📋 Question Bank', active: false, href: '/superadmin/collections/questionbank' },
-          { label: '📦 Collection', active: true, href: '/superadmin/collections/collection' }
-        ]
-      },
-    {
-      label: '📦 Snippets',
-      active: false,
-      subItems: [
-        { label: '📋 Snippet Bank', active: false, href: '/superadmin/snippets' },
-        { label: '📦 Snippet Set', active: false, href: '/superadmin/snippets/snippetset' }
-      ]
-    },
-    {
-      label: "📦 Overview Snippets",
-      active: false,
-      subItems: [
-        {
-          label: "📋 Snippet Bank",
-          active: false,
-          href: "/superadmin/overviewsnippets",
-        },
-        {
-          label: "📦 Snippet Set",
-          active: false,
-          href: "/superadmin/overviewsnippets/overviewsnippetset",
-        },
-      ],
-    },
-    { label: '🏢 Company', active: false, href: '/superadmin' },
-    { label: "📊 Analytics", active: false, href: "/superadmin/analytics" },
-  ].filter(item => item !== undefined);
 
- 
 
   return (
     <div className="h-screen flex flex-col">
-    {/* Header */}
-    <Header userName="Neil Sims" userEmail="neilsimsemail@example.com" />
-    {/* Main Content */}
-    <div className="flex flex-1">
-      {/* Sidebar */}
-      <Sidebar navItems={navItems} />
-      {/* Main Page Content */}
-      <div className="w-4/5 p-8">
-        {/* Page Header */}
-        <h1 className="text-2xl font-semibold mb-6">{collection ? collection.name : 'Loading...'}</h1>
+      {/* Header */}
+      <Header userName="Neil Sims" userEmail="neilsimsemail@example.com" />
+      {/* Main Content */}
+      <div className="flex flex-1">
+        {/* Sidebar */}
+        <Sidebar activePath={"/superadmin/collections/collection"} />
+        {/* Main Page Content */}
+        <div className="w-4/5 p-8">
+          {/* Page Header */}
+          <h1 className="text-2xl font-semibold mb-6">{collection ? collection.name : 'Loading...'}</h1>
 
-        <div className="border p-4">
-          {collection ? (
-            <>
-              <h2 className="text-lg mb-4 font-semibold"> Tags: {collection.tags}</h2>
-              {questions.length > 0 ? (
-                <Table
-                  headers={tableHeaders}
-                  data={questions.map(({ factor, questionText, id, createdAt, updatedAt }) => ({
-                    factor,
-                    questionText,
-                    id,
-                    createdAt,
-                    updatedAt,
-                  }))} // Transforming questions to match Record<string, string>[]
-                  handleClick={() => {}}
-                  underlineColumn=""
-                />
-              ) : (
-                <p></p>
-              )}
-            </>
-          ) : (
-            <p>Loading collection details...</p>
-          )}
+          <div className="border p-4">
+            {collection ? (
+              <>
+                <h2 className="text-lg mb-4 font-semibold"> Tags: {collection.tags}</h2>
+                {questions.length > 0 ? (
+                  <Table
+                    headers={tableHeaders}
+                    data={questions.map(({ factor, questionText, id, createdAt, updatedAt }) => ({
+                      factor,
+                      questionText,
+                      id,
+                      createdAt,
+                      updatedAt,
+                    }))} // Transforming questions to match Record<string, string>[]
+                    handleClick={() => {}}
+                    underlineColumn=""
+                  />
+                ) : (
+                  <p>No questions available.</p>
+                )}
+              </>
+            ) : (
+              <p>Loading collection details...</p>
+            )}
+          </div>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
 };
 
-
 export default function () {
-    return (
-      <Suspense fallback={<div>Loading...</div>}>
-        <CollectionDetailPage />
-      </Suspense>
-    );
-  }
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <CollectionDetailPage />
+    </Suspense>
+  );
+}

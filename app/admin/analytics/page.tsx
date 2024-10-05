@@ -10,11 +10,12 @@ import { Schema } from "@/amplify/data/resource";
 import { Amplify } from "aws-amplify";
 import outputs from "@/amplify_outputs.json";
 import Header from "@/components/superadminHeader";
-import Sidebar from "@/components/superadminSidebar";
+import Sidebar from "@/components/adminSideBar";
 import DropdownButton from "@/components/dropDownButton";
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import Breadcrumb from "@/components/breadCrumb";
 
 const PieChart = dynamic(() => import("@/components/adminPieChart"), {
   ssr: false,
@@ -670,8 +671,9 @@ const AdminPage: React.FC = () => {
     <div className="h-screen flex flex-col">
       <Header userName="Neil Sims" userEmail="neilsimsemail@example.com" />
       <div className="flex flex-1">
-        <Sidebar navItems={navItems} />
+        <Sidebar activePath="/admin/analytics" />
         <div className="w-4/5 p-3 bg-gray-50">
+        <Breadcrumb/>
           <div className="flex mb-4 gap-0.5">
             {/* Year of Service Dropdown */}
             <MultiSelectDropdown
@@ -721,7 +723,7 @@ const AdminPage: React.FC = () => {
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div className="flex flex-col items-center w-full h-[400px] border-2 border-white rounded-sm p-4 bg-white">
                 <h2 className="text-sm font-semibold mb-2">
-                  %age of Employees rated each factor as most important
+                  Factor Importance Amongst Employees
                 </h2>
                 <div className="w-full h-full">
                   <PieChart data={percentageFactorImportance} />

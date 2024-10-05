@@ -20,6 +20,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({ ratings, categories }
         name: rating.label,
         orientation: 'h',
         type: 'bar',
+        hoverinfo: 'none',  // Disable hover interaction
         marker: { 
           color: rating.color,
           line: {
@@ -59,7 +60,11 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({ ratings, categories }
           b: 80,
         },
       }}
-      config={{ displayModeBar: false }}
+      config={{
+        displayModeBar: false,  // Removes the "Download plot as PNG" button
+        displaylogo: false,     // Removes the "Made with Plotly" logo
+        modeBarButtonsToRemove: ['toImage'],  // Remove the download image button
+      }}
       style={{ width: '100%', height: '100%' }}
     />
   );

@@ -5,13 +5,14 @@ import { Schema } from "@/amplify/data/resource";
 import { Amplify } from "aws-amplify";
 import outputs from "@/amplify_outputs.json";
 import Header from "@/components/superadminHeader";
-import Sidebar from "@/components/superadminSidebar";
+import Sidebar from "@/components/adminSideBar";
 import DropdownButton from "@/components/dropDownButton";
 import dynamic from "next/dynamic";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import AdminEmployeeComponent from "@/components/adminEmployeeComponent";
 import { data } from '../../../amplify/data/resource';
+import Breadcrumb from "@/components/breadCrumb";
 
 const PieChart = dynamic(() => import("@/components/adminPieChart"), {
   ssr: false,
@@ -188,7 +189,13 @@ const OverviewPage: React.FC = () => {
     }
   }, [searchParams]);
   const getSnippets = async () => {
-    const { data: overviewSnippets } = await client.models.OverviewTextSnippet.list({});
+    const { data: overviewSnippets } = await client.models.TextSnippet.list({
+      filter:{
+        type : {
+          eq : "admin"
+        }
+      }
+    });
 
     if (overviewSnippets.length === 0) {
       console.error("No snippets found for company:");
@@ -250,8 +257,9 @@ const OverviewPage: React.FC = () => {
     <div className="h-screen flex flex-col">
       <Header userName="Neil Sims" userEmail="neilsimsemail@example.com" />
       <div className="flex flex-1">
-        <Sidebar navItems={navItems} />
+        <Sidebar activePath="/admin/overview" />
         <div className="w-4/5 p-3 bg-gray-50 flex flex-col">
+        <Breadcrumb/>
           {/* Section with charts and summary paragraph */}
           <div className="bg-white p-6 rounded-lg shadow-lg mb-6">
             {surveyName.length > 0 ?(<h1 className="text-[20px] font-bold mb-6">

@@ -8,6 +8,8 @@ import outputs from "@/amplify_outputs.json";
 import Header from "@/components/superadminHeader";
 import Sidebar from "@/components/superadminSidebar";
 import Table from "@/components/table";
+import Breadcrumb from "@/components/breadCrumb";
+import { Suspense } from "react";
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
@@ -295,8 +297,9 @@ const SuperAdminMainPage: React.FC = () => {
     <div className="h-screen flex flex-col">
       <Header userName="Neil Sims" userEmail="neilsimsemail@example.com" />
       <div className="flex flex-1">
-        <Sidebar navItems={navItems} />
+        <Sidebar activePath={"/superadmin"} />
         <div className="w-4/5 p-8">
+          <Breadcrumb />
           <h1 className="text-2xl font-semibold mb-6">Companies</h1>
           <div className="border p-4">
             <div className="flex items-center mb-4 justify-end">
@@ -338,4 +341,11 @@ const SuperAdminMainPage: React.FC = () => {
   );
 };
 
-export default SuperAdminMainPage;
+
+export default function () {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SuperAdminMainPage/>
+    </Suspense>
+  );
+}
