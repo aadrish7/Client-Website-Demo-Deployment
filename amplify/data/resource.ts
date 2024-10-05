@@ -62,12 +62,6 @@ const schema = a.schema({
     })
     .authorization((allow) => [allow.publicApiKey()]),
 
-  OverviewSnippet: a
-    .model({
-      snippetName: a.string(),
-    })
-    .authorization((allow) => [allow.publicApiKey()]),
-
   Question: a
     .model({
       factor: a.string().required(),
@@ -104,14 +98,7 @@ const schema = a.schema({
       disabled: a.boolean().default(false)
 ,    })
     .authorization((allow) => [allow.publicApiKey()]),
-  
-  OverviewTextSnippet: a
-    .model({
-      factor: a.string().required(),
-      score: a.integer().required(),
-      snippetText: a.string().required(),
-    })
-    .authorization((allow) => [allow.publicApiKey()]),
+
 
   SnippetSet: a
     .model({
@@ -121,13 +108,6 @@ const schema = a.schema({
     })
     .authorization((allow) => [allow.publicApiKey()]),
   
-  OverviewSnippetSet: a
-    .model({
-      name: a.string(),
-      tags: a.string(),
-      textSnippets: a.string().array(),
-    })
-    .authorization((allow) => [allow.publicApiKey()]),
 
   FactorImportance: a
     .model({
