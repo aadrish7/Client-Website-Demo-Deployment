@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { NavItem, navItems } from '@/constants/navItems'; // Import your navItems from centralized file
+import { FiChevronDown, FiChevronUp } from 'react-icons/fi'; // Import icons from react-icons
 
 interface SidebarProps {
   activePath: string; // Now we just pass the active path
@@ -39,7 +40,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePath }) => {
                     {item.label}
                   </span>
                   <span className="ml-2">
-                    {openDropdownIndex === index ? '^' : 'v'}
+                    {openDropdownIndex === index ? <FiChevronUp /> : <FiChevronDown />}
                   </span>
                 </button>
                 {openDropdownIndex === index && (
