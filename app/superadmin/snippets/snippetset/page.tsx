@@ -19,7 +19,9 @@ const CreateSnippetSetModal: React.FC<{
 }> = ({ onClose, onCreate }) => {
   const [name, setName] = useState<string>("");
   const [tags, setTags] = useState<string>("");
-  const [textSnippets, setTextSnippets] = useState<{ id: string; snippetText: string }[]>([]);
+  const [textSnippets, setTextSnippets] = useState<
+    { id: string; snippetText: string }[]
+  >([]);
   const [isCreating, setIsCreating] = useState<boolean>(false);
 
   useEffect(() => {
@@ -59,61 +61,64 @@ const CreateSnippetSetModal: React.FC<{
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-10">
-    <div className="bg-white p-6 rounded-md shadow-lg w-full max-w-md">
-      <h2 className="text-lg font-semibold mb-7">Create New Snippet Set</h2>
-  
-      {/* Snippet Set Name Input */}
-      <div className="mb-6 mt-4">
-        <label className="text-sm block font-medium mb-2">Name</label>
-        <input
-          type="text"
-          className="border border-gray-300 rounded p-2 w-full bg-gray-100 text-sm"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Enter snippet set name"
-        />
-      </div>
-  
-      {/* Tags Input */}
-      <div className="mb-6 mt-4">
-        <label className="text-sm block font-medium mb-2">Tags</label>
-        <input
-          type="text"
-          className="border border-gray-300 rounded p-2 w-full bg-gray-100 text-sm"
-          value={tags}
-          onChange={(e) => setTags(e.target.value)}
-          placeholder="Enter snippet set tags"
-        />
-      </div>
-  
-      {/* Text Snippets Info */}
-      <div className="mb-6 mt-4">
-        <label className="text-sm block font-medium mb-2">Text Snippets</label>
-        <p className="text-sm">{textSnippets.length} snippets will be added to this set by default.</p>
-      </div>
-  
-      {/* Buttons */}
-      <div className="flex justify-center">
-        <button
-          onClick={onClose}
-          className="bg-gray-500 text-white px-4 py-2 rounded-md mr-2"
-          disabled={isCreating}
-        >
-          Cancel
-        </button>
-        <button
-          onClick={handleSubmit}
-          className={`bg-blue-600 text-white px-4 py-2 rounded-md ${
-            isCreating ? 'opacity-50 cursor-not-allowed' : ''
-          }`}
-          disabled={isCreating}
-        >
-          {isCreating ? 'Creating Snippet Set...' : 'Create'}
-        </button>
+      <div className="bg-white p-6 rounded-md shadow-lg w-full max-w-md">
+        <h2 className="text-lg font-semibold mb-7">Create New Snippet Set</h2>
+
+        {/* Snippet Set Name Input */}
+        <div className="mb-6 mt-4">
+          <label className="text-sm block font-medium mb-2">Name</label>
+          <input
+            type="text"
+            className="border border-gray-300 rounded p-2 w-full bg-gray-100 text-sm"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Enter snippet set name"
+          />
+        </div>
+
+        {/* Tags Input */}
+        <div className="mb-6 mt-4">
+          <label className="text-sm block font-medium mb-2">Tags</label>
+          <input
+            type="text"
+            className="border border-gray-300 rounded p-2 w-full bg-gray-100 text-sm"
+            value={tags}
+            onChange={(e) => setTags(e.target.value)}
+            placeholder="Enter snippet set tags"
+          />
+        </div>
+
+        {/* Text Snippets Info */}
+        <div className="mb-6 mt-4">
+          <label className="text-sm block font-medium mb-2">
+            Text Snippets
+          </label>
+          <p className="text-sm">
+            {textSnippets.length} snippets will be added to this set by default.
+          </p>
+        </div>
+
+        {/* Buttons */}
+        <div className="flex justify-center">
+          <button
+            onClick={onClose}
+            className="bg-gray-500 text-white px-4 py-2 rounded-md mr-2"
+            disabled={isCreating}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmit}
+            className={`bg-blue-600 text-white px-4 py-2 rounded-md ${
+              isCreating ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+            disabled={isCreating}
+          >
+            {isCreating ? "Creating Snippet Set..." : "Create"}
+          </button>
+        </div>
       </div>
     </div>
-  </div>
-  
   );
 };
 
@@ -148,20 +153,36 @@ const SnippetSetsPage: React.FC = () => {
 
   const navItems = [
     {
-        label: '📦 Collections',
-        active: false,
-        subItems: [
-          { label: '📋 Question Bank', active: false, href: '/superadmin/collections/questionbank' },
-          { label: '📦 Collection', active: false, href: '/superadmin/collections/collection' }
-        ]
-      },
+      label: "📦 Collections",
+      active: false,
+      subItems: [
+        {
+          label: "📋 Question Bank",
+          active: false,
+          href: "/superadmin/collections/questionbank",
+        },
+        {
+          label: "📦 Collection",
+          active: false,
+          href: "/superadmin/collections/collection",
+        },
+      ],
+    },
     {
-      label: '📦 Snippets',
+      label: "📦 Snippets",
       active: true,
       subItems: [
-        { label: '📋 Snippet Bank', active: false, href: '/superadmin/snippets' },
-        { label: '📦 Snippet Set', active: true, href: '/superadmin/snippets/snippetset' }
-      ]
+        {
+          label: "📋 Snippet Bank",
+          active: false,
+          href: "/superadmin/snippets",
+        },
+        {
+          label: "📦 Snippet Set",
+          active: true,
+          href: "/superadmin/snippets/snippetset",
+        },
+      ],
     },
     {
       label: "📦 Overview Snippets",
@@ -179,9 +200,9 @@ const SnippetSetsPage: React.FC = () => {
         },
       ],
     },
-    { label: '🏢 Company', active: false, href: '/superadmin' },
+    { label: "🏢 Company", active: false, href: "/superadmin" },
     { label: "📊 Analytics", active: false, href: "/superadmin/analytics" },
-  ].filter(item => item !== undefined);
+  ].filter((item) => item !== undefined);
 
   const handleModalClose = () => setIsModalOpen(false);
 
@@ -208,16 +229,6 @@ const SnippetSetsPage: React.FC = () => {
           <h1 className="text-2xl font-semibold mb-6">Snippet Sets</h1>
 
           <div className="border p-4">
-            <div className="flex items-center mb-4 justify-end">
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-md flex items-center space-x-1"
-              >
-                <span>Create New Snippet Set</span>
-                <span className="text-xl font-bold">+</span>
-              </button>
-            </div>
-
             {tableData && tableHeaders ? (
               <Table
                 headers={tableHeaders}
