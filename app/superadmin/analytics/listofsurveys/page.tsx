@@ -189,7 +189,7 @@ const AdminPage: React.FC = () => {
     <div className="h-screen flex flex-col">
       <Header userName="Neil Sims" userEmail="neilsimsemail@example.com" />
       <div className="flex flex-1 justify-center">
-        <Sidebar navItems={navItems} />
+      <Sidebar activePath="/superadmin/analytics" />
         <div className="w-4/5 p-8">
           <Breadcrumb />
           <h1 className="text-2xl font-semibold mb-6">List of Surveys</h1>

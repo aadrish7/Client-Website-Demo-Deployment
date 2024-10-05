@@ -10,6 +10,7 @@ import Header from "@/components/superadminHeader";
 import { fetchUserAttributes } from "aws-amplify/auth";
 import { data } from "../../amplify/data/resource";
 import Breadcrumb from "@/components/breadCrumb";
+import { Suspense } from "react";
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
@@ -185,4 +186,12 @@ const AdminPage: React.FC = () => {
   );
 };
 
-export default AdminPage;
+export default function () {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AdminPage />
+    </Suspense>
+  );
+}
+
+

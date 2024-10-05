@@ -18,16 +18,20 @@ type TextSnippetDetails = {
   factor: string;
   score: number;
   snippetText: string;
-  type: "normal" | "admin" | "employee" | null | undefined; // Added type
+  type: "normal" | "admin" | "employee" | null | undefined;
+  disabled: boolean; // Disabled field is required
 };
 
 const SnippetSetDetails: React.FC = () => {
   const [snippetSet, setSnippetSet] = useState<{
     name: string;
+    tags: string;
     textSnippets: string[];
-  }>({ name: "", textSnippets: [] });
+  }>({ name: "", textSnippets: [], tags: "" });
 
-  const [textSnippetsDetails, setTextSnippetsDetails] = useState<TextSnippetDetails[]>([]); // Use type here
+  const [textSnippetsDetails, setTextSnippetsDetails] = useState<
+    TextSnippetDetails[]
+  >([]);
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -41,37 +45,39 @@ const SnippetSetDetails: React.FC = () => {
         if (foundSet) {
           setSnippetSet({
             name: foundSet.name ?? "",
-            textSnippets: foundSet.textSnippets?.filter(
-              (snippet): snippet is string => snippet !== null
-            ) ?? [], // Filter out null values
+            tags: foundSet.tags ?? "",
+            textSnippets:
+              foundSet.textSnippets?.filter(
+                (snippet): snippet is string => snippet !== null
+              ) ?? [],
           });
 
           // Fetch text snippets based on the IDs present in textSnippets array of the SnippetSet
           const fetchedTextSnippets = await Promise.all(
             foundSet.textSnippets?.filter(Boolean)?.map(async (snippetId) => {
-              const { data: textSnippets } = await client.models.TextSnippet.list({
-                filter: {
-                  id: { eq: snippetId || "" },
-                },
-              });
+              const { data: textSnippets } =
+                await client.models.TextSnippet.list({
+                  filter: {
+                    id: { eq: snippetId || "" },
+                  },
+                });
               const textSnippet = textSnippets[0];
               return {
                 factor: textSnippet?.factor,
                 score: textSnippet?.score,
                 snippetText: textSnippet?.snippetText,
-                type: textSnippet?.type, // Include type in the response
+                type: textSnippet?.type,
+                disabled: textSnippet?.disabled ?? false, // Ensure disabled is present
               };
             }) ?? []
           );
 
-          const snippets = fetchedTextSnippets.map((snippet) => ({
-            factor: snippet?.factor ?? "",
-            score: snippet?.score ?? 0,
-            snippetText: snippet?.snippetText ?? "",
-            type: snippet?.type ?? "normal", // Fallback type
-          }));
+          // Only include snippets where disabled is false
+          const snippets = fetchedTextSnippets.filter(
+            (snippet) => !snippet.disabled
+          );
 
-          setTextSnippetsDetails(snippets);
+          setTextSnippetsDetails(snippets); // Now the snippets array includes 'disabled'
         }
       } catch (error) {
         console.error("Failed to fetch snippet set or text snippets", error);
@@ -81,12 +87,13 @@ const SnippetSetDetails: React.FC = () => {
     if (snippetSetName) fetchSnippetSet();
   }, [snippetSetName]);
 
-  const headers = ["Factor", "Score", "Snippet Text"];
+  const headers = ["Factor", "Score", "Snippet Text", "Type"];
 
   const tableData = textSnippetsDetails.map((snippet) => ({
     Factor: snippet.factor,
     Score: snippet.score.toString(),
     "Snippet Text": snippet.snippetText,
+    Type: snippet.type ?? "Unknown", // Ensure Type is always a string
   }));
 
   const handleSnippetClick = (snippetText: string) => {};
@@ -148,20 +155,27 @@ const SnippetSetDetails: React.FC = () => {
     <div className="h-screen flex flex-col">
       <Header userName="Neil Sims" userEmail="neilsimsemail@example.com" />
       <div className="flex flex-1">
-        <Sidebar navItems={navItems} />
+        <Sidebar activePath="/superadmin/snippets/snippetset" />
         <div className="w-4/5 p-8">
           <h1 className="text-2xl font-semibold mb-6">{snippetSetName}</h1>
+          <div className="border p-4">
+            {snippetSet.tags.length > 0 ? (
+              <h2 className="text-lg mb-4 font-semibold">
+                Tags: {snippetSet.tags}
+              </h2>
+            ) : null}
 
-          {textSnippetsDetails.length > 0 ? (
-            <Table
-              headers={headers}
-              data={tableData}
-              underlineColumn=""
-              handleClick={handleSnippetClick}
-            />
-          ) : (
-            <p>Loading snippets...</p>
-          )}
+            {textSnippetsDetails.length > 0 ? (
+              <Table
+                headers={headers}
+                data={tableData}
+                underlineColumn=""
+                handleClick={handleSnippetClick}
+              />
+            ) : (
+              <p>Loading snippets...</p>
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -1,22 +1,25 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
-
-interface NavItem {
-  label: string;
-  active: boolean;
-  href?: string;
-  subItems?: NavItem[]; // Used for dropdown items
-}
+import { NavItem, navItems } from '@/constants/navItems'; // Import your navItems from centralized file
 
 interface SidebarProps {
-  navItems: NavItem[];
+  activePath: string; // Now we just pass the active path
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ navItems }) => {
+const Sidebar: React.FC<SidebarProps> = ({ activePath }) => {
   const [openDropdownIndex, setOpenDropdownIndex] = useState<number | null>(null);
 
   const handleDropdownClick = (index: number) => {
     setOpenDropdownIndex(openDropdownIndex === index ? null : index);
+  };
+
+  // Function to check if the current item or its subItems are active
+  const isActive = (item: NavItem): boolean => {
+    if (item.href === activePath) return true;
+    if (item.subItems) {
+      return item.subItems.some(subItem => subItem.href === activePath);
+    }
+    return false;
   };
 
   return (
@@ -26,25 +29,26 @@ const Sidebar: React.FC<SidebarProps> = ({ navItems }) => {
           <li key={index}>
             {item.subItems ? (
               <div>
-                {/* Handle dropdown toggle */}
                 <button
                   onClick={() => handleDropdownClick(index)}
-                  className={`flex items-center justify-between w-full ${item.active ? 'font-bold text-blue-600' : ''}`}
+                  className={`flex items-center justify-between w-full ${isActive(item) ? 'font-bold text-blue-600' : ''}`}
                 >
-                  {item.label}
-                  {/* Show dropdown or dropup icon */}
+                  <span className="flex items-center">
+                    {/* Render icon dynamically */}
+                    {item.icon && <item.icon className="mr-2" />}
+                    {item.label}
+                  </span>
                   <span className="ml-2">
                     {openDropdownIndex === index ? '^' : 'v'}
                   </span>
                 </button>
-                {/* Show sub-items only if this dropdown is open */}
                 {openDropdownIndex === index && (
                   <ul className="pl-4 m-4 space-y-3">
                     {item.subItems.map((subItem, subIndex) => (
                       <li key={subIndex}>
                         <Link
                           href={subItem.href || '#'}
-                          className={subItem.active ? 'font-bold text-blue-600' : 'hover:text-blue-600'}
+                          className={subItem.href === activePath ? 'font-bold text-blue-600' : 'hover:text-blue-600'}
                         >
                           {subItem.label}
                         </Link>
@@ -54,9 +58,11 @@ const Sidebar: React.FC<SidebarProps> = ({ navItems }) => {
                 )}
               </div>
             ) : (
-              // Render the main category items
-              <Link href={item.href || '#'} className={item.active ? 'font-bold text-blue-600' : 'hover:text-blue-600'}>
-                {item.label}
+              <Link href={item.href || '#'} className={isActive(item) ? 'font-bold text-blue-600' : 'hover:text-blue-600'}>
+                <span className="flex items-center">
+                  {item.icon && <item.icon className="mr-2" />}
+                  {item.label}
+                </span>
               </Link>
             )}
           </li>

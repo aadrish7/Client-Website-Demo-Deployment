@@ -228,7 +228,7 @@ const SnippetSetsPage: React.FC = () => {
       {/* Main Content */}
       <div className="flex flex-1">
         {/* Sidebar */}
-        <Sidebar navItems={navItems} />
+        <Sidebar activePath="/superadmin/snippets/snippetset" />
         {/* Main Page Content */}
         <div className="w-4/5 p-8">
           {/* Page Header */}

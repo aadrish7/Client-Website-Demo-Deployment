@@ -612,7 +612,7 @@ const SuperAdminMainPage: React.FC = () => {
     <div className="h-screen flex flex-col">
       <Header userName="Neil Sims" userEmail="neilsimsemail@example.com" />
       <div className="flex flex-1">
-        <Sidebar navItems={navItems} />
+        <Sidebar activePath="/superadmin/snippets" />
         <div className="w-4/5 p-8">
           <h1 className="text-2xl font-semibold mb-6">Snippet Bank</h1>
 
