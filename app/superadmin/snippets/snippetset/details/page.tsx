@@ -9,6 +9,7 @@ import Header from "@/components/superadminHeader";
 import Sidebar from "@/components/superadminSidebar";
 import Table from "@/components/table";
 import { Suspense } from "react";
+import Breadcrumb from "@/components/normalBreadCrumb";
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
@@ -157,6 +158,7 @@ const SnippetSetDetails: React.FC = () => {
       <div className="flex flex-1">
         <Sidebar activePath="/superadmin/snippets/snippetset" />
         <div className="w-4/5 p-8">
+        <Breadcrumb/>
           <h1 className="text-2xl font-semibold mb-6">{snippetSetName}</h1>
           <div className="border p-4">
             {snippetSet.tags.length > 0 ? (

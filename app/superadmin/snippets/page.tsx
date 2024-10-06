@@ -11,6 +11,7 @@ import Table from "@/components/table";
 import Papa from "papaparse";
 import { create } from "zustand";
 import { FaChevronDown, FaEdit, FaTrash } from "react-icons/fa";
+import Breadcrumb from "@/components/normalBreadCrumb";
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
@@ -614,6 +615,7 @@ const SuperAdminMainPage: React.FC = () => {
       <div className="flex flex-1">
         <Sidebar activePath="/superadmin/snippets" />
         <div className="w-4/5 p-8">
+          <Breadcrumb />
           <h1 className="text-2xl font-semibold mb-6">Snippet Bank</h1>
 
           <div className="border p-4">

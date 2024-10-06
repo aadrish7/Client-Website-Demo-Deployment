@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import Header from "@/components/superadminHeader";
 import Sidebar from "@/components/superadminSidebar";
 import Table from "@/components/table";
+import Breadcrumb from "@/components/normalBreadCrumb";
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
@@ -190,6 +191,7 @@ const SnippetSetsPage: React.FC = () => {
         {/* Main Page Content */}
         <div className="w-4/5 p-8">
           {/* Page Header */}
+          <Breadcrumb/>
           <h1 className="text-2xl font-semibold mb-6">Snippet Sets</h1>
 
           <div className="border p-4">
