@@ -26,7 +26,7 @@ const lightColorMapping: { [key: string]: string } = {
   "Flexibility": '#D8F9F8',
 };
 
-const adminBarChart: React.FC<BarChartProps> = ({ data, factor }) => {
+const AdminBarChart: React.FC<BarChartProps> = ({ data, factor }) => {
   const sortedNames = Object.keys(data).sort((a, b) => data[b] - data[a]).slice(0, 3);
   const scores = sortedNames.map(name => data[name]);
   const remainingScores = sortedNames.map(name => 5 - data[name]);
@@ -74,15 +74,17 @@ const adminBarChart: React.FC<BarChartProps> = ({ data, factor }) => {
         },
         showlegend: false,
         hovermode: false, // Disable hover interaction for the entire chart
+        autosize: true, // Enable autosizing based on the container
       }}
       config={{
         displaylogo: false, // Removes the "Made with Plotly" logo
         modeBarButtonsToRemove: ['toImage'], // Removes the "Download plot as PNG" button
         displayModeBar: false, // Removes the mode bar with zoom and pan options
+        responsive: true, // Enables responsiveness to container resizing
       }}
-      style={{ width: '100%', height: '100%', cursor: 'default' }} // Ensures cursor remains default (no "+" sign)
+      style={{ width: '100%', height: '100%', cursor: 'default' }} // Ensure it uses 100% of the parent container's width and height
     />
   );
 };
 
-export default adminBarChart;
+export default AdminBarChart;

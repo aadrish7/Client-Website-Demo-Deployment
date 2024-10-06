@@ -56,7 +56,7 @@ const PieChart: React.FC<PieChartProps> = ({ data }) => {
         hovermode: false, // Disable hover interaction for the plot
         legend: {
           orientation: 'v',
-          x: 1,
+          x: 0.90,
           y: 0.5,
           xanchor: 'left',
           font: {
@@ -66,24 +66,24 @@ const PieChart: React.FC<PieChartProps> = ({ data }) => {
           },
           itemsizing: 'constant',
           traceorder: 'normal',
-          // Disable legend hover
           itemclick: false,
           itemdoubleclick: false,
         },
         margin: {
           l: 0,
-          r: 150,
+          r: 0,
           t: 0,
           b: 0,
         },
-        height: 300,
-        width: 400,
+        // Remove fixed width/height, so it adapts to the parent container
+        autosize: true,
       }}
       config={{
         displaylogo: false, // Removes "Made with Plotly" logo
         modeBarButtonsToRemove: ['toImage'], // Removes the "Download plot as PNG" button
+        responsive: true, // Make the chart responsive to the container size
       }}
-      style={{ width: '100%', height: '100%' }}
+      style={{ width: '95%', height: '95%' }} // Use the full available space of the parent container
     />
   );
 };

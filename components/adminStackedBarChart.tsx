@@ -41,7 +41,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({ ratings, categories }
           title: '',
           showgrid: false,
           zeroline: false,
-          automargin: true,
+          automargin: true, // Ensure labels don't get cut off
         },
         bargap: 0.5,  // Reduce gap between bars
         bargroupgap: 0.1, // Reduce gap between bar groups
@@ -59,13 +59,15 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({ ratings, categories }
           t: 30,
           b: 80,
         },
+        autosize: true,  // Automatically size the chart based on container
       }}
       config={{
         displayModeBar: false,  // Removes the "Download plot as PNG" button
         displaylogo: false,     // Removes the "Made with Plotly" logo
         modeBarButtonsToRemove: ['toImage'],  // Remove the download image button
+        responsive: true,  // Ensure chart resizes with its container
       }}
-      style={{ width: '100%', height: '100%' }}
+      style={{ width: '100%', height: '100%' }}  // Chart takes full width and height of the container
     />
   );
 };

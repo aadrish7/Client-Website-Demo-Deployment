@@ -759,7 +759,7 @@ const AdminPage: React.FC = () => {
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div className="flex flex-col items-center w-full h-[400px] border-2 border-white rounded-sm p-4 bg-white">
                 <h2 className="text-sm font-semibold mb-2">
-                  %age of Employees rated each factor as most important
+                Factor Importance Amongst Employees
                 </h2>
                 <div className="w-full h-full">
                   <PieChart data={percentageFactorImportance} />
