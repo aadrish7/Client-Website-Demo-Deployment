@@ -189,8 +189,8 @@ const SurveyDetailsPage = () => {
   const [employeeData, setEmployeeData] = useState<Record<string, string>[]>([]);
   const [surveyId, setSurveyId] = useState<string>("")
 
-  const collectionTableHeaders = ['name', 'id']; 
-  const snippetTableHeaders = ['name', 'id']
+  const collectionTableHeaders = ['name', 'tags']; 
+  const snippetTableHeaders = ['name', 'tags']
   const employeeHeaders = ['name', 'department', 'job title', 'email'];
 
   const fetchData = async () => {
@@ -214,7 +214,7 @@ const SurveyDetailsPage = () => {
             
             if (collections && collections.length > 0) {
               const collection = collections[0];
-              setCollectionData([{ id: collectionId, name: collection.name || '' }]);
+              setCollectionData([{ tags: collection.tags || "", name: collection.name || '' }]);
             }
           }
 
@@ -225,7 +225,7 @@ const SurveyDetailsPage = () => {
 
             if (snippets && snippets.length > 0) {
               const snippet = snippets[0];
-              setSnippetData([{ id: snippetSetId, name: snippet.name || '' }]);
+              setSnippetData([{ tags: snippet.tags || "", name: snippet.name || '' }]);
               console.log("snippet", snippet)
             }
           }
@@ -258,44 +258,6 @@ const SurveyDetailsPage = () => {
   const handleIdClick = (id: string) => {
     router.push(`/superadmin/snippets/snippetset/details?name=${id}`);
   };
-
-  const navItems = [
-    {
-        label: '📦 Collections',
-        active: false,
-        subItems: [
-          { label: '📋 Question Bank', active: false, href: '/superadmin/collections/questionbank' },
-          { label: '📦 Collection', active: false, href: '/superadmin/collections/collection' }
-        ]
-      },
-    {
-      label: '📦 Snippets',
-      active: false,
-      subItems: [
-        { label: '📋 Snippet Bank', active: false, href: '/superadmin/snippets' },
-        { label: '📦 Snippet Set', active: false, href: '/superadmin/snippets/snippetset' }
-      ]
-    },
-    {
-      label: "📦 Overview Snippets",
-      active: false,
-      subItems: [
-        {
-          label: "📋 Snippet Bank",
-          active: false,
-          href: "/superadmin/overviewsnippets",
-        },
-        {
-          label: "📦 Snippet Set",
-          active: false,
-          href: "/superadmin/overviewsnippets/overviewsnippetset",
-        },
-      ],
-    },
-    
-    { label: '🏢 Company', active: true, href: '/superadmin' },
-    { label: "📊 Analytics", active: false, href: "/superadmin/analytics" },
-  ];
 
   const handleEmployeesCreated = () => {
     fetchData();
