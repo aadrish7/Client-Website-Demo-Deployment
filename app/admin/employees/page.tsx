@@ -8,7 +8,7 @@ import Header from "@/components/superadminHeader";
 import Sidebar from "@/components/adminSideBar";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
-import Breadcrumb from "@/components/breadCrumb";
+import Breadcrumb from "@/components/adminBreadCrumb";
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();

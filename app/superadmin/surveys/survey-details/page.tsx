@@ -11,12 +11,12 @@ import Table from '@/components/table';
 import { Schema } from '@/amplify/data/resource';
 import { Suspense } from 'react';
 import '@fortawesome/fontawesome-free/css/all.min.css';
+import Breadcrumb from '@/components/surveyBreadCrumb';
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
 
 import Papa from 'papaparse';
-import Breadcrumb from '@/components/breadCrumb';
 
 interface EmployeeUploadPopupProps {
   surveyId: string;
