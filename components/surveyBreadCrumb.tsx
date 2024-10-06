@@ -7,42 +7,42 @@ const Breadcrumb = () => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const { companyId, setCompanyId } = useUserStore(); // Get companyId from the store
+  const { companyName, setCompanyName } = useUserStore(); // Get companyId from the store
 
-  if (pathname === '/superadmin/analytics') {
+  if (pathname === '/superadmin') {
     return null;
   }
 
   const pathArray = pathname.split('/').filter((segment) => segment);
-  const isListOfSurveys = pathname.includes('/superadmin/analytics/listofsurveys');
-  const isOverview = pathname.includes('/overview');
+  const isListOfSurveys = pathname.includes('/superadmin/surveys');
+  const isOverview = pathname.includes('/superadmin/surveys/survey-details');
 
   const breadcrumbs = [];
 
   useEffect(() => {
-    const queryCompanyId = searchParams.get('companyId');
-    if (queryCompanyId && queryCompanyId !== companyId) {
-      setCompanyId(queryCompanyId); 
+    const queryCompanyName = searchParams.get('companyName');
+    if (queryCompanyName && queryCompanyName !== companyName) {
+      setCompanyName(queryCompanyName); 
     }
-  }, [searchParams, companyId, setCompanyId]);
+  }, [searchParams, companyName, setCompanyName]);
 
-  if (pathname === '/superadmin/analytics') {
+  if (pathname === '/superadmin') {
     return null;
   }
 
   if (isListOfSurveys || isOverview) {
-    breadcrumbs.push({ label: 'Companies', path: '/superadmin/analytics' });
+    breadcrumbs.push({ label: 'Companies', path: '/superadmin' });
   }
 
   if (isListOfSurveys || isOverview) {
     breadcrumbs.push({
       label: 'Survey List',
-      path: `/superadmin/analytics/listofsurveys?companyId=${companyId}`
+      path: `/superadmin/surveys?companyName=${companyName}`
     });
   }
 
   if (isOverview) {
-    breadcrumbs.push({ label: 'Analytics', path: pathname + '?' + searchParams.toString() });
+    breadcrumbs.push({ label: 'Survey Details', path: pathname + '?' + searchParams.toString() });
   }
 
   const handleClick = (path: any) => {

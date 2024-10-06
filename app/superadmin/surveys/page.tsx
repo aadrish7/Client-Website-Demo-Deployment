@@ -11,7 +11,7 @@ import Table from "@/components/table";
 import { Schema } from "@/amplify/data/resource";
 import { Suspense } from "react";
 import Router, { useRouter } from "next/navigation";
-import Breadcrumb from "@/components/breadCrumb";
+import Breadcrumb from "@/components/surveyBreadCrumb";
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();

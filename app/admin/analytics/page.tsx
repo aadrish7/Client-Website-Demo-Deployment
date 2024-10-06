@@ -15,7 +15,7 @@ import DropdownButton from "@/components/dropDownButton";
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
-import Breadcrumb from "@/components/breadCrumb";
+import Breadcrumb from "@/components/adminBreadCrumb";
 
 const PieChart = dynamic(() => import("@/components/adminPieChart"), {
   ssr: false,

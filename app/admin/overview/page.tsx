@@ -12,7 +12,7 @@ import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import AdminEmployeeComponent from "@/components/adminEmployeeComponent";
 import { data } from '../../../amplify/data/resource';
-import Breadcrumb from "@/components/breadCrumb";
+import Breadcrumb from "@/components/adminBreadCrumb";
 
 const PieChart = dynamic(() => import("@/components/adminPieChart"), {
   ssr: false,

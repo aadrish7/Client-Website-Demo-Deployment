@@ -9,9 +9,9 @@ import outputs from "@/amplify_outputs.json";
 import Header from "@/components/superadminHeader";
 import { fetchUserAttributes } from "aws-amplify/auth";
 import { data } from "../../amplify/data/resource";
-import Breadcrumb from "@/components/breadCrumb";
 import { Suspense } from "react";
 import useUserStore from "@/store/userStore";
+import Breadcrumb from "@/components/adminBreadCrumb";
 
 
 Amplify.configure(outputs);
@@ -21,8 +21,7 @@ const AdminPage: React.FC = () => {
   const router = useRouter();
   const [tableHeaders, setTableHeaders] = useState<string[]>([]);
   const [tableData, setTableData] = useState<Record<string, string>[]>([]);
-  const setSurveyId = useUserStore((state) => state.setSurveyId)
-  const surveyId = useUserStore((state) => state.surveyId)
+  const {surveyId, setSurveyId} = useUserStore();
 
   const fetchData = async () => {
     const userAttributes = await fetchUserAttributes();

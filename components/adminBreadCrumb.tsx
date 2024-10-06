@@ -6,43 +6,21 @@ const Breadcrumb = () => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-
-  const { companyId, setCompanyId } = useUserStore(); // Get companyId from the store
-
-  if (pathname === '/superadmin/analytics') {
-    return null;
-  }
-
-  const pathArray = pathname.split('/').filter((segment) => segment);
-  const isListOfSurveys = pathname.includes('/superadmin/analytics/listofsurveys');
-  const isOverview = pathname.includes('/overview');
-
   const breadcrumbs = [];
-
-  useEffect(() => {
-    const queryCompanyId = searchParams.get('companyId');
-    if (queryCompanyId && queryCompanyId !== companyId) {
-      setCompanyId(queryCompanyId); 
-    }
-  }, [searchParams, companyId, setCompanyId]);
-
-  if (pathname === '/superadmin/analytics') {
+  if (pathname === '/admin') {
     return null;
   }
-
-  if (isListOfSurveys || isOverview) {
-    breadcrumbs.push({ label: 'Companies', path: '/superadmin/analytics' });
+  else if (pathname.includes("/admin/overview")){
+    breadcrumbs.push({ label: 'Home', path: '/admin' });
+    breadcrumbs.push({label : "Overview", pathname})
   }
-
-  if (isListOfSurveys || isOverview) {
-    breadcrumbs.push({
-      label: 'Survey List',
-      path: `/superadmin/analytics/listofsurveys?companyId=${companyId}`
-    });
+  else if (pathname.includes("/admin/analytics")){
+    breadcrumbs.push({ label: 'Home', path: '/admin' });
+    breadcrumbs.push({label : "Analytics", pathname})
   }
-
-  if (isOverview) {
-    breadcrumbs.push({ label: 'Analytics', path: pathname + '?' + searchParams.toString() });
+  else if (pathname.includes("/admin/employees")){
+    breadcrumbs.push({ label: 'Home', path: '/admin' });
+    breadcrumbs.push({label : "Employees", pathname})
   }
 
   const handleClick = (path: any) => {
