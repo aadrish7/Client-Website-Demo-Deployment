@@ -248,7 +248,9 @@ const EmployeesPage: React.FC = () => {
   };
 
   useEffect(() => {
+    console.log("search params value", searchParams.get("surveyId"));
     if (searchParams.has("surveyId")) {
+      
       fetchData();
     }
   }, []);

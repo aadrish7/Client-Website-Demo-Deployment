@@ -1,13 +1,22 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { NavItem, navItems } from '@/constants/adminNavItems'; // Import your navItems from centralized file
+import { IconType } from 'react-icons'; 
+import { useNavItems } from '@/constants/adminNavItems'; // Use the hook instead of directly importing navItems
 
 interface SidebarProps {
   activePath: string; // Now we just pass the active path
 }
-
+interface NavItem {
+  label: string;
+  href?: string;
+  subItems?: NavItem[]; // Used for dropdown items
+  icon?: IconType; // Icon type from react-icons
+}
 const Sidebar: React.FC<SidebarProps> = ({ activePath }) => {
   const [openDropdownIndex, setOpenDropdownIndex] = useState<number | null>(null);
+  
+  // Call the useNavItems hook to get the nav items
+  const navItems = useNavItems();
 
   const handleDropdownClick = (index: number) => {
     setOpenDropdownIndex(openDropdownIndex === index ? null : index);
