@@ -5,6 +5,8 @@ import { HiBriefcase } from "react-icons/hi2";
 import { FaFileContract } from "react-icons/fa";
 import { IoGrid } from "react-icons/io5";
 import { IoIosPeople } from "react-icons/io";
+import useUserStore from "@/store/userStore";
+import { useMemo } from "react";
 
 export interface NavItem {
   label: string;
@@ -13,8 +15,15 @@ export interface NavItem {
   icon?: IconType; // Icon type from react-icons
 }
 
-export const navItems: NavItem[] = [
-  { label: 'Overview', href: '/admin/overview', icon: IoGrid },
-  { label: 'Analytics', href: '/admin/analytics', icon: FaFileContract },
-  { label: 'Employees', href: '/admin/employees', icon: IoIosPeople },
-];
+// Move the creation of navItems inside a component or a function
+export const useNavItems = () => {
+  const surveyId = useUserStore((state) => state.surveyId);
+
+  const navItems: NavItem[] = useMemo(() => [
+    { label: 'Overview', href: `/admin/overview?surveyId=${surveyId}`, icon: IoGrid },
+    { label: 'Analytics', href: `/admin/analytics?surveyId=${surveyId}`, icon: FaFileContract },
+    { label: 'Employees', href: `/admin/employees?surveyId=${surveyId}`, icon: IoIosPeople },
+  ], [surveyId]); // Ensure that navItems updates when surveyId changes
+
+  return navItems;
+};

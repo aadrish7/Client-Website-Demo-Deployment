@@ -1,23 +1,38 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { NavItem, navItems } from '@/constants/adminNavItems'; // Import your navItems from centralized file
+import { IconType } from 'react-icons'; 
+import { useNavItems } from '@/constants/adminNavItems'; // Use the hook instead of directly importing navItems
 
 interface SidebarProps {
   activePath: string; // Now we just pass the active path
 }
+interface NavItem {
+  label: string;
+  href?: string;
+  subItems?: NavItem[]; // Used for dropdown items
+  icon?: IconType; // Icon type from react-icons
+}
 
 const Sidebar: React.FC<SidebarProps> = ({ activePath }) => {
   const [openDropdownIndex, setOpenDropdownIndex] = useState<number | null>(null);
+  
+  // Call the useNavItems hook to get the nav items
+  const navItems = useNavItems();
 
   const handleDropdownClick = (index: number) => {
     setOpenDropdownIndex(openDropdownIndex === index ? null : index);
   };
 
+  // Function to strip out query parameters from a URL
+  const stripQueryParams = (url: string | undefined) => {
+    return url ? url.split('?')[0] : '';
+  };
+
   // Function to check if the current item or its subItems are active
   const isActive = (item: NavItem): boolean => {
-    if (item.href === activePath) return true;
+    if (stripQueryParams(item.href) === stripQueryParams(activePath)) return true;
     if (item.subItems) {
-      return item.subItems.some(subItem => subItem.href === activePath);
+      return item.subItems.some(subItem => stripQueryParams(subItem.href) === stripQueryParams(activePath));
     }
     return false;
   };
@@ -48,7 +63,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePath }) => {
                       <li key={subIndex}>
                         <Link
                           href={subItem.href || '#'}
-                          className={subItem.href === activePath ? 'font-bold text-blue-600' : 'hover:text-blue-600'}
+                          className={stripQueryParams(subItem.href) === stripQueryParams(activePath) ? 'font-bold text-blue-600' : 'hover:text-blue-600'}
                         >
                           {subItem.label}
                         </Link>
