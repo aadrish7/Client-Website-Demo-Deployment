@@ -390,21 +390,21 @@ const EmployeesPage: React.FC = () => {
                       </button>
                       <button
                         onClick={() => {
-                          setSelectedStatus("Attempted");
+                          setSelectedStatus("Completed");
                           setShowStatusDropdown(false);
                         }}
                         className="block px-4 py-2 text-sm text-gray-700"
                       >
-                        Attempted
+                        Completed
                       </button>
                       <button
                         onClick={() => {
-                          setSelectedStatus("Not Attempted");
+                          setSelectedStatus("Not Started");
                           setShowStatusDropdown(false);
                         }}
                         className="block px-4 py-2 text-sm text-gray-700"
                       >
-                        Not Attempted
+                        Not Started
                       </button>
                     </div>
                   </div>
