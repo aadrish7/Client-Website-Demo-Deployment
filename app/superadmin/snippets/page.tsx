@@ -12,6 +12,7 @@ import Papa from "papaparse";
 import { create } from "zustand";
 import { FaChevronDown, FaEdit, FaTrash } from "react-icons/fa";
 import Breadcrumb from "@/components/normalBreadCrumb";
+import {Suspense} from "react";
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
@@ -736,4 +737,11 @@ const SuperAdminMainPage: React.FC = () => {
   );
 };
 
-export default SuperAdminMainPage;
+export default function () {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SuperAdminMainPage />
+    </Suspense>
+  );
+}
+

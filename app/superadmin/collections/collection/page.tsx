@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import Header from "@/components/superadminHeader";
 import Sidebar from "@/components/superadminSidebar";
 import Breadcrumb from "@/components/normalBreadCrumb";
+import { Suspense } from "react";
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
@@ -262,4 +263,11 @@ const CollectionsPage: React.FC = () => {
   );
 };
 
-export default CollectionsPage;
+export default function () {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <CollectionsPage />
+    </Suspense>
+  );
+}
+
