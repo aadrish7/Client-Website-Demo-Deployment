@@ -9,6 +9,7 @@ import Header from "@/components/superadminHeader";
 import Sidebar from "@/components/superadminSidebar";
 import Table from "@/components/table";
 import Breadcrumb from "@/components/normalBreadCrumb";
+import { Suspense } from "react";
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
@@ -266,4 +267,11 @@ const SnippetSetsPage: React.FC = () => {
   );
 };
 
-export default SnippetSetsPage;
+
+export default function () {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SnippetSetsPage />
+    </Suspense>
+  );
+}
