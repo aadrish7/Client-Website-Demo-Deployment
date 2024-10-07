@@ -35,54 +35,70 @@ function ConfirmSignUpContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
-    <div className="bg-white shadow-md rounded-lg p-8 mb-4 w-full max-w-md">
-      <h1 className="text-2xl font-bold text-gray-800 mb-6 text-center">Confirm Your Sign Up</h1>
-      <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <label htmlFor="email" className="block text-gray-700 text-sm font-bold mb-2">
-            Email:
-          </label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value={email}
-            readOnly
-            aria-readonly="true"
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-gray-100"
-          />
-        </div>
-        <div className="mb-6">
-          <label htmlFor="code" className="block text-gray-700 text-sm font-bold mb-2">
-            Confirmation Code:
-          </label>
-          <input
-            type="text"
-            id="code"
-            name="code"
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            required
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          />
-        </div>
-        <div className="flex items-center justify-center">
-          <button
-            type="submit"
-            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300"
-          >
-            Confirm
-          </button>
-        </div>
-      </form>
+    <div className="bg-black min-h-screen flex justify-center items-center">
+    <div className="relative z-10 w-[850px] h-[500px] flex">
+      <div className="w-1/2 h-full">
+        <img
+          src="/landingPageLogo.png"
+          alt="Background Logo"
+          className="object-cover w-full h-full opacity-70"
+        />
+      </div>
+  
+      <div className="w-1/2 flex items-center justify-end">
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white shadow-md rounded-lg px-6 pt-6 pb-8 w-full max-w-md h-auto"
+        >
+          <h2 className="text-2xl font-bold mb-4">Confirm Your Sign Up</h2>
+  
+          <div className="mb-3">
+            <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="email">
+              Your email
+            </label>
+            <input
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 text-sm leading-tight focus:outline-none focus:shadow-outline bg-gray-100"
+              id="email"
+              name="email"
+              type="email"
+              value={email}
+              readOnly
+              aria-readonly="true"
+            />
+          </div>
+  
+          <div className="mb-3">
+            <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="code">
+              Confirmation Code
+            </label>
+            <input
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 text-sm leading-tight focus:outline-none focus:shadow-outline"
+              id="code"
+              name="code"
+              type="text"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              required
+            />
+          </div>
+  
+          {error && (
+            <p className="text-red-500 text-sm mb-3">{error}</p>
+          )}
+  
+          <div className="mb-3">
+            <button
+              type="submit"
+              className="w-full bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-sm focus:outline-none focus:shadow-outline transition duration-300"
+            >
+              Confirm
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
-    {error && (
-      <p className="text-red-500 text-sm mt-2">
-        {error}
-      </p>
-    )}
   </div>
+  
   );
 }
 

@@ -221,7 +221,7 @@ const SurveysPage = () => {
     {
       id: string;
       "survey name": string;
-      "collection id": string;
+      "updated at": string; // Update to use updatedAt field
       status: string;
       start: boolean;
     }[]
@@ -296,16 +296,19 @@ const SurveysPage = () => {
       const { data: surveyList } = await client.models.Survey.list({
         filter: { companyId: { eq: companyId } },
       });
-      setTableHeaders(["survey name", "collection id", "status", "manage"]);
+      setTableHeaders(["survey name", "updated at", "status", "manage"]);
       setTableData(
         surveyList.map((s) => ({
           id: s.id,
           "survey name": s.surveyName,
-          "collection id": s.collectionId || "",
+         "updated at": new Date(s.updatedAt).toLocaleDateString('default', {
+          day: 'numeric', 
+          month: 'long',   
+          year: 'numeric',  
+        }),
           status: s.start ? "Started" : "Not Started",
           start: s.start ?? false,
-        }))
-      );
+        })))
     } catch (error) {
       console.error("Failed to fetch surveys", error);
     }

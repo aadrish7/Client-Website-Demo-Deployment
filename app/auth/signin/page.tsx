@@ -50,7 +50,7 @@ export default function SignInPage() {
         } else if (role === "superadmin") {
           router.push("/superadmin");
         } else if (role === "employee") {
-          router.push("/employee");
+          router.push("/assessment");
         } else {
           router.push("/"); // Fallback in case no role is set
         }
@@ -114,23 +114,6 @@ export default function SignInPage() {
                 required
               />
             </div>
-
-            {/* <div className="mb-3">
-              <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="role">
-                Select your role
-              </label>
-              <select
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 text-sm leading-tight focus:outline-none focus:shadow-outline"
-                id="role"
-                name="role"
-                required
-              >
-                <option value="" disabled>Select a role</option>
-                <option value="admin">Admin</option>
-                <option value="employee">Employee</option>
-                <option value="superadmin">Super Admin</option>
-              </select>
-            </div> */}
 
             {errorMessage && (
               <p className="text-red-500 text-sm mb-3">{errorMessage}</p>

@@ -78,10 +78,14 @@ const BarChart: React.FC<BarChartProps> = ({ data }) => {
         margin: {
           b: 100, 
         },
-        showlegend: false, 
+        showlegend: false,
+        autosize: true, // Enable auto-sizing to the container
       }}
-      config={{ displayModeBar: false }} 
-      style={{ width: '100%', height: '100%' }}
+      config={{
+        displayModeBar: false,  // Removes the "Download plot as PNG" button
+        responsive: true,       // Make the chart responsive to container size changes
+      }}
+      style={{ width: '100%', height: '100%' }} // Takes full width and height of the parent container
     />
   );
 };
