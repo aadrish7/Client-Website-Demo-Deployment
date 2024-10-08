@@ -136,7 +136,6 @@ type RatingData = {
   values: number[];
   color: string;
 };
-const ageCategories = ["Age 18-24", "Age 25-35", "Age 35-45", "Age 45+"];
 
 const AdminPage: React.FC = () => {
   const searchParams = useSearchParams();
@@ -153,7 +152,13 @@ const AdminPage: React.FC = () => {
     yearsOfService: [],
   });
 
-  const ageCategories = ["Age 18-24", "Age 25-35", "Age 35-45", "Age 45+"];
+  const ageCategories = [
+    "Age 18-24", 
+    "Age 25-39", 
+    "Age 40-55", 
+    "Age 56+"
+  ];
+  
   const yearsOfServiceCategories = ["1-3 years", "3-5 years", "5+ years"];
 
   const [departments, setDepartments] = useState<string[]>([]);
@@ -370,19 +375,6 @@ const AdminPage: React.FC = () => {
     setPercentageFactorImportance(factorImportancePercentage);
   };
 
-  // useEffect(() => {
-  //   if (listOfEmployees.length > 0) {
-  //     let filtered = listOfEmployees;
-  //     if (filter.department) {
-  //       filtered = filtered.filter(emp => emp.department === filter.department);
-  //     }
-  //     if (filter.gender) {
-  //       filtered = filtered.filter(emp => emp.gender === filter.gender);
-  //     }
-  //     console.log("filtered data", filtered);
-  //     setListOfEmployees(filtered);
-  //   }
-  // }, [filter]);
   const calculateAge = (dob: string) => {
     const birthDate = new Date(dob);
     const today = new Date();
@@ -432,7 +424,6 @@ const AdminPage: React.FC = () => {
     const survey = surveys[0];
 
     var copyListOfEmployees = [...listOfEmployees];
-    console.log("listOfEmployees before filtering", listOfEmployees);
 
     if (
       filter.department &&
@@ -459,15 +450,14 @@ const AdminPage: React.FC = () => {
         const age = calculateAge(emp.dob);
         return filter.age?.some((ageRange) => {
           if (ageRange === "Age 18-24") return age >= 18 && age <= 24;
-          if (ageRange === "Age 25-35") return age >= 25 && age <= 35;
-          if (ageRange === "Age 35-45") return age >= 35 && age <= 45;
-          if (ageRange === "Age 45+") return age >= 45;
+          if (ageRange === "Age 25-39") return age >= 25 && age <= 39;
+          if (ageRange === "Age 40-55") return age >= 40 && age <= 55;
+          if (ageRange === "Age 56+") return age >= 56;
           return false;
         });
       });
     }
     
-
     if (
       filter.yearsOfService &&
       Array.isArray(filter.yearsOfService) &&
@@ -486,8 +476,6 @@ const AdminPage: React.FC = () => {
       });
     }
 
-    console.log("listOfEmployees after filtering", copyListOfEmployees);
-
     const { data: beforeFiltersurveyResponses } =
       await client.models.AverageSurveyResults.list({
         filter: {
@@ -502,7 +490,6 @@ const AdminPage: React.FC = () => {
       copyListOfEmployees.some((emp) => emp.id === response.userId)
     );
 
-    console.log("AveragesurveyResponses", surveyResponses);
 
     const { data: beforeFilterfactorImportanceResponses } =
       await client.models.FactorImportance.list({
@@ -518,8 +505,6 @@ const AdminPage: React.FC = () => {
       beforeFilterfactorImportanceResponses.filter((response) =>
         copyListOfEmployees.some((emp) => emp.id === response.userId)
       );
-
-    console.log("factorImportanceResponses", factorImportanceResponses);
 
     preparingDataForStackedBarChart(factorImportanceResponses, ratingsData);
 
@@ -539,8 +524,6 @@ const AdminPage: React.FC = () => {
         copyListOfEmployees.some((emp) => emp.id === response.userId)
       );
 
-    console.log("indivdualSurveyResponses123", indivdualSurveyResponses);
-
     const tempIndividualSurveyResponses: any[] = [];
     indivdualSurveyResponses.forEach((response) => {
       if (typeof response.allanswersjson === "string") {
@@ -553,10 +536,8 @@ const AdminPage: React.FC = () => {
         );
       }
     });
-    console.log("tempIndividualSurveyResponses", tempIndividualSurveyResponses);
+
     setAllIndividualSurveyResponses(tempIndividualSurveyResponses);
-    // const currentFactor = selectedFactor;
-    // setSelectedFactor(()=>currentFactor);
 
     const allResponses: any[] = [];
     surveyResponses.forEach((response) => {
@@ -641,23 +622,6 @@ const AdminPage: React.FC = () => {
     handleFactorChange();
   }, [selectedFactor, allIndividualSurveyResponses]);
 
-  const navItems = [
-    {
-      label: "📦 Overview",
-      active: false,
-      href: `/admin/overview?surveyId=${searchParams.get("surveyId")}`,
-    },
-    {
-      label: "📊 Analytics",
-      active: true,
-      href: `/admin/analytics?surveyId=${searchParams.get("surveyId")}`,
-    },
-    {
-      label: "🏢 Employees",
-      active: false,
-      href: `/admin/employees?surveyId=${searchParams.get("surveyId")}`,
-    },
-  ].filter((item) => item !== undefined);
 
   const categories = [
     "Psychological Safety",

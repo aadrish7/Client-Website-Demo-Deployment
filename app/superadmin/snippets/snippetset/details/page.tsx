@@ -19,7 +19,7 @@ type TextSnippetDetails = {
   factor: string;
   score: number;
   snippetText: string;
-  type: "normal" | "admin" | "employee" | null | undefined;
+  type: "adminoverview"| "employeeaggregated" |"employeeindividual" | null | undefined;
   disabled: boolean; // Disabled field is required
 };
 

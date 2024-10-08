@@ -12,7 +12,7 @@ import Papa from "papaparse";
 import { create } from "zustand";
 import { FaChevronDown, FaEdit, FaTrash } from "react-icons/fa";
 import Breadcrumb from "@/components/normalBreadCrumb";
-import {Suspense} from "react";
+import { Suspense } from "react";
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
@@ -21,21 +21,42 @@ interface CreateTextSnippetProps {
   onClose: () => void;
 }
 
-const EditSnippetModal: React.FC<{ snippet: any; onClose: () => void; onSave: () => void }> = ({
-  snippet,
-  onClose,
-  onSave,
-}) => {
+const EditSnippetModal: React.FC<{
+  snippet: any;
+  onClose: () => void;
+  onSave: () => void;
+}> = ({ snippet, onClose, onSave }) => {
   const [factor, setFactor] = useState<string>(snippet.factor);
   const [score, setScore] = useState<string>(snippet.score);
   const [snippetText, setSnippetText] = useState<string>(snippet.snippetText);
-  const [type, setType] = useState<"normal" | "admin" | "employee" | null>(snippet.type);
+  const [type, setType] = useState<
+    "adminoverview" | "employeeaggregated" | "employeeindividual" | null
+  >(snippet.type);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
-  const factors = ["Advocacy", "Psychological Safety", "Flexibility", "Growth Satisfaction", "Purpose"];
-  const types = ["normal", "employee", "admin"];
+  // Define types without spaces for saving
+  const typeValues = [
+    "adminoverview",
+    "employeeaggregated",
+    "employeeindividual",
+  ];
+
+  // Define corresponding display types with spaces
+  const displayTypes: any = {
+    adminoverview: "Admin Overview",
+    employeeaggregated: "Employee Aggregated",
+    employeeindividual: "Employee Individual",
+  };
+
+  const factors = [
+    "Advocacy",
+    "Psychological Safety",
+    "Flexibility",
+    "Growth Satisfaction",
+    "Purpose",
+  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,13 +71,13 @@ const EditSnippetModal: React.FC<{ snippet: any; onClose: () => void; onSave: ()
         return;
       }
 
-      // Update the snippet in Amplify
+      // Update the snippet in Amplify with the type without spaces
       await client.models.TextSnippet.update({
         id: snippet.id,
         factor,
         score: Number(score),
         snippetText,
-        type,
+        type, // This is already stored without spaces
       });
 
       setSuccessMessage("Text Snippet updated successfully!");
@@ -99,7 +120,12 @@ const EditSnippetModal: React.FC<{ snippet: any; onClose: () => void; onSave: ()
             <select
               value={type || ""} // Default value when type is null
               onChange={(e) =>
-                setType(e.target.value as "normal" | "admin" | "employee")
+                setType(
+                  e.target.value as
+                    | "adminoverview"
+                    | "employeeaggregated"
+                    | "employeeindividual"
+                )
               } // Type casting
               className="w-full p-2 border border-gray-300 rounded bg-gray-100 text-sm"
               required
@@ -107,9 +133,10 @@ const EditSnippetModal: React.FC<{ snippet: any; onClose: () => void; onSave: ()
               <option value="" disabled>
                 Select a type
               </option>
-              {types.map((item, index) => (
+              {/* Show the type with spaces in the dropdown */}
+              {typeValues.map((item, index) => (
                 <option key={index} value={item}>
-                  {item}
+                  {displayTypes[item]} {/* Display the type with spaces */}
                 </option>
               ))}
             </select>
@@ -128,7 +155,9 @@ const EditSnippetModal: React.FC<{ snippet: any; onClose: () => void; onSave: ()
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Snippet Text</label>
+            <label className="block text-sm font-medium mb-2">
+              Snippet Text
+            </label>
             <textarea
               value={snippetText}
               onChange={(e) => setSnippetText(e.target.value)}
@@ -162,7 +191,6 @@ const EditSnippetModal: React.FC<{ snippet: any; onClose: () => void; onSave: ()
     </div>
   );
 };
-
 
 const CreateSnippetSetModal: React.FC<{
   onClose: () => void;
@@ -279,14 +307,28 @@ const CreateTextSnippet: React.FC<CreateTextSnippetProps> = ({ onClose }) => {
   const [factor, setFactor] = useState<string>("");
   const [score, setScore] = useState<string>("");
   const [snippetText, setSnippetText] = useState<string>("");
-  const [type, setType] = useState<"normal" | "admin" | "employee" | null>(
-    null
-  ); // Updated type
+  const [type, setType] = useState<
+    "adminoverview" | "employeeaggregated" | "employeeindividual" | null
+  >(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
   const router = useRouter();
+
+  // Define types without spaces for saving
+  const typeValues = [
+    "adminoverview",
+    "employeeaggregated",
+    "employeeindividual",
+  ];
+
+  // Define corresponding display types with spaces
+  const displayTypes: any = {
+    adminoverview: "Admin Overview",
+    employeeaggregated: "Employee Aggregated",
+    employeeindividual: "Employee Individual",
+  };
 
   const factors = [
     "Advocacy",
@@ -295,7 +337,6 @@ const CreateTextSnippet: React.FC<CreateTextSnippetProps> = ({ onClose }) => {
     "Growth Satisfaction",
     "Purpose",
   ];
-  const types = ["normal", "employee", "admin"]; // Array for the dropdown
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -310,11 +351,12 @@ const CreateTextSnippet: React.FC<CreateTextSnippetProps> = ({ onClose }) => {
         return;
       }
 
+      // Submit without spaces in the 'type' value
       await client.models.TextSnippet.create({
         factor,
         score: Number(score),
         snippetText,
-        type, // Passed type to the create call
+        type, // This is already stored without spaces
       });
 
       setFactor("");
@@ -362,17 +404,23 @@ const CreateTextSnippet: React.FC<CreateTextSnippetProps> = ({ onClose }) => {
             <select
               value={type || ""} // Default value when type is null
               onChange={(e) =>
-                setType(e.target.value as "normal" | "admin" | "employee")
-              } // Type casting
+                setType(
+                  e.target.value as
+                    | "adminoverview"
+                    | "employeeaggregated"
+                    | "employeeindividual"
+                )
+              }
               className="w-full p-2 border border-gray-300 rounded bg-gray-100 text-sm"
               required
             >
               <option value="" disabled>
                 Select a type
               </option>
-              {types.map((item, index) => (
+              {/* Show the type with spaces in the dropdown */}
+              {typeValues.map((item, index) => (
                 <option key={index} value={item}>
-                  {item}
+                  {displayTypes[item]} {/* Display the type with spaces */}
                 </option>
               ))}
             </select>
@@ -427,8 +475,6 @@ const CreateTextSnippet: React.FC<CreateTextSnippetProps> = ({ onClose }) => {
   );
 };
 
-
-
 const SuperAdminMainPage: React.FC = () => {
   const [tableHeaders, setTableHeaders] = useState<string[]>([]);
   const [tableData, setTableData] = useState<Record<string, any>[]>([]);
@@ -436,11 +482,18 @@ const SuperAdminMainPage: React.FC = () => {
   const [showManualCreationPopup, setShowManualCreationPopup] = useState(false);
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [isSnippetDropdownOpen, setIsSnippetDropdownOpen] = useState(false); // State for dropdown
+  const [isSnippetDropdownOpen, setIsSnippetDropdownOpen] = useState(false);
   const [editSnippet, setEditSnippet] = useState<any | null>(null);
   const [createSnippetSetModalOpen, setCreateSnippetSetModalOpen] =
-    useState(false); // State for modal
-  const router = useRouter();
+    useState(false);
+  const [sortColumn, setSortColumn] = useState<string | null>("factor"); 
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+
+  const displayTypes: any = {
+    adminoverview: "Admin Overview",
+    employeeaggregated: "Employee Aggregated",
+    employeeindividual: "Employee Individual",
+  };
 
   const handleIdClick = (id: string) => {
     // Handle ID click logic
@@ -448,27 +501,24 @@ const SuperAdminMainPage: React.FC = () => {
 
   const fetchTextSnippets = async () => {
     try {
-      const { data: textSnippetList } = await client.models.TextSnippet.list(
-        {
-          filter: { disabled: { eq: false } },
-        }
-      );
-      console.log("textSnippetList:", textSnippetList);
-      setTableHeaders(() => ["factor", "score", "type", "snippet text", "manage"]); // Added type to table headers
+      const { data: textSnippetList } = await client.models.TextSnippet.list({
+        filter: { disabled: { eq: false } },
+      });
+      setTableHeaders(["factor", "score", "type", "snippet text", "manage"]);
       setTableData(
         textSnippetList.map((snippet: any) => ({
           factor: snippet.factor,
           score: snippet.score,
           "snippet text": snippet.snippetText,
-          type: snippet.type, // Added type to table data
+          type: snippet.type,
           manage: (
             <div className="flex space-x-4">
               <FaEdit
-                onClick={() => setEditSnippet(snippet)} // Show edit modal
+                onClick={() => setEditSnippet(snippet)}
                 className="cursor-pointer text-blue-600"
               />
               <FaTrash
-                onClick={() => handleDelete(snippet)} // Handle delete
+                onClick={() => handleDelete(snippet)}
                 className="cursor-pointer text-red-600"
               />
             </div>
@@ -485,15 +535,33 @@ const SuperAdminMainPage: React.FC = () => {
     fetchTextSnippets();
   }, []);
 
+  // Sorting function
+  const handleSort = (column: string) => {
+    const isAsc = sortColumn === column && sortDirection === "asc";
+    const direction = isAsc ? "desc" : "asc";
+    setSortDirection(direction);
+    setSortColumn(column);
+
+    const sortedData = [...tableData].sort((a, b) => {
+      const valueA = a[column]?.toString().toLowerCase();
+      const valueB = b[column]?.toString().toLowerCase();
+
+      if (direction === "asc") {
+        return valueA < valueB ? -1 : valueA > valueB ? 1 : 0;
+      } else {
+        return valueA > valueB ? -1 : valueA < valueB ? 1 : 0;
+      }
+    });
+
+    setTableData(sortedData);
+  };
+
   const handleDelete = async (snippet: any) => {
     try {
-
       await client.models.TextSnippet.update({
         id: snippet.id,
-        disabled: true, 
+        disabled: true,
       });
-
-
       fetchTextSnippets();
     } catch (error) {
       console.error("Failed to delete snippet", error);
@@ -501,8 +569,8 @@ const SuperAdminMainPage: React.FC = () => {
   };
 
   const handleEditSave = () => {
-    setEditSnippet(null); // Close edit modal
-    fetchTextSnippets(); // Refresh the table after saving
+    setEditSnippet(null);
+    fetchTextSnippets();
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -524,7 +592,12 @@ const SuperAdminMainPage: React.FC = () => {
       factor: string;
       score: string;
       text: string;
-      type: "normal" | "admin" | "employee" | null | undefined;
+      type:
+        | "adminoverview"
+        | "employeeaggregated"
+        | "employeeindividual"
+        | null
+        | undefined;
     };
 
     Papa.parse(csvFile, {
@@ -534,8 +607,18 @@ const SuperAdminMainPage: React.FC = () => {
         try {
           for (const row of data) {
             const { factor, score, text: snippetText, type } = row;
-            if (type !== "normal" && type !== "admin" && type !== "employee") {
-              console.error(`Invalid type: ${type}`);
+            const sanitizedType = type?.replace(/\s/g, "") as
+              | "adminoverview"
+              | "employeeaggregated"
+              | "employeeindividual"
+              | null;
+
+            if (
+              sanitizedType !== "adminoverview" &&
+              sanitizedType !== "employeeaggregated" &&
+              sanitizedType !== "employeeindividual"
+            ) {
+              console.error(`Invalid type: ${sanitizedType}`);
               continue;
             }
 
@@ -543,7 +626,7 @@ const SuperAdminMainPage: React.FC = () => {
               factor,
               score: Number(score),
               snippetText,
-              type,
+              type: sanitizedType,
             });
           }
           await fetchTextSnippets();
@@ -557,59 +640,6 @@ const SuperAdminMainPage: React.FC = () => {
     });
   };
 
-  const navItems = [
-    {
-      label: "📦 Collections",
-      active: false,
-      subItems: [
-        {
-          label: "📋 Question Bank",
-          active: false,
-          href: "/superadmin/collections/questionbank",
-        },
-        {
-          label: "📦 Collection",
-          active: false,
-          href: "/superadmin/collections/collection",
-        },
-      ],
-    },
-    {
-      label: "📦 Snippets",
-      active: true,
-      subItems: [
-        {
-          label: "📋 Snippet Bank",
-          active: true,
-          href: "/superadmin/snippets",
-        },
-        {
-          label: "📦 Snippet Set",
-          active: false,
-          href: "/superadmin/snippets/snippetset",
-        },
-      ],
-    },
-    {
-      label: "📦 Overview Snippets",
-      active: false,
-      subItems: [
-        {
-          label: "📋 Snippet Bank",
-          active: false,
-          href: "/superadmin/overviewsnippets",
-        },
-        {
-          label: "📦 Snippet Set",
-          active: false,
-          href: "/superadmin/overviewsnippets/overviewsnippetset",
-        },
-      ],
-    },
-    { label: "🏢 Company", active: false, href: "/superadmin" },
-    { label: "📊 Analytics", active: false, href: "/superadmin/analytics" },
-  ].filter((item) => item !== undefined);
-
   return (
     <div className="h-screen flex flex-col">
       <Header userName="Neil Sims" userEmail="neilsimsemail@example.com" />
@@ -621,7 +651,6 @@ const SuperAdminMainPage: React.FC = () => {
 
           <div className="border p-4">
             <div className="flex items-center mb-4 justify-end space-x-4">
-              {/* Create Snippet Set Button */}
               <button
                 onClick={() => setCreateSnippetSetModalOpen(true)}
                 className="bg-blue-600 text-white px-4 py-2 rounded-md"
@@ -629,14 +658,13 @@ const SuperAdminMainPage: React.FC = () => {
                 Create Snippet Set
               </button>
 
-              {/* Add Snippet Dropdown Button */}
               <div className="relative">
                 <button
                   className="bg-blue-600 text-white px-4 py-2 rounded-md flex items-center"
                   onClick={() => setIsSnippetDropdownOpen((prev) => !prev)}
                 >
                   <span>Add Snippet</span>
-                  <FaChevronDown className="ml-2" /> {/* Dropdown icon */}
+                  <FaChevronDown className="ml-2" />
                 </button>
                 {isSnippetDropdownOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white shadow-md rounded-md z-10">
@@ -665,12 +693,54 @@ const SuperAdminMainPage: React.FC = () => {
 
             {/* Generalized Table */}
             {tableData && tableHeaders ? (
-              <Table
-                headers={tableHeaders}
-                data={tableData}
-                handleClick={handleIdClick}
-                underlineColumn=""
-              />
+              <div className="overflow-x-auto border border-gray-200 rounded-md">
+                <table className="min-w-full bg-white divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      {tableHeaders.map((header, index) => (
+                        <th
+                          key={index}
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                          onClick={() => handleSort(header)}
+                        >
+                          {header}
+                          {sortColumn === header && (
+                            <span className="ml-1">
+                              {sortDirection === "asc" ? "↑" : "↓"}
+                            </span>
+                          )}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {tableData.map((row, rowIndex) => (
+                      <tr key={rowIndex}>
+                        {tableHeaders.map((header, colIndex) => (
+                          <td
+                            key={colIndex}
+                            className={`px-6 py-4 whitespace-nowrap text-sm ${
+                              header.toLowerCase() === ""
+                                ? "text-blue-500 font-bold cursor-pointer"
+                                : ""
+                            }`}
+                            onClick={() => {
+                              if (header.toLowerCase() === "") {
+                                handleIdClick(row[header]);
+                              }
+                            }}
+                          >
+                            {/* If the column is 'type', show the value from displayTypes */}
+                            {header === "type"
+                              ? displayTypes[row[header]] || row[header]
+                              : row[header]}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             ) : (
               <p>Loading Table...</p>
             )}
@@ -725,14 +795,13 @@ const SuperAdminMainPage: React.FC = () => {
         />
       )}
 
-{editSnippet && (
+      {editSnippet && (
         <EditSnippetModal
           snippet={editSnippet}
           onClose={() => setEditSnippet(null)}
           onSave={handleEditSave}
         />
       )}
-
     </div>
   );
 };
@@ -744,4 +813,3 @@ export default function () {
     </Suspense>
   );
 }
-

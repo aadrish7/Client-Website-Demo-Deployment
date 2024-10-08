@@ -192,7 +192,7 @@ const OverviewPage: React.FC = () => {
     const { data: overviewSnippets } = await client.models.TextSnippet.list({
       filter:{
         type : {
-          eq : "admin"
+          eq : "adminoverview"
         }
       }
     });

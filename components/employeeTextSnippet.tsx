@@ -47,7 +47,7 @@ const TextSnippetDisplay: React.FC<Props> = ({
           {matchingSnippets
             .filter(
               (snippet: any) =>
-                snippet[0].type === "normal" &&
+                snippet[0].type === "employeeindividual" &&
                 snippet[0].factor === selectedMetric
             )
             .map((snippet: any, index: any) => (

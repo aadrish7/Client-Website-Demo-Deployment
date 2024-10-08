@@ -94,7 +94,7 @@ const schema = a.schema({
       factor: a.string().required(),
       score: a.integer().required(),
       snippetText: a.string().required(),
-      type : a.enum(["admin", "employee", "normal"]),
+      type : a.enum(["adminoverview", "employeeaggregated", "employeeindividual"]),
       disabled: a.boolean().default(false)
 ,    })
     .authorization((allow) => [allow.publicApiKey()]),

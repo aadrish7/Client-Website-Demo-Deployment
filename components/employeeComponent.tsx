@@ -271,47 +271,47 @@ const QuestionsComponent: React.FC = () => {
       setArrOfSnippetIds(() => validSnippetIds);
 
       const { data: averageSurveyResponses } =
-        await client.models.AverageSurveyResults.list({
-          filter: {
-            surveyId: { eq: survey.id },
-            userId: { eq: finalUser.id },
-          },
-        });
+      await client.models.AverageSurveyResults.list({
+        filter: {
+          surveyId: { eq: survey.id },
+          userId: { eq: finalUser.id },
+        },
+      });
 
-      if (averageSurveyResponses && averageSurveyResponses.length > 0) {
-        const allanswersjson = averageSurveyResponses[0].averageScorejson;
-        if (!allanswersjson) {
-          throw new Error("No answers found in average survey results");
-        }
-        const allResponses: any[] = [];
-        averageSurveyResponses.forEach((response) => {
-          if (typeof response.averageScorejson === "string") {
-            const surveyResponse = JSON.parse(response.averageScorejson);
-            allResponses.push(surveyResponse);
-          } else {
-            console.error(
-              "Invalid type for averageScorejson:",
-              typeof response.averageScorejson
-            );
-          }
-        });
-        //convert into userSelections type
-        const userSelections: UserSelections = {};
-        allResponses.forEach((response) => {
-          for (const key in response) {
-            if (!userSelections[key]) {
-              userSelections[key] = [];
-            }
-            userSelections[key].push(response[key]);
-          }
-        });
-        console.log("userSelections", userSelections);
-
-        setCurrentStep((currentStep) => currentStep + 1);
-        setUserSelections(() => userSelections);
-        setViewSurveyResults(() => true);
-        return null;
+    if (averageSurveyResponses && averageSurveyResponses.length > 0) {
+      const allanswersjson = averageSurveyResponses[0].averageScorejson;
+      if (!allanswersjson) {
+        throw new Error("No answers found in average survey results");
       }
+      const allResponses: any[] = [];
+      averageSurveyResponses.forEach((response) => {
+        if (typeof response.averageScorejson === "string") {
+          const surveyResponse = JSON.parse(response.averageScorejson);
+          allResponses.push(surveyResponse);
+        } else {
+          console.error(
+            "Invalid type for averageScorejson:",
+            typeof response.averageScorejson
+          );
+        }
+      });
+      //convert into userSelections type
+      const userSelections: UserSelections = {};
+      allResponses.forEach((response) => {
+        for (const key in response) {
+          if (!userSelections[key]) {
+            userSelections[key] = [];
+          }
+          userSelections[key].push(response[key]);
+        }
+      });
+      console.log("userSelections", userSelections);
+
+      setCurrentStep((currentStep) => currentStep + 1);
+      setUserSelections(() => userSelections);
+      setViewSurveyResults(() => true);
+      return null;
+    }
 
       const { data: collections } = await client.models.Collection.list({
         filter: {
@@ -537,7 +537,7 @@ const QuestionsComponent: React.FC = () => {
       if (snippets.length > 0) {
         // Filter the snippets based on factorScore and score range
         let matchedSnippets = snippets.filter((snippet: any) => {
-          if (snippet[0].type !== "normal" && snippet[0].type !== "admin") {
+          if (snippet[0].type !== "employeeindividual" && snippet[0].type !== "adminoverview") {
             const factorScore = averageSurveyResults[snippet[0].factor];
             return factorScore && isScoreInRange(factorScore, snippet[0].score);
           }
@@ -576,7 +576,7 @@ const QuestionsComponent: React.FC = () => {
             <h3 className="text-lg font-semibold text-gray-800">Overview</h3>
             {matchingSnippets.length > 0 &&
               matchingSnippets.map((snippet: any, index: any) => {
-                if (snippet[0].type === "employee") {
+                if (snippet[0].type === "employeeaggregated") {
                   return (
                     <span className="text-gray-600 mt-2" key={index}>
                       {snippet[0].snippetText}{" "}
