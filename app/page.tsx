@@ -21,7 +21,7 @@ export default function App() {
       // Redirect based on the user role
       switch (userRole) {
         case "employee":
-          router.push("/employee");
+          router.push("/assessment");
           break;
         case "admin":
           router.push("/admin");
