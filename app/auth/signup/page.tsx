@@ -32,23 +32,23 @@ export default function SignUpPage() {
     const form = event.currentTarget;
     const email = form.elements.email.value;
 
-    const {data : relevantUser} = await client.models.User.list({
+    // const {data : relevantUser} = await client.models.User.list({
 
-      filter : {
-        email : {
-          eq : email
-        }
-      }
+    //   filter : {
+    //     email : {
+    //       eq : email
+    //     }
+    //   }
 
-    })
+    // })
 
-    if (relevantUser.length == 0){
-      setErrorMessage("User does not exist in the database. Please contact the admin to add you to the database.")
-      return;
-    }
+    // if (relevantUser.length == 0){
+    //   setErrorMessage("User does not exist in the database. Please contact the admin to add you to the database.")
+    //   return;
+    // }
 
-    const finalUser = relevantUser[0];
-    const roleInDB = finalUser.role;
+    // const finalUser = relevantUser[0];
+    // const roleInDB = finalUser.role;
 
     try {
       //sign up the user with the email and password
@@ -57,7 +57,7 @@ export default function SignUpPage() {
         password: form.elements.password.value,
         options: {
           userAttributes: {
-            "custom:role": roleInDB,
+            "custom:role": "superadmin",
           },
         },
       });

@@ -66,8 +66,8 @@ const schema = a.schema({
     .model({
       factor: a.string().required(),
       questionText: a.string().required(),
-      options: a.string().array(),
       disabled: a.boolean().default(false),
+      collectionId : a.string(),
     })
     .authorization((allow) => [allow.publicApiKey()]),
 
@@ -75,7 +75,6 @@ const schema = a.schema({
     .model({
       name: a.string(),
       tags: a.string(),
-      questions: a.string().array(),
     })
     .authorization((allow) => [allow.publicApiKey()]),
 
@@ -95,8 +94,9 @@ const schema = a.schema({
       score: a.integer().required(),
       snippetText: a.string().required(),
       type : a.enum(["adminoverview", "employeeaggregated", "employeeindividual"]),
-      disabled: a.boolean().default(false)
-,    })
+      disabled: a.boolean().default(false),
+      snippetSetId: a.string(),
+    })
     .authorization((allow) => [allow.publicApiKey()]),
 
 
@@ -104,7 +104,6 @@ const schema = a.schema({
     .model({
       name: a.string(),
       tags: a.string(),
-      textSnippets: a.string().array(),
     })
     .authorization((allow) => [allow.publicApiKey()]),
   

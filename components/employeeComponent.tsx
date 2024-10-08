@@ -22,7 +22,6 @@ const client = generateClient<Schema>();
 
 interface Question {
   questionText: string;
-  options: string[];
   id: string;
 }
 
@@ -158,251 +157,117 @@ const QuestionsComponent: React.FC = () => {
   const getQuestions = async () => {
     try {
       const { email } = await fetchUserAttributes();
-
+  
       if (!email) {
         throw new Error("User email is missing");
       }
-
+  
       const { data: userList } = await client.models.User.list({
         filter: {
           email: { eq: email },
         },
       });
-
+  
       if (!userList || userList.length === 0) {
         throw new Error(`No user found with email: ${email}`);
       }
-
+  
       const finalUser = userList[0];
       if (!finalUser.id) {
         throw new Error("User ID is missing");
       }
-
+  
       setUserId(() => finalUser.id);
-
+  
       const companyId = finalUser.companyId;
       if (!companyId) {
         throw new Error("User's company ID is missing");
       }
-
+  
       const { data: SurveyList } = await client.models.Survey.list({
         filter: {
           companyId: { eq: companyId },
           start: { eq: true },
         },
       });
-
+  
       if (!SurveyList || SurveyList.length === 0) {
         setNoQuestions(() => true);
         throw new Error(`No active survey found for company ID: ${companyId}`);
       }
-
+  
       const survey = SurveyList[0];
-
-      const snippetSetId = survey.snippetSetId;
-      if (!snippetSetId) {
-        throw new Error("Survey's snippet set ID is missing");
-      }
-
-      const { data: SnippetSet } = await client.models.SnippetSet.list({
-        filter: {
-          id: { eq: snippetSetId },
-        },
-      });
-
-      const ArrOfSnippetIds = SnippetSet[0].textSnippets;
-
-      if (!ArrOfSnippetIds || ArrOfSnippetIds.length === 0) {
-        throw new Error(
-          `No text snippets found in snippet set with ID: ${snippetSetId}`
-        );
-      }
-
-      var finalSnippetData: any = [];
-
-      for (const id of ArrOfSnippetIds) {
-        if (!id) {
-          console.warn("Encountered a null snippet ID");
-          return null;
-        }
-
-        const { data: snippetData } = await client.models.TextSnippet.list({
-          filter: {
-            id: { eq: id },
-          },
-        });
-        finalSnippetData.push(snippetData);
-      }
-      setSnippets(() => finalSnippetData);
-
       if (!survey.id) {
         throw new Error("Survey ID is missing");
       }
-
+  
       const collectionId = survey.collectionId;
       if (!collectionId) {
         throw new Error("Survey's collection ID is missing");
       }
-
+  
       setSurveyId(() => survey.id);
-
-      const snippetID = survey.snippetSetId;
-      if (!snippetID) {
-        throw new Error("Survey's snippet ID is missing");
-      }
-
-      const { data: snippetData } = await client.models.SnippetSet.get({
-        id: snippetID,
-      });
-
-      if (!snippetData) {
-        throw new Error(`No snippet found for snippet ID: ${snippetID}`);
-      }
-
-      const snippetIds = snippetData.textSnippets;
-      if (!snippetIds || snippetIds.length === 0) {
-        throw new Error(
-          `No text snippets found in snippet set with ID: ${snippetID}`
-        );
-      }
-      const validSnippetIds = snippetIds.filter(
-        (id): id is string => id !== null
-      );
-      setArrOfSnippetIds(() => validSnippetIds);
-
-      const { data: averageSurveyResponses } =
-      await client.models.AverageSurveyResults.list({
+  
+      // Fetch all questions that belong to the collection using collectionId
+      const { data: questions } = await client.models.Question.list({
         filter: {
-          surveyId: { eq: survey.id },
-          userId: { eq: finalUser.id },
+          collectionId: { eq: collectionId }, // Use collectionId to fetch questions
         },
       });
-
-    if (averageSurveyResponses && averageSurveyResponses.length > 0) {
-      const allanswersjson = averageSurveyResponses[0].averageScorejson;
-      if (!allanswersjson) {
-        throw new Error("No answers found in average survey results");
+  
+      if (!questions || questions.length === 0) {
+        throw new Error(`No questions found for collection ID: ${collectionId}`);
       }
-      const allResponses: any[] = [];
-      averageSurveyResponses.forEach((response) => {
-        if (typeof response.averageScorejson === "string") {
-          const surveyResponse = JSON.parse(response.averageScorejson);
-          allResponses.push(surveyResponse);
-        } else {
-          console.error(
-            "Invalid type for averageScorejson:",
-            typeof response.averageScorejson
-          );
-        }
-      });
-      //convert into userSelections type
-      const userSelections: UserSelections = {};
-      allResponses.forEach((response) => {
-        for (const key in response) {
-          if (!userSelections[key]) {
-            userSelections[key] = [];
-          }
-          userSelections[key].push(response[key]);
-        }
-      });
-      console.log("userSelections", userSelections);
-
-      setCurrentStep((currentStep) => currentStep + 1);
-      setUserSelections(() => userSelections);
-      setViewSurveyResults(() => true);
-      return null;
-    }
-
-      const { data: collections } = await client.models.Collection.list({
-        filter: {
-          id: { eq: collectionId },
-        },
-      });
-
-      if (!collections || collections.length === 0) {
-        throw new Error(`No collection found with ID: ${collectionId}`);
-      }
-
-      const collection = collections[0];
-      const questionIds = collection.questions;
-
-      if (!questionIds || questionIds.length === 0) {
-        throw new Error(
-          `No questions found in collection with ID: ${collectionId}`
-        );
-      }
-
-      const questionList = await Promise.all(
-        questionIds.map(async (id) => {
-          if (!id) {
-            console.warn("Encountered a null question ID");
-            return null;
-          }
-
-          const { data: questions } = await client.models.Question.list({
-            filter: {
-              id: { eq: id },
-            },
-          });
-
-          if (!questions || questions.length === 0) {
-            console.warn(`No questions found for question ID: ${id}`);
-            return null;
-          }
-
-          return questions;
-        })
-      );
-
-      const validQuestions = questionList.filter((q) => q !== null);
-
-      setTotalQuestions(() => validQuestions.length + 1);
-
+  
+      setTotalQuestions(() => questions.length);
+  
+      // Group the questions by their factor
       const questionsByFactor: QuestionsByFactor = {};
-      validQuestions.forEach((question: any) => {
-        const factor = question[0]?.factor;
+      questions.forEach((question) => {
+        const factor = question.factor;
         if (!factor) {
           console.warn("Question factor is missing");
           return;
         }
-
+  
         if (!questionsByFactor[factor]) {
           questionsByFactor[factor] = [];
         }
-
-        questionsByFactor[factor].push(...question);
+  
+        questionsByFactor[factor].push(question);
       });
-
+  
       return questionsByFactor;
     } catch (error: any) {
       console.error("Error fetching questions:", error.message || error);
       return {};
     }
   };
-
+  
   const loadQuestions = async () => {
     try {
       const groupedQuestions = await getQuestions();
-
+  
       if (!groupedQuestions || Object.keys(groupedQuestions).length === 0) {
         console.warn("No questions available. Setting noQuestions to true.");
         return;
       }
-
+  
       setQuestionsByFactor(groupedQuestions);
-
+  
       const firstFactor = Object.keys(groupedQuestions)[0];
       if (!firstFactor) {
         throw new Error(
           "Failed to determine the first factor from grouped questions."
         );
       }
-
+  
       setCurrentFactor(firstFactor);
     } catch (error: any) {
       console.error("Error loading questions:", error.message || error);
     }
   };
+  
 
   useEffect(() => {
     loadQuestions();
