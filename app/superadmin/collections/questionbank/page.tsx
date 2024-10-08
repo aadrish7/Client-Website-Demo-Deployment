@@ -441,34 +441,26 @@ const CreateQuestionModal: React.FC<{
 const QuestionsPage: React.FC = () => {
   const [tableHeaders, setTableHeaders] = useState<string[]>([]);
   const [tableData, setTableData] = useState<Record<string, any>[]>([]);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc'); // Sorting state
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isCSVModalOpen, setIsCSVModalOpen] = useState<boolean>(false);
   const [editingQuestion, setEditingQuestion] = useState<any | null>(null);
-  const [dropdownOpen, setDropdownOpen] = useState<boolean>(false); // State for dropdown
+  const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
   const [isCollectionModalOpen, setIsCollectionModalOpen] = useState<boolean>(false);
 
   const handleEdit = (question: any) => {
-    setEditingQuestion(question); // Show the edit modal with the selected question
+    setEditingQuestion(question);
   };
 
-  // Close the modal and refresh the data after saving
   const handleEditSave = () => {
     setEditingQuestion(null);
-    fetchQuestions(); // Refetch questions after saving
+    fetchQuestions();
   };
-
-
-  
 
   const handleCreateCollection = () => {
-    // After creating a new collection, refetch the collections and close the modal
     setIsCollectionModalOpen(false);
-    // You can refetch the collections here or handle updating the state as needed
-    fetchQuestions();  // To refresh the table after collection creation
+    fetchQuestions();
   };
-
-
-
 
   const fetchQuestions = async () => {
     try {
@@ -498,8 +490,7 @@ const QuestionsPage: React.FC = () => {
         }))
       );
     } catch (error) {
-      console.error("Failed to fetch questions");
-      console.error("Error:", error);
+      console.error("Failed to fetch questions", error);
     }
   };
 
@@ -507,65 +498,12 @@ const QuestionsPage: React.FC = () => {
     fetchQuestions();
   }, []);
 
-  const navItems = [
-    {
-      label: "📦 Collections",
-      active: true,
-      subItems: [
-        {
-          label: "📋 Question Bank",
-          active: true,
-          href: "/superadmin/collections/questionbank",
-        },
-        {
-          label: "📦 Collection",
-          active: false,
-          href: "/superadmin/collections/collection",
-        },
-      ],
-    },
-    {
-      label: "📦 Snippets",
-      active: false,
-      subItems: [
-        {
-          label: "📋 Snippet Bank",
-          active: false,
-          href: "/superadmin/snippets",
-        },
-        {
-          label: "📦 Snippet Set",
-          active: false,
-          href: "/superadmin/snippets/snippetset",
-        },
-      ],
-    },
-    {
-      label: "📦 Overview Snippets",
-      active: false,
-      subItems: [
-        {
-          label: "📋 Snippet Bank",
-          active: false,
-          href: "/superadmin/overviewsnippets",
-        },
-        {
-          label: "📦 Snippet Set",
-          active: false,
-          href: "/superadmin/overviewsnippets/overviewsnippetset",
-        },
-      ],
-    },
-    { label: "🏢 Company", active: false, href: "/superadmin" },
-    { label: "📊 Analytics", active: false, href: "/superadmin/analytics" },
-  ].filter((item) => item !== undefined);
-
   const handleModalClose = () => setIsModalOpen(false);
   const handleCSVModalClose = () => setIsCSVModalOpen(false);
 
   const handleCreateQuestion = () => {
     setIsModalOpen(false);
-    fetchQuestions(); // To refresh the table after question creation
+    fetchQuestions();
   };
 
   const handleCSVUpload = async (groupedQuestions: Map<string, string[]>) => {
@@ -603,31 +541,43 @@ const QuestionsPage: React.FC = () => {
     setDropdownOpen((prev) => !prev);
   };
 
-  return ( <div className="h-screen flex flex-col">
-  <Header userName="Neil Sims" userEmail="neilsimsemail@example.com" />
-  <div className="flex flex-1">
-    <Sidebar activePath="/superadmin/collections/questionbank" />
-    <div className="w-4/5 p-8">
-      <h1 className="text-2xl font-semibold mb-6">Question Bank</h1>
+  // Handle sorting when the user clicks the factor column
+  const handleSort = () => {
+    const sortedData = [...tableData].sort((a, b) => {
+      if (sortOrder === "asc") {
+        return a.factor.localeCompare(b.factor);
+      } else {
+        return b.factor.localeCompare(a.factor);
+      }
+    });
+    setTableData(sortedData);
+    setSortOrder((prevSortOrder) => (prevSortOrder === "asc" ? "desc" : "asc"));
+  };
 
-      <div className="border p-4">
-        <div className="flex items-center mb-4 justify-end space-x-2">
-          {/* Create Collection Button */}
-          <button
-            className="bg-blue-600 text-white px-4 py-2 rounded-md"
-            onClick={() => setIsCollectionModalOpen(true)}
-          >
-            Create Collection
-          </button>
+  return (
+    <div className="h-screen flex flex-col">
+      <Header userName="Neil Sims" userEmail="neilsimsemail@example.com" />
+      <div className="flex flex-1">
+        <Sidebar activePath="/superadmin/collections/questionbank" />
+        <div className="w-4/5 p-8">
+          <h1 className="text-2xl font-semibold mb-6">Question Bank</h1>
 
-          {/* Add a Question Dropdown */}
-          <div className="relative">
+          <div className="border p-4">
+            <div className="flex items-center mb-4 justify-end space-x-2">
+              <button
+                className="bg-blue-600 text-white px-4 py-2 rounded-md"
+                onClick={() => setIsCollectionModalOpen(true)}
+              >
+                Create Collection
+              </button>
+
+              <div className="relative">
                 <button
                   className="bg-blue-600 text-white px-4 py-2 rounded-md flex items-center"
                   onClick={handleDropdownToggle}
                 >
                   <span>Add a Question</span>
-                  <FaChevronDown className="ml-2" /> {/* Dropdown icon */}
+                  <FaChevronDown className="ml-2" />
                 </button>
                 {dropdownOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white shadow-md rounded-md z-10">
@@ -654,72 +604,87 @@ const QuestionsPage: React.FC = () => {
               </div>
             </div>
 
-        {tableData && tableHeaders ? (
-          <div className="overflow-x-auto border border-gray-200 rounded-md">
-            <table className="min-w-full bg-white divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  {tableHeaders.map((header, index) => (
-                    <th
-                      key={index}
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      {header}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {tableData.map((row, rowIndex) => (
-                  <tr key={rowIndex}>
-                    {tableHeaders.map((header, colIndex) => (
-                      <td
-                        key={colIndex}
-                        className={`px-6 py-4 whitespace-nowrap text-sm`}
-                      >
-                        {row[header]}
-                      </td>
+            {tableData && tableHeaders ? (
+              <div className="overflow-x-auto border border-gray-200 rounded-md">
+                <table className="min-w-full bg-white divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      {tableHeaders.map((header, index) => (
+                        <th
+                          key={index}
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          {header === "factor" ? (
+                            <div className="flex items-center">
+                              Factor
+                              <button onClick={handleSort} className="ml-2">
+                                {sortOrder === "asc" ? "↑" : "↓"}
+                              </button>
+                            </div>
+                          ) : (
+                            header
+                          )}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {tableData.map((row, rowIndex) => (
+                      <tr key={rowIndex}>
+                        {tableHeaders.map((header, colIndex) => (
+                          <td
+                            key={colIndex}
+                            className={`px-6 py-4 whitespace-nowrap text-sm ${
+                              header.toLowerCase() === ""
+                                ? "text-blue-500 font-bold cursor-pointer"
+                                : ""
+                            }`}
+                            onClick={() => {
+                              if (header.toLowerCase() === "question text") {
+                                console.log("Clicked:", row[header]);
+                              }
+                            }}
+                          >
+                            {row[header]}
+                          </td>
+                        ))}
+                      </tr>
                     ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p>Loading Questions...</p>
+            )}
           </div>
-        ) : (
-          <p>Loading Questions...</p>
-        )}
+        </div>
       </div>
+
+      {isCollectionModalOpen && (
+        <CreateCollectionModal
+          onClose={() => setIsCollectionModalOpen(false)}
+          onCreate={handleCreateCollection}
+        />
+      )}
+
+      {isModalOpen && (
+        <CreateQuestionModal
+          onClose={handleModalClose}
+          onCreate={handleCreateQuestion}
+        />
+      )}
+      {isCSVModalOpen && (
+        <CSVUploadModal onClose={handleCSVModalClose} onUpload={handleCSVUpload} />
+      )}
+      {editingQuestion && (
+        <EditQuestionModal
+          question={editingQuestion}
+          onClose={() => setEditingQuestion(null)}
+          onSave={handleEditSave}
+        />
+      )}
     </div>
-  </div>
-
-  {isCollectionModalOpen && (
-    <CreateCollectionModal
-      onClose={() => setIsCollectionModalOpen(false)}
-      onCreate={handleCreateCollection} // Callback to refresh the data
-    />
-  )}
-
-  {isModalOpen && (
-    <CreateQuestionModal
-      onClose={handleModalClose}
-      onCreate={handleCreateQuestion}
-    />
-  )}
-  {isCSVModalOpen && (
-    <CSVUploadModal
-      onClose={handleCSVModalClose}
-      onUpload={handleCSVUpload}
-    />
-  )}
-  {editingQuestion && (
-    <EditQuestionModal
-      question={editingQuestion}
-      onClose={() => setEditingQuestion(null)}
-      onSave={handleEditSave}
-    />
-  )}
-</div>
-)
+  );
 };
 
 export default QuestionsPage;

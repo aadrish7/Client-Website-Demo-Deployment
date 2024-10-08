@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import outputs from "../../../amplify_outputs.json";
 import { Schema } from "@/amplify/data/resource";
 import { generateClient } from "aws-amplify/data";
+import ResolvingViewport from 'next/dist/lib/metadata/types/metadata-interface.js';
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
@@ -30,39 +31,24 @@ export default function SignUpPage() {
     event.preventDefault();
     const form = event.currentTarget;
     const email = form.elements.email.value;
-    const role = form.elements.role.value;
 
-    console.log("role", role);
-    if (role === "admin") {
-      const { data: listOfAdmins, errors } = await client.models.User.list({
-        filter: {
-          and: [
-            { role: { eq: "admin" } },
-            { email: { eq: email } }
-          ]
+    const {data : relevantUser} = await client.models.User.list({
+
+      filter : {
+        email : {
+          eq : email
         }
-      });
-    
-      if (listOfAdmins.length === 0) {
-        setErrorMessage("Admin with this email has not been registered");
-        return;
       }
-    } else if (role === "employee") {
-      const { data: listOfEmployees, errors } = await client.models.User.list({
-        filter: {
-          and: [
-            { role: { eq: "employee" } },
-            { email: { eq: email } }
-          ]
-        }
-      });
-    
-      if (listOfEmployees.length === 0) {
-        setErrorMessage("Employee with this email has not been registered");
-        return;
-      }
+
+    })
+
+    if (relevantUser.length == 0){
+      setErrorMessage("User does not exist in the database. Please contact the admin to add you to the database.")
+      return;
     }
-    
+
+    const finalUser = relevantUser[0];
+    const roleInDB = finalUser.role;
 
     try {
       //sign up the user with the email and password
@@ -71,7 +57,7 @@ export default function SignUpPage() {
         password: form.elements.password.value,
         options: {
           userAttributes: {
-            "custom:role": form.elements.role.value,
+            "custom:role": roleInDB,
           },
         },
       });
@@ -146,25 +132,6 @@ export default function SignUpPage() {
                 placeholder="********"
                 required
               />
-            </div>
-
-            <div className="mb-3">
-              <label
-                className="block text-gray-700 text-sm font-bold mb-1"
-                htmlFor="role"
-              >
-                Select your role
-              </label>
-              <select
-                id="role"
-                name="role"
-                required
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 text-sm leading-tight focus:outline-none focus:shadow-outline"
-              >
-                <option value="admin">Admin</option>
-                <option value="superadmin">Superadmin</option>
-                <option value="employee">Employee</option>
-              </select>
             </div>
 
             {errorMessage && (

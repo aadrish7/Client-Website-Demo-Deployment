@@ -217,11 +217,12 @@ const SuperAdminMainPage: React.FC = () => {
   const fetchCompanies = async () => {
     try {
       const { data: companyList } = await client.models.Company.list({});
-      setTableHeaders(() => ["company name", "admin email"]);
+      setTableHeaders(() => ["company name", "admin email", "admin name"]);
       setTableData(
-        companyList.map((collection: any) => ({
-          "company name" : collection.companyName,
-          "admin email": collection.adminEmail,
+        companyList.map((company: any) => ({
+          "company name": company.companyName,
+          "admin email": company.adminEmail,
+          "admin name": `${company.adminFirstName} ${company.adminLastName}`, // Display admin's full name
         }))
       );
     } catch (error) {
@@ -313,12 +314,6 @@ const SuperAdminMainPage: React.FC = () => {
                   <span>Add Company</span>
                   <span className="text-xl font-bold">+</span>
                 </button>
-                {/* <button
-                  onClick={goToCSVCreation}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md flex items-center space-x-1"
-                >
-                  Create Company CSV
-                </button> */}
               </div>
             </div>
 

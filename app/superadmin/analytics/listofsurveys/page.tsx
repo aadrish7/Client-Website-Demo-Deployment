@@ -68,7 +68,7 @@ const AdminPage: React.FC = () => {
       return;
     }
 
-    setTableHeaders(["Survey Name", "Survey Status", "Completion Percentage"]);
+    setTableHeaders(["Survey Name", "Survey Status", "Percentage Completion"]);
 
     const tableData = await Promise.all(
       surveys.map(async (survey) => {
@@ -108,7 +108,7 @@ const AdminPage: React.FC = () => {
         return {
           surveyName: survey?.surveyName || "",
           start: survey?.start === true ? "In progress" : "Completed",
-          "Completion Percentage": finalpercentage.toFixed(2) + "%",
+          "Percentage Completion": finalpercentage.toFixed(2) + "%",
         };
       })
     );
@@ -239,8 +239,8 @@ const AdminPage: React.FC = () => {
                           )
                         ) : header === "Survey Name" ? (
                           row.surveyName
-                        ) : header === "Completion Percentage" ? (
-                          row["Completion Percentage"]
+                        ) : header === "Percentage Completion" ? (
+                          row["Percentage Completion"]
                         ) : (
                           row.start
                         )}
