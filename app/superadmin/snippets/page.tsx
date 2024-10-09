@@ -37,14 +37,12 @@ const EditSnippetModal: React.FC<{
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
-  // Define types without spaces for saving
   const typeValues = [
     "adminoverview",
     "employeeaggregated",
     "employeeindividual",
   ];
 
-  // Define corresponding display types with spaces
   const displayTypes: any = {
     adminoverview: "Admin Overview",
     employeeaggregated: "Employee Aggregated",
@@ -81,9 +79,9 @@ const EditSnippetModal: React.FC<{
         factor,
         score: Number(score),
         snippetText,
-        type, // This is already stored without spaces
+        type, 
         disabled: false,
-        snippetSetId: "", // Default value for snippetSetId
+        snippetSetId: "", 
       });
 
       setSuccessMessage("Text Snippet updated successfully!");
@@ -204,6 +202,31 @@ interface TextSnippet {
   snippetText: string;
   type: "adminoverview" | "employeeaggregated" | "employeeindividual";
 }
+const fetchAllSnippets = async (client: any, pageSize: number = 100): Promise<any[]> => {
+  let allTodos: any[] = [];
+  let nextToken: string | null = null;
+  let hasMorePages: boolean = true;
+
+  while (hasMorePages) {
+    const { data: todos, nextToken: newNextToken }: { data: any[]; nextToken: any } = await client.models.TextSnippet.list({
+      nextToken,
+      limit: pageSize,
+    });
+
+    // Combine the new todos with the existing ones
+    allTodos = [...allTodos, ...todos];
+
+    // Update the nextToken for the next request
+    nextToken = newNextToken;
+
+    // If there's no more nextToken or fewer items than the page size, stop fetching
+    if (!nextToken || todos.length < pageSize) {
+      hasMorePages = false;
+    }
+  }
+
+  return allTodos;
+};
 
 const CreateSnippetSetModal: React.FC<{
   onClose: () => void;
@@ -217,11 +240,15 @@ const CreateSnippetSetModal: React.FC<{
   useEffect(() => {
     const fetchTextSnippets = async () => {
       try {
-        const { data: snippetList } = await client.models.TextSnippet.list({
-          filter: {
-            and: [{ disabled: { eq: false } }, { snippetSetId: { eq: "" } }],
-          },
-        });
+        const allSnippets = await fetchAllSnippets(client);
+        const snippetList = allSnippets.filter((snippet: any) => !snippet.disabled && snippet.snippetSetId === "");
+        // const { data: snippetList } = await client.models.TextSnippet.list({
+        //   filter: {
+        //     and: [{ disabled: { eq: false } }, { snippetSetId: { eq: "" } }],
+        //   },
+        // });
+        console.log("fetched snippetl list", snippetList )
+
         setTextSnippets(
           snippetList.map((snippet: any) => ({
             id: snippet.id,
@@ -263,7 +290,6 @@ const CreateSnippetSetModal: React.FC<{
           disabled: true,
           snippetSetId: snippetSet.id,
         });
-        console.log("saved snippet",mysavedsnippet);
       }
       onCreate();
     } catch (error) {
@@ -534,9 +560,11 @@ const SuperAdminMainPage: React.FC = () => {
 
   const fetchTextSnippets = async () => {
     try {
-      const { data: textSnippetList } = await client.models.TextSnippet.list({
-        filter: { disabled: { eq: false } },
-      });
+      const allSnippets = await fetchAllSnippets(client);
+      const textSnippetList = allSnippets.filter((snippet: any) => !snippet.disabled);
+      // const { data: textSnippetList } = await client.models.TextSnippet.list({
+      //   filter: { disabled: { eq: false } },
+      // });
       setTableHeaders(["factor", "score", "type", "snippet text", "manage"]);
       setTableData(
         textSnippetList.map((snippet: any) => ({

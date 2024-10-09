@@ -10,9 +10,12 @@ import Sidebar from "@/components/superadminSidebar";
 import Table from "@/components/table";
 import { Suspense } from "react";
 import Breadcrumb from "@/components/normalBreadCrumb";
+import { Pagination } from "@aws-amplify/ui-react";
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
+
+
 
 // Define a type for text snippet details
 type TextSnippetDetails = {
@@ -38,6 +41,32 @@ const SnippetSetDetails: React.FC = () => {
   const searchParams = useSearchParams();
   const snippetSetName = searchParams.get("name");
 
+  const fetchAllTextSnippets = async (client: any, pageSize: number = 100): Promise<any[]> => {
+    let allTodos: any[] = [];
+    let nextToken: string | null = null;
+    let hasMorePages: boolean = true;
+  
+    while (hasMorePages) {
+      const { data: todos, nextToken: newNextToken }: { data: any[]; nextToken: any } = await client.models.TextSnippet.list({
+        nextToken,
+        limit: pageSize,
+      });
+  
+      // Combine the new todos with the existing ones
+      allTodos = [...allTodos, ...todos];
+  
+      // Update the nextToken for the next request
+      nextToken = newNextToken;
+  
+      // If there's no more nextToken or fewer items than the page size, stop fetching
+      if (!nextToken || todos.length < pageSize) {
+        hasMorePages = false;
+      }
+    }
+  
+    return allTodos;
+  };
+
     useEffect(() => {
       const fetchSnippetSet = async () => {
         try {
@@ -48,7 +77,6 @@ const SnippetSetDetails: React.FC = () => {
             },
           });
           const foundSet = snippetSets.find((set) => set.name === snippetSetName);
-          console.log(foundSet);
     
           if (foundSet) {
             setSnippetSet({
@@ -57,20 +85,21 @@ const SnippetSetDetails: React.FC = () => {
               textSnippets: [], // No longer used, but kept for structure
             });
     
-            // Fetch text snippets by snippetSetId instead of using textSnippet IDs
-            const { data: textSnippets } = await client.models.TextSnippet.list({
-              filter: {
-                snippetSetId: { eq: foundSet.id || "" },
-                disabled : {eq :true},
-              },
-            });
-            console.log("textSnippets", textSnippets);
-            // Only include snippets where disabled is false
-            const snippets = textSnippets;
-            console.log(snippets);
+            if (!foundSet.id) {
+              console.error("Snippet set ID not found");
+              return;
+            }
+      
+            
+            var snippets = await fetchAllTextSnippets(client);
+            //filter the ones that have the disabled field set to true and the snippetSetId is equal to the foundSet.id
+            const filteredSnippets = snippets.filter((snippet:any) => snippet.snippetSetId === foundSet.id && snippet.disabled === true);
+            snippets = filteredSnippets;
+
+            console.log("filteredSnippets", filteredSnippets);
     
             setTextSnippetsDetails(
-              snippets.map((snippet) => ({
+              snippets.map((snippet:any) => ({
                 factor: snippet.factor,
                 score: snippet.score,
                 snippetText: snippet.snippetText,
