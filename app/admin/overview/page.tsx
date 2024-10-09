@@ -89,6 +89,8 @@ const OverviewPage: React.FC = () => {
   };
 
 
+
+
   const fetchData = async () => {
     const idOfSurvey = searchParams.get("surveyId") || "";
 
@@ -190,20 +192,39 @@ const OverviewPage: React.FC = () => {
 
     }
   }, [searchParams]);
-  const getSnippets = async () => {
-    const { data: overviewSnippets } = await client.models.TextSnippet.list({
-      filter:{
-        type : {
-          eq : "adminoverview",
-        },
-        disabled : {
-          eq : false
-        },
-        snippetSetId : {
-          eq : snippetSetId
-      },
+  const fetchAllSnippets = async (client: any, pageSize: number = 100): Promise<any[]> => {
+    let allTodos: any[] = [];
+    let nextToken: string | null = null;
+    let hasMorePages: boolean = true;
+  
+    while (hasMorePages) {
+      const { data: todos, nextToken: newNextToken }: { data: any[]; nextToken: any } = await client.models.TextSnippet.list({
+        nextToken,
+        limit: pageSize,
+      });
+  
+      // Combine the new todos with the existing ones
+      allTodos = [...allTodos, ...todos];
+  
+      // Update the nextToken for the next request
+      nextToken = newNextToken;
+  
+      // If there's no more nextToken or fewer items than the page size, stop fetching
+      if (!nextToken || todos.length < pageSize) {
+        hasMorePages = false;
+      }
     }
-    });
+  
+    return allTodos;
+  };
+  const getSnippets = async () => {
+    const allSnippets = await fetchAllSnippets(client);
+    if (!allSnippets) {
+      console.error("No snippets found for company:");
+      return;
+    }
+    const overviewSnippets = allSnippets.filter((snippet: any) => snippet.snippetSetId === snippetSetId && snippet.disabled === true && snippet.type === "adminoverview");
+
     console.log("Overview Snippets", overviewSnippets)
 
     if (overviewSnippets.length === 0) {

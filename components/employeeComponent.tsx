@@ -444,20 +444,47 @@ const QuestionsComponent: React.FC = () => {
     );
     return sortedAverages;
   };
+  const fetchAllSnippets = async (client: any, pageSize: number = 100): Promise<any[]> => {
+    let allTodos: any[] = [];
+    let nextToken: string | null = null;
+    let hasMorePages: boolean = true;
+  
+    while (hasMorePages) {
+      const { data: todos, nextToken: newNextToken }: { data: any[]; nextToken: any } = await client.models.TextSnippet.list({
+        nextToken,
+        limit: pageSize,
+      });
+  
+      // Combine the new todos with the existing ones
+      allTodos = [...allTodos, ...todos];
+  
+      // Update the nextToken for the next request
+      nextToken = newNextToken;
+  
+      // If there's no more nextToken or fewer items than the page size, stop fetching
+      if (!nextToken || todos.length < pageSize) {
+        hasMorePages = false;
+      }
+    }
+  
+    return allTodos;
+  };
   useEffect(() => {
     const fetchSnippets = async () => {
       if (viewSurveyResults) {
         const averageSurveyResults = calculateAverages(userSelections);
-        console.log("averageSurveyResults", averageSurveyResults);
-
         try {
-          const { data: snippets } = await client.models.TextSnippet.list({
-            filter: {
-              snippetSetId: { eq: snippetId },
-            },
-          });
-          console.log("snippets", snippets);
-
+        //   const { data: snippets } = await client.models.TextSnippet.list({
+        //     filter: {
+        //       snippetSetId: { eq: snippetId },
+        //       disabled : {eq: true},
+        //       type : {ne: "adminoverview"},
+        //     },
+        //   });
+          const beforeFilterSnippets = await fetchAllSnippets(client);
+          const filteredSnippets = beforeFilterSnippets.filter((snippet:any) => snippet.snippetSetId === snippetId && snippet.disabled === true && snippet.type !== "adminoverview");
+          const snippets = filteredSnippets;
+          
           if (snippets.length > 0) {
             // Filter the snippets based on factorScore and score range
             setSnippets(() => snippets);
