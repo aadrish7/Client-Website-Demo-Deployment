@@ -38,55 +38,55 @@ const SnippetSetDetails: React.FC = () => {
   const searchParams = useSearchParams();
   const snippetSetName = searchParams.get("name");
 
-  useEffect(() => {
-    const fetchSnippetSet = async () => {
-      try {
-        const { data: snippetSets } = await client.models.SnippetSet.list({});
-        const foundSet = snippetSets.find((set) => set.name === snippetSetName);
-        if (foundSet) {
-          setSnippetSet({
-            name: foundSet.name ?? "",
-            tags: foundSet.tags ?? "",
-            textSnippets:
-              foundSet.textSnippets?.filter(
-                (snippet): snippet is string => snippet !== null
-              ) ?? [],
+    useEffect(() => {
+      const fetchSnippetSet = async () => {
+        try {
+          if (!snippetSetName) return;
+          const { data: snippetSets } = await client.models.SnippetSet.list({
+            filter: {
+              name: { eq: snippetSetName },
+            },
           });
-
-          // Fetch text snippets based on the IDs present in textSnippets array of the SnippetSet
-          const fetchedTextSnippets = await Promise.all(
-            foundSet.textSnippets?.filter(Boolean)?.map(async (snippetId) => {
-              const { data: textSnippets } =
-                await client.models.TextSnippet.list({
-                  filter: {
-                    id: { eq: snippetId || "" },
-                  },
-                });
-              const textSnippet = textSnippets[0];
-              return {
-                factor: textSnippet?.factor,
-                score: textSnippet?.score,
-                snippetText: textSnippet?.snippetText,
-                type: textSnippet?.type,
-                disabled: textSnippet?.disabled ?? false, // Ensure disabled is present
-              };
-            }) ?? []
-          );
-
-          // Only include snippets where disabled is false
-          const snippets = fetchedTextSnippets.filter(
-            (snippet) => !snippet.disabled
-          );
-
-          setTextSnippetsDetails(snippets); // Now the snippets array includes 'disabled'
+          const foundSet = snippetSets.find((set) => set.name === snippetSetName);
+          console.log(foundSet);
+    
+          if (foundSet) {
+            setSnippetSet({
+              name: foundSet.name ?? "",
+              tags: foundSet.tags ?? "",
+              textSnippets: [], // No longer used, but kept for structure
+            });
+    
+            // Fetch text snippets by snippetSetId instead of using textSnippet IDs
+            const { data: textSnippets } = await client.models.TextSnippet.list({
+              filter: {
+                snippetSetId: { eq: foundSet.id || "" },
+                disabled : {eq :true},
+              },
+            });
+            console.log("textSnippets", textSnippets);
+            // Only include snippets where disabled is false
+            const snippets = textSnippets;
+            console.log(snippets);
+    
+            setTextSnippetsDetails(
+              snippets.map((snippet) => ({
+                factor: snippet.factor,
+                score: snippet.score,
+                snippetText: snippet.snippetText,
+                type: snippet.type,
+                disabled: snippet.disabled ?? false,
+              }))
+            );
+          }
+        } catch (error) {
+          console.error("Failed to fetch snippet set or text snippets", error);
         }
-      } catch (error) {
-        console.error("Failed to fetch snippet set or text snippets", error);
-      }
-    };
-
-    if (snippetSetName) fetchSnippetSet();
-  }, [snippetSetName]);
+      };
+    
+      if (snippetSetName) fetchSnippetSet();
+    }, [snippetSetName]);
+    
 
   const headers = ["Factor", "Score", "Snippet Text", "Type"];
 
@@ -96,61 +96,6 @@ const SnippetSetDetails: React.FC = () => {
     "Snippet Text": snippet.snippetText,
     Type: snippet.type ?? "Unknown", // Ensure Type is always a string
   }));
-
-  const handleSnippetClick = (snippetText: string) => {};
-
-  const navItems = [
-    {
-      label: "📦 Collections",
-      active: false,
-      subItems: [
-        {
-          label: "📋 Question Bank",
-          active: false,
-          href: "/superadmin/collections/questionbank",
-        },
-        {
-          label: "📦 Collection",
-          active: false,
-          href: "/superadmin/collections/collection",
-        },
-      ],
-    },
-    {
-      label: "📦 Snippets",
-      active: true,
-      subItems: [
-        {
-          label: "📋 Snippet Bank",
-          active: false,
-          href: "/superadmin/snippets",
-        },
-        {
-          label: "📦 Snippet Set",
-          active: true,
-          href: "/superadmin/snippets/snippetset",
-        },
-      ],
-    },
-    {
-      label: "📦 Overview Snippets",
-      active: false,
-      subItems: [
-        {
-          label: "📋 Snippet Bank",
-          active: false,
-          href: "/superadmin/overviewsnippets",
-        },
-        {
-          label: "📦 Snippet Set",
-          active: false,
-          href: "/superadmin/overviewsnippets/overviewsnippetset",
-        },
-      ],
-    },
-    { label: "🏢 Company", active: false, href: "/superadmin" },
-    { label: "📊 Analytics", active: false, href: "/superadmin/analytics" },
-  ].filter((item) => item !== undefined);
 
   return (
     <div className="h-screen flex flex-col">
@@ -172,7 +117,7 @@ const SnippetSetDetails: React.FC = () => {
                 headers={headers}
                 data={tableData}
                 underlineColumn=""
-                handleClick={handleSnippetClick}
+                handleClick={() => {}}
               />
             ) : (
               <p>Loading snippets...</p>

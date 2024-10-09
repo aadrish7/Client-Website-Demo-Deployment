@@ -13,6 +13,7 @@ import { create } from "zustand";
 import { FaChevronDown, FaEdit, FaTrash } from "react-icons/fa";
 import Breadcrumb from "@/components/normalBreadCrumb";
 import { Suspense } from "react";
+import { truncate } from "fs";
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
@@ -70,14 +71,19 @@ const EditSnippetModal: React.FC<{
         setLoading(false);
         return;
       }
-
-      // Update the snippet in Amplify with the type without spaces
       await client.models.TextSnippet.update({
+        id : snippet.id,
+        disabled: true,
+      });
+      // Update the snippet in Amplify with the type without spaces
+      await client.models.TextSnippet.create({
         id: snippet.id,
         factor,
         score: Number(score),
         snippetText,
         type, // This is already stored without spaces
+        disabled: false,
+        snippetSetId: "", // Default value for snippetSetId
       });
 
       setSuccessMessage("Text Snippet updated successfully!");
@@ -191,6 +197,13 @@ const EditSnippetModal: React.FC<{
     </div>
   );
 };
+interface TextSnippet {
+  id: string;
+  factor: string;
+  score: number;
+  snippetText: string;
+  type: "adminoverview" | "employeeaggregated" | "employeeindividual";
+}
 
 const CreateSnippetSetModal: React.FC<{
   onClose: () => void;
@@ -198,21 +211,24 @@ const CreateSnippetSetModal: React.FC<{
 }> = ({ onClose, onCreate }) => {
   const [name, setName] = useState<string>("");
   const [tags, setTags] = useState<string>("");
-  const [textSnippets, setTextSnippets] = useState<
-    { id: string; snippetText: string }[]
-  >([]);
+  const [textSnippets, setTextSnippets] = useState<TextSnippet[]>([]); // Updated type for text snippets
   const [isCreating, setIsCreating] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchTextSnippets = async () => {
       try {
         const { data: snippetList } = await client.models.TextSnippet.list({
-          filter: { disabled: { eq: false } },
+          filter: {
+            and: [{ disabled: { eq: false } }, { snippetSetId: { eq: "" } }],
+          },
         });
         setTextSnippets(
-          snippetList.map((snippet) => ({
+          snippetList.map((snippet: any) => ({
             id: snippet.id,
+            factor: snippet.factor, // Include required fields
+            score: snippet.score,   // Include required fields
             snippetText: snippet.snippetText,
+            type: snippet.type,     // Include required fields
           }))
         );
       } catch (error) {
@@ -226,12 +242,29 @@ const CreateSnippetSetModal: React.FC<{
   const handleSubmit = async () => {
     setIsCreating(true);
     try {
-      const snippetIds = textSnippets.map((snippet) => snippet.id);
-      await client.models.SnippetSet.create({
+      const { data: snippetSet } = await client.models.SnippetSet.create({
         name,
         tags,
-        textSnippets: snippetIds,
       });
+      if (!snippetSet) {
+        console.error("Failed to create snippet set");
+        return;
+      }
+      if (!snippetSet.id) {
+        console.error("Snippet set ID not found");
+        return;
+      }
+      for (const snippet of textSnippets) {
+        const {data:mysavedsnippet} = await client.models.TextSnippet.create({
+          factor: snippet.factor,
+          score: snippet.score,
+          snippetText: snippet.snippetText,
+          type: snippet.type,
+          disabled: true,
+          snippetSetId: snippetSet.id,
+        });
+        console.log("saved snippet",mysavedsnippet);
+      }
       onCreate();
     } catch (error) {
       console.error("Failed to create snippet set", error);
@@ -271,9 +304,7 @@ const CreateSnippetSetModal: React.FC<{
 
         {/* Text Snippets Info */}
         <div className="mb-6 mt-4">
-          <label className="text-sm block font-medium mb-2">
-            Text Snippets
-          </label>
+          <label className="text-sm block font-medium mb-2">Text Snippets</label>
           <p className="text-sm">
             {textSnippets.length} snippets will be added to this set by default.
           </p>
@@ -357,6 +388,8 @@ const CreateTextSnippet: React.FC<CreateTextSnippetProps> = ({ onClose }) => {
         score: Number(score),
         snippetText,
         type, // This is already stored without spaces
+        disabled: false,
+        snippetSetId: "", // Default value for snippetSetId
       });
 
       setFactor("");
@@ -627,6 +660,8 @@ const SuperAdminMainPage: React.FC = () => {
               score: Number(score),
               snippetText,
               type: sanitizedType,
+              disabled: false,
+              snippetSetId: "",
             });
           }
           await fetchTextSnippets();

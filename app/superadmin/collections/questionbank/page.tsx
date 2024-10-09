@@ -17,41 +17,37 @@ import { FaChevronDown } from "react-icons/fa";
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
 
-const CreateCollectionModal: React.FC<{ onClose: () => void; onCreate: () => void }> = ({ onClose, onCreate }) => {
+const CreateCollectionModal: React.FC<{ 
+  onClose: () => void; 
+  onCreate: () => void; 
+  questions: { id: string; factor: string; questionText: string; }[] 
+}> = ({ onClose, onCreate, questions }) => {
   const [name, setName] = useState<string>('');
   const [tags, setTags] = useState<string>('');
-  const [questions, setQuestions] = useState<{ factor: string; questionText: string; options: string[] | null; id: string; createdAt: string; updatedAt: string; }[]>([]);
   const [isCreating, setIsCreating] = useState<boolean>(false);
-
-  useEffect(() => {
-    const fetchQuestions = async () => {
-      try {
-        const { data: questionList } = await client.models.Question.list({
-          filter: { disabled: { eq: false } },
-        });
-        setQuestions(questionList.map((question) => ({
-          ...question,
-          options: question.options as string[] | null,
-        }))); 
-      } catch (error) {
-        console.error('Failed to fetch questions', error);
-      }
-    };
-
-    fetchQuestions();
-  }, []);
 
   const handleSubmit = async () => {
     setIsCreating(true);
     try {
-      const questionIds = questions.map((question) => question.id);
-      
-      await client.models.Collection.create({
+      const { data: collection } = await client.models.Collection.create({
         name,
         tags,
-        questions: questionIds,
       });
-      onCreate();  // Close modal and trigger refresh
+      if (!collection) {
+        console.error('Failed to create collection');
+        return;
+      }
+      for (const question of questions) {
+        await client.models.Question.create({
+          collectionId: collection.id,
+          factor: question.factor || '',
+          questionText: question.questionText || '',
+          disabled: true,
+        });
+      }
+
+      onCreate();
+
     } catch (error) {
       console.error('Failed to create collection', error);
     } finally {
@@ -59,13 +55,11 @@ const CreateCollectionModal: React.FC<{ onClose: () => void; onCreate: () => voi
     }
   };
 
-  
-
   return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-10">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-10">
       <div className="bg-white p-6 rounded-md shadow-lg w-full max-w-md">
         <h2 className="text-lg font-semibold mb-7">Create New Collection</h2>
-    
+
         {/* Name Input */}
         <div className="mb-6 mt-4">
           <label className="block text-sm font-medium mb-2">Name</label>
@@ -78,7 +72,7 @@ const CreateCollectionModal: React.FC<{ onClose: () => void; onCreate: () => voi
             disabled={isCreating}
           />
         </div>
-    
+
         {/* Tags Input */}
         <div className="mb-6 mt-4">
           <label className="block text-sm font-medium mb-2">Tags</label>
@@ -91,13 +85,13 @@ const CreateCollectionModal: React.FC<{ onClose: () => void; onCreate: () => voi
             disabled={isCreating}
           />
         </div>
-    
+
         {/* Questions Information */}
         <div className="mb-6 mt-4">
           <label className="block text-sm font-medium mb-2">Questions</label>
           <p>{questions.length} questions will be added to this collection by default.</p>
         </div>
-    
+
         {/* Buttons */}
         <div className="flex justify-center mt-4">
           <button 
@@ -109,9 +103,7 @@ const CreateCollectionModal: React.FC<{ onClose: () => void; onCreate: () => voi
           </button>
           <button 
             onClick={handleSubmit} 
-            className={`bg-blue-600 text-white px-4 py-2 rounded-md ${
-              isCreating ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
+            className={`bg-blue-600 text-white px-4 py-2 rounded-md ${isCreating ? 'opacity-50 cursor-not-allowed' : ''}`}
             disabled={isCreating}
           >
             {isCreating ? 'Creating...' : 'Create'}
@@ -119,9 +111,10 @@ const CreateCollectionModal: React.FC<{ onClose: () => void; onCreate: () => voi
         </div>
       </div>
     </div>
-    
   );
 };
+
+
 
 const CSVUploadModal: React.FC<{
   onClose: () => void;
@@ -276,8 +269,8 @@ const EditQuestionModal: React.FC<{
       await client.models.Question.create({
         factor,
         questionText,
-        options: ["1", "2", "3", "4", "5"],  // Default options for consistency
         disabled: false, // New question is active
+        collectionId: "", // No collection for now
       });
   
       // Trigger refresh or any callback after saving
@@ -366,8 +359,8 @@ const CreateQuestionModal: React.FC<{
       await client.models.Question.create({
         factor,
         questionText,
-        options: ["1", "2", "3", "4", "5"],
         disabled: false,
+        collectionId: "",
       });
       onCreate(); // Close modal and trigger refresh
     } catch (error) {
@@ -447,6 +440,12 @@ const QuestionsPage: React.FC = () => {
   const [editingQuestion, setEditingQuestion] = useState<any | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
   const [isCollectionModalOpen, setIsCollectionModalOpen] = useState<boolean>(false);
+  const [questions, setQuestions] = useState<{ 
+    id: string; 
+    factor: string; 
+    questionText: string; 
+  }[]>([]);
+  
 
   const handleEdit = (question: any) => {
     setEditingQuestion(question);
@@ -467,9 +466,28 @@ const QuestionsPage: React.FC = () => {
       const { userId } = await getCurrentUser();
       const { data: questionList } = await client.models.Question.list({
         filter: {
-          disabled: { eq: false },
+          and: [
+            { disabled: { eq: false } },
+            { collectionId: { eq: "" } },
+          ],
         },
       });
+      
+      
+      
+      console.log("Questions:", questionList);
+
+      if (!questionList) return;
+      if (questionList.length === 0) {
+        setTableHeaders(() => ["factor", "question text", "manage"]);
+        setTableData([]);
+        return;
+      }
+      setQuestions(questionList.map((question) => ({
+        id: question.id,
+        factor: question.factor || "",
+        questionText: question.questionText || "",
+      })));
       setTableHeaders(() => ["factor", "question text", "manage"]);
       setTableData(
         questionList.map((question) => ({
@@ -513,8 +531,8 @@ const QuestionsPage: React.FC = () => {
           await client.models.Question.create({
             factor,
             questionText,
-            options: ["1", "2", "3", "4", "5"],
             disabled: false,
+            collectionId: "",
           });
         }
       }
@@ -576,7 +594,7 @@ const QuestionsPage: React.FC = () => {
                   className="bg-blue-600 text-white px-4 py-2 rounded-md flex items-center"
                   onClick={handleDropdownToggle}
                 >
-                  <span>Add a Question</span>
+                  <span>Add Question</span>
                   <FaChevronDown className="ml-2" />
                 </button>
                 {dropdownOpen && (
@@ -664,6 +682,7 @@ const QuestionsPage: React.FC = () => {
         <CreateCollectionModal
           onClose={() => setIsCollectionModalOpen(false)}
           onCreate={handleCreateCollection}
+          questions={questions}
         />
       )}
 

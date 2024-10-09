@@ -13,6 +13,7 @@ import { Suspense } from "react";
 import AdminEmployeeComponent from "@/components/adminEmployeeComponent";
 import { data } from '../../../amplify/data/resource';
 import Breadcrumb from "@/components/adminBreadCrumb";
+import { disable } from 'aws-amplify/analytics';
 
 const PieChart = dynamic(() => import("@/components/adminPieChart"), {
   ssr: false,
@@ -37,6 +38,7 @@ const OverviewPage: React.FC = () => {
   const [averageScores, setAverageScores] = useState<{ [key: string]: number }>(
     {}
   );
+  const [snippetSetId, setSnippetSetId] = useState<string>("");
   //array of strings
   const [matchingSnippets, setMatchingSnippets] = useState<any>([]);
 
@@ -56,7 +58,6 @@ const OverviewPage: React.FC = () => {
     const factorImportanceResponsesFiltered = factorImportanceResponses.filter(
       (response) => response.score === 5
     );
-    console.log("5factorImportanceResponsesFiltered", factorImportanceResponsesFiltered);
 
     // Step 2: Count occurrences of each factor
     const factorImportanceCount = factorImportanceResponsesFiltered.reduce(
@@ -104,6 +105,7 @@ const OverviewPage: React.FC = () => {
     }
     const survey = surveys[0];
     setSurveyName(survey.surveyName);
+    setSnippetSetId(()=>survey.snippetSetId || "");
    if (!survey.companyId) {
       console.error("No company found for survey:", survey);
       return;
@@ -192,10 +194,17 @@ const OverviewPage: React.FC = () => {
     const { data: overviewSnippets } = await client.models.TextSnippet.list({
       filter:{
         type : {
-          eq : "adminoverview"
-        }
-      }
+          eq : "adminoverview",
+        },
+        disabled : {
+          eq : false
+        },
+        snippetSetId : {
+          eq : snippetSetId
+      },
+    }
     });
+    console.log("Overview Snippets", overviewSnippets)
 
     if (overviewSnippets.length === 0) {
       console.error("No snippets found for company:");
@@ -234,24 +243,6 @@ const OverviewPage: React.FC = () => {
     findMatchingSnippets();
     
   }, [averageScores]);
-
-  const navItems = [
-    {
-      label: "📦 Overview",
-      active: true,
-      href: `/admin/overview?surveyId=${searchParams.get("surveyId")}`,
-    },
-    {
-      label: "📊 Analytics",
-      active: false,
-      href: `/admin/analytics?surveyId=${searchParams.get("surveyId")}`,
-    },
-    {
-      label: "🏢 Employees",
-      active: false,
-      href: `/admin/employees?surveyId=${searchParams.get("surveyId")}`,
-    },
-  ].filter((item) => item !== undefined);
 
   return (
     <div className="h-screen flex flex-col">

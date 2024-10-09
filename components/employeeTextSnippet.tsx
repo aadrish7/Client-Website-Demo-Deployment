@@ -33,8 +33,8 @@ const TextSnippetDisplay: React.FC<Props> = ({
   useEffect(() => {
     if (snippets.length > 0) {
       const matchedSnippets = snippets.filter((snippet: any) => {
-        const factorScore = factors[snippet[0].factor];
-        return factorScore && isScoreInRange(factorScore, snippet[0].score);
+        const factorScore = factors[snippet.factor];
+        return factorScore && isScoreInRange(factorScore, snippet.score);
       });
       setMatchingSnippets(matchedSnippets);
     }
@@ -47,11 +47,11 @@ const TextSnippetDisplay: React.FC<Props> = ({
           {matchingSnippets
             .filter(
               (snippet: any) =>
-                snippet[0].type === "employeeindividual" &&
-                snippet[0].factor === selectedMetric
+                snippet.type === "employeeindividual" &&
+                snippet.factor === selectedMetric
             )
             .map((snippet: any, index: any) => (
-              <span key={index}>{snippet[0].snippetText} </span>
+              <span key={index}>{snippet.snippetText} </span>
             ))}
         </p>
       ) : null}

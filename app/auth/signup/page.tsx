@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import outputs from "../../../amplify_outputs.json";
 import { Schema } from "@/amplify/data/resource";
 import { generateClient } from "aws-amplify/data";
-import ResolvingViewport from 'next/dist/lib/metadata/types/metadata-interface.js';
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
@@ -14,6 +13,7 @@ const client = generateClient<Schema>();
 interface SignUpFormElements extends HTMLFormControlsCollection {
   email: HTMLInputElement;
   password: HTMLInputElement;
+  retypePassword: HTMLInputElement;
   role: HTMLSelectElement;
 }
 
@@ -25,25 +25,33 @@ export default function SignUpPage() {
   const router = useRouter();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [retypePassword, setRetypePassword] = useState<string>("");
 
-  //function to handle the signup form submission
+  // Function to handle the signup form submission
   async function handleSubmit(event: FormEvent<SignUpForm>) {
     event.preventDefault();
     const form = event.currentTarget;
     const email = form.elements.email.value;
+    const password = form.elements.password.value;
 
-    const {data : relevantUser} = await client.models.User.list({
+    // Check if the passwords match before proceeding
+    if (password !== retypePassword) {
+      setErrorMessage("Passwords do not match. Please try again.");
+      return;
+    }
 
-      filter : {
-        email : {
-          eq : email
-        }
-      }
+    const { data: relevantUser } = await client.models.User.list({
+      filter: {
+        email: {
+          eq: email,
+        },
+      },
+    });
 
-    })
-
-    if (relevantUser.length == 0){
-      setErrorMessage("User does not exist in the database. Please contact the admin to add you to the database.")
+    if (relevantUser.length === 0) {
+      setErrorMessage(
+        "User does not exist in the database. Please contact the admin to add you to the database."
+      );
       return;
     }
 
@@ -51,10 +59,10 @@ export default function SignUpPage() {
     const roleInDB = finalUser.role;
 
     try {
-      //sign up the user with the email and password
+      // Sign up the user with the email and password
       await signUp({
         username: email,
-        password: form.elements.password.value,
+        password,
         options: {
           userAttributes: {
             "custom:role": roleInDB,
@@ -130,6 +138,25 @@ export default function SignUpPage() {
                 name="password"
                 type="password"
                 placeholder="********"
+                required
+              />
+            </div>
+
+            <div className="mb-3">
+              <label
+                className="block text-gray-700 text-sm font-bold mb-1"
+                htmlFor="retypePassword"
+              >
+                Retype your password
+              </label>
+              <input
+                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 text-sm leading-tight focus:outline-none focus:shadow-outline"
+                id="retypePassword"
+                name="retypePassword"
+                type="password"
+                placeholder="********"
+                value={retypePassword}
+                onChange={(e) => setRetypePassword(e.target.value)}
                 required
               />
             </div>
