@@ -25,8 +25,8 @@ const schema = a.schema({
       jobLevel: a.string(),
       department: a.string(),
       password: a.string(),
-      companyId: a.id().required(),
-      surveyId: a.id().required(),
+      companyId: a.id(),
+      surveyId: a.id(),
     })
     .authorization((allow) => [allow.publicApiKey()]),
 
