@@ -56,6 +56,10 @@ const AdminPage: React.FC = () => {
       return;
     }
     const companyId = usersdata[0].companyId;
+    if (!companyId) {
+      console.error("No company found for user:", userAttributes);
+      return;
+    }
     const { data: surveys } = await client.models.Survey.list({
       filter: {
         companyId: {
