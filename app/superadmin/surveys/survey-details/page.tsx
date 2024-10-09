@@ -226,15 +226,12 @@ const SurveyDetailsPage = () => {
             if (snippets && snippets.length > 0) {
               const snippet = snippets[0];
               setSnippetData([{ tags: snippet.tags || "", name: snippet.name || '' }]);
-              console.log("snippet", snippet)
             }
           }
 
           const { data: users } = await client.models.User.list({
             filter: { surveyId: { eq: surveyID } }
           });
-
-          console.log('Users:', users);
 
           const formattedEmployees = users.map(emp => ({
             name: `${emp.firstName} ${emp.lastName}`,

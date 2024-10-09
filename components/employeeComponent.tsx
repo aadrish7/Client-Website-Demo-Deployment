@@ -68,6 +68,7 @@ const QuestionsComponent: React.FC = () => {
     Alignment: null,
   });
   const [isViewingResults, setIsViewingResults] = useState<boolean>(false);
+  const [snippetId, setSnippetId] = useState<string>("");
 
   const steps = ["Create Account", "Assessment", "Survey Results"];
   const email = useUserStore((state) => state.userEmail);
@@ -157,70 +158,119 @@ const QuestionsComponent: React.FC = () => {
   const getQuestions = async () => {
     try {
       const { email } = await fetchUserAttributes();
-  
+
       if (!email) {
         throw new Error("User email is missing");
       }
-  
+
       const { data: userList } = await client.models.User.list({
         filter: {
           email: { eq: email },
         },
       });
-  
+
       if (!userList || userList.length === 0) {
         throw new Error(`No user found with email: ${email}`);
       }
-  
+
       const finalUser = userList[0];
       if (!finalUser.id) {
         throw new Error("User ID is missing");
       }
-  
+
       setUserId(() => finalUser.id);
-  
+
       const companyId = finalUser.companyId;
       if (!companyId) {
         throw new Error("User's company ID is missing");
       }
-  
+
       const { data: SurveyList } = await client.models.Survey.list({
         filter: {
           companyId: { eq: companyId },
           start: { eq: true },
         },
       });
-  
+
       if (!SurveyList || SurveyList.length === 0) {
         setNoQuestions(() => true);
         throw new Error(`No active survey found for company ID: ${companyId}`);
       }
-  
+
       const survey = SurveyList[0];
       if (!survey.id) {
         throw new Error("Survey ID is missing");
       }
-  
+
       const collectionId = survey.collectionId;
       if (!collectionId) {
         throw new Error("Survey's collection ID is missing");
       }
-  
+
+      const snippetId = survey.snippetSetId;
+      if (!snippetId) {
+        throw new Error("Snippet ID is missing");
+      }
+      setSnippetId(() => snippetId);
+
       setSurveyId(() => survey.id);
-  
+
+      const { data: averageSurveyResponses } =
+        await client.models.AverageSurveyResults.list({
+          filter: {
+            surveyId: { eq: survey.id },
+            userId: { eq: finalUser.id },
+          },
+        });
+
+      if (averageSurveyResponses && averageSurveyResponses.length > 0) {
+        const allanswersjson = averageSurveyResponses[0].averageScorejson;
+        if (!allanswersjson) {
+          throw new Error("No answers found in average survey results");
+        }
+        const allResponses: any[] = [];
+        averageSurveyResponses.forEach((response) => {
+          if (typeof response.averageScorejson === "string") {
+            const surveyResponse = JSON.parse(response.averageScorejson);
+            allResponses.push(surveyResponse);
+          } else {
+            console.error(
+              "Invalid type for averageScorejson:",
+              typeof response.averageScorejson
+            );
+          }
+        });
+        //convert into userSelections type
+        const userSelections: UserSelections = {};
+        allResponses.forEach((response) => {
+          for (const key in response) {
+            if (!userSelections[key]) {
+              userSelections[key] = [];
+            }
+            userSelections[key].push(response[key]);
+          }
+        });
+        setCurrentStep((currentStep) => currentStep + 1);
+        setUserSelections(() => userSelections);
+        setViewSurveyResults(() => true);
+        return null;
+      }
+
       // Fetch all questions that belong to the collection using collectionId
       const { data: questions } = await client.models.Question.list({
         filter: {
           collectionId: { eq: collectionId }, // Use collectionId to fetch questions
         },
       });
-  
+
       if (!questions || questions.length === 0) {
-        throw new Error(`No questions found for collection ID: ${collectionId}`);
+        throw new Error(
+          `No questions found for collection ID: ${collectionId}`
+        );
       }
-  
+
       setTotalQuestions(() => questions.length);
-  
+
       // Group the questions by their factor
       const questionsByFactor: QuestionsByFactor = {};
       questions.forEach((question) => {
@@ -229,45 +279,44 @@ const QuestionsComponent: React.FC = () => {
           console.warn("Question factor is missing");
           return;
         }
-  
+
         if (!questionsByFactor[factor]) {
           questionsByFactor[factor] = [];
         }
-  
+
         questionsByFactor[factor].push(question);
       });
-  
+
       return questionsByFactor;
     } catch (error: any) {
       console.error("Error fetching questions:", error.message || error);
       return {};
     }
   };
-  
+
   const loadQuestions = async () => {
     try {
       const groupedQuestions = await getQuestions();
-  
+
       if (!groupedQuestions || Object.keys(groupedQuestions).length === 0) {
         console.warn("No questions available. Setting noQuestions to true.");
         return;
       }
-  
+
       setQuestionsByFactor(groupedQuestions);
-  
+
       const firstFactor = Object.keys(groupedQuestions)[0];
       if (!firstFactor) {
         throw new Error(
           "Failed to determine the first factor from grouped questions."
         );
       }
-  
+
       setCurrentFactor(firstFactor);
     } catch (error: any) {
       console.error("Error loading questions:", error.message || error);
     }
   };
-  
 
   useEffect(() => {
     loadQuestions();
@@ -396,31 +445,57 @@ const QuestionsComponent: React.FC = () => {
     return sortedAverages;
   };
   useEffect(() => {
-    if (viewSurveyResults) {
-      const averageSurveyResults = calculateAverages(userSelections);
-  
-      if (snippets.length > 0) {
-        // Filter the snippets based on factorScore and score range
-        let matchedSnippets = snippets.filter((snippet: any) => {
-          if (snippet[0].type !== "employeeindividual" && snippet[0].type !== "adminoverview") {
-            const factorScore = averageSurveyResults[snippet[0].factor];
-            return factorScore && isScoreInRange(factorScore, snippet[0].score);
+    const fetchSnippets = async () => {
+      if (viewSurveyResults) {
+        const averageSurveyResults = calculateAverages(userSelections);
+        console.log("averageSurveyResults", averageSurveyResults);
+
+        try {
+          const { data: snippets } = await client.models.TextSnippet.list({
+            filter: {
+              snippetSetId: { eq: snippetId },
+            },
+          });
+          console.log("snippets", snippets);
+
+          if (snippets.length > 0) {
+            // Filter the snippets based on factorScore and score range
+            setSnippets(() => snippets);
+            let matchedSnippets = snippets.filter((snippet: any) => {
+              if (
+                snippet.type !== "employeeindividual" &&
+                snippet.type !== "adminoverview"
+              ) {
+              
+                const factorScore = averageSurveyResults[snippet.factor];
+                return (
+                  factorScore && isScoreInRange(factorScore, snippet.score)
+                );
+              }
+            });
+
+            // Sort the matched snippets based on the order of factors in averageSurveyResults
+            matchedSnippets = matchedSnippets.sort((a: any, b: any) => {
+              const factorA = a.factor;
+              const factorB = b.factor;
+              return (
+                Object.keys(averageSurveyResults).indexOf(factorA) -
+                Object.keys(averageSurveyResults).indexOf(factorB)
+              );
+            });
+
+            // Reverse the sorted snippets if needed
+            console.log("matchedSnippets", matchedSnippets);
+            setMatchingSnippets(matchedSnippets);
           }
-        });
-  
-        // Sort the matched snippets based on the order of factors in averageSurveyResults
-        matchedSnippets = matchedSnippets.sort((a: any, b: any) => {
-          const factorA = a[0].factor;
-          const factorB = b[0].factor;
-          return Object.keys(averageSurveyResults).indexOf(factorA) - Object.keys(averageSurveyResults).indexOf(factorB);
-        });
-  
-        // Reverse the sorted snippets if needed
-        setMatchingSnippets(matchedSnippets);
+        } catch (error) {
+          console.error("Failed to fetch snippets", error);
+        }
       }
-    }
+    };
+
+    fetchSnippets();
   }, [viewSurveyResults]);
-  
 
   if (viewSurveyResults) {
     return (
@@ -441,14 +516,14 @@ const QuestionsComponent: React.FC = () => {
             <h3 className="text-lg font-semibold text-gray-800">Overview</h3>
             {matchingSnippets.length > 0 &&
               matchingSnippets.map((snippet: any, index: any) => {
-                if (snippet[0].type === "employeeaggregated") {
+                if (snippet.type === "employeeaggregated") {
                   return (
                     <span className="text-gray-600 mt-2" key={index}>
-                      {snippet[0].snippetText}{" "}
+                      {snippet.snippetText}{" "}
                     </span>
                   );
                 }
-                return null; 
+                return null;
               })}
 
             <MetricsBreakdown

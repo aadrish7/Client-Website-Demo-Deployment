@@ -133,5 +133,10 @@ const CollectionsPage: React.FC = () => {
   );
 };
 
-
-export default CollectionsPage;
+export default function () {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <CollectionsPage />
+    </Suspense>
+  );
+}

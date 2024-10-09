@@ -183,6 +183,7 @@ const AdminPage: React.FC = () => {
     { label: "2", values: [0, 0, 0, 0, 0], color: "#F4B7C8" },
     { label: "1", values: [0, 0, 0, 0, 0], color: "#F8D1DD" },
   ]);
+  const [surveyId, setSurveyId] = useState("");
 
   const router = useRouter();
 
@@ -201,9 +202,7 @@ const AdminPage: React.FC = () => {
 
   useEffect(() => {
     if (searchParams.has("surveyId")) {
-      // Reset the chart data before fetching new data
       resetChartData();
-      fetchData();
     }
   }, [filter, searchParams]);
 
@@ -410,6 +409,8 @@ const AdminPage: React.FC = () => {
 
   const fetchData = async () => {
     const idOfSurvey = searchParams.get("surveyId") || "";
+    console.log("fetching data for surveyId:", idOfSurvey);
+  
     const { data: surveys } = await client.models.Survey.list({
       filter: {
         id: {
@@ -417,145 +418,152 @@ const AdminPage: React.FC = () => {
         },
       },
     });
+  
     if (surveys.length === 0) {
       console.error("No surveys found for company:");
       return;
     }
+  
     const survey = surveys[0];
-
-    var copyListOfEmployees = [...listOfEmployees];
-
-    if (
-      filter.department &&
-      Array.isArray(filter.department) &&
-      filter.department.length > 0
-    ) {
-      copyListOfEmployees = copyListOfEmployees.filter((emp) =>
-        filter.department?.includes(emp.department)
+    setSurveyId(survey.id);
+  
+    // Fetch data once and store it
+    const { data: beforeFiltersurveyResponses } = await client.models.AverageSurveyResults.list({
+      filter: { surveyId: { eq: survey.id } },
+    });
+  
+    const { data: beforeFilterfactorImportanceResponses } = await client.models.FactorImportance.list({
+      filter: { surveyId: { eq: survey.id } },
+    });
+  
+    const { data: beforeFilteringIndividualSurveyResponses } = await client.models.SurveyResults.list({
+      filter: { surveyId: { eq: survey.id } },
+    });
+  
+    // Store raw data in state
+    setRawSurveyResponses(beforeFiltersurveyResponses);
+    setRawFactorImportanceResponses(beforeFilterfactorImportanceResponses);
+    setRawIndividualSurveyResponses(beforeFilteringIndividualSurveyResponses);
+  };
+  
+  // State to store raw data and filtered data
+  const [rawSurveyResponses, setRawSurveyResponses] = useState<any[]>([]);
+  const [rawFactorImportanceResponses, setRawFactorImportanceResponses] = useState<any[]>([]);
+  const [rawIndividualSurveyResponses, setRawIndividualSurveyResponses] = useState<any[]>([]);
+  const [filteredSurveyResponses, setFilteredSurveyResponses] = useState<any[]>([]);
+  const [filteredFactorImportanceResponses, setFilteredFactorImportanceResponses] = useState<any[]>([]);
+  const [filteredIndividualSurveyResponses, setFilteredIndividualSurveyResponses] = useState<any[]>([]);
+  const [copyListOfEmployees, setCopyListOfEmployees] = useState<any[]>([]);
+  
+  useEffect(() => {
+    if (searchParams.has("surveyId")) {
+      fetchData();
+    }
+  }, [searchParams]);
+  
+  useEffect(() => {
+    // Set default values for filters if they are undefined
+    const {
+      department = [],
+      gender = [],
+      age = [],
+      yearsOfService = [],
+    } = filter || {};
+  
+    // Update filtered list of employees based on filters
+    let updatedListOfEmployees = [...listOfEmployees];
+  
+    if (department.length > 0) {
+      updatedListOfEmployees = updatedListOfEmployees.filter(emp =>
+        department.includes(emp.department)
       );
     }
-
-    if (
-      filter.gender &&
-      Array.isArray(filter.gender) &&
-      filter.gender.length > 0
-    ) {
-      copyListOfEmployees = copyListOfEmployees.filter((emp) =>
-        filter.gender?.includes(emp.gender)
+  
+    if (gender.length > 0) {
+      updatedListOfEmployees = updatedListOfEmployees.filter(emp =>
+        gender.includes(emp.gender)
       );
     }
-
-    if (filter.age && Array.isArray(filter.age) && filter.age.length > 0) {
-      copyListOfEmployees = copyListOfEmployees.filter((emp) => {
-        const age = calculateAge(emp.dob);
-        return filter.age?.some((ageRange) => {
-          if (ageRange === "Age 18-24") return age >= 18 && age <= 24;
-          if (ageRange === "Age 25-39") return age >= 25 && age <= 39;
-          if (ageRange === "Age 40-55") return age >= 40 && age <= 55;
-          if (ageRange === "Age 56+") return age >= 56;
+  
+    if (age.length > 0) {
+      updatedListOfEmployees = updatedListOfEmployees.filter(emp => {
+        const ageValue = calculateAge(emp.dob);
+        return age.some(ageRange => {
+          if (ageRange === "Age 18-24") return ageValue >= 18 && ageValue <= 24;
+          if (ageRange === "Age 25-39") return ageValue >= 25 && ageValue <= 39;
+          if (ageRange === "Age 40-55") return ageValue >= 40 && ageValue <= 55;
+          if (ageRange === "Age 56+") return ageValue >= 56;
           return false;
         });
       });
     }
-    
-    if (
-      filter.yearsOfService &&
-      Array.isArray(filter.yearsOfService) &&
-      filter.yearsOfService.length > 0
-    ) {
-      copyListOfEmployees = copyListOfEmployees.filter((emp) => {
-        const yearsOfService = calculateYearsOfService(emp.hireDate);
-        return filter.yearsOfService?.some((serviceRange) => {
-          if (serviceRange === "1-3 years")
-            return yearsOfService >= 1 && yearsOfService <= 3;
-          if (serviceRange === "3-5 years")
-            return yearsOfService >= 3 && yearsOfService <= 5;
-          if (serviceRange === "5+ years") return yearsOfService >= 5;
+  
+    if (yearsOfService.length > 0) {
+      updatedListOfEmployees = updatedListOfEmployees.filter(emp => {
+        const years = calculateYearsOfService(emp.hireDate);
+        return yearsOfService.some(serviceRange => {
+          if (serviceRange === "1-3 years") return years >= 1 && years <= 3;
+          if (serviceRange === "3-5 years") return years >= 3 && years <= 5;
+          if (serviceRange === "5+ years") return years >= 5;
           return false;
         });
       });
     }
-
-    const { data: beforeFiltersurveyResponses } =
-      await client.models.AverageSurveyResults.list({
-        filter: {
-          surveyId: {
-            eq: survey.id,
-          },
-        },
-      });
-
-    //Average Survey Responses
-    const surveyResponses = beforeFiltersurveyResponses.filter((response) =>
-      copyListOfEmployees.some((emp) => emp.id === response.userId)
+  
+    setCopyListOfEmployees(updatedListOfEmployees);
+  
+    // Filter the responses based on the updated list of employees
+    setFilteredSurveyResponses(
+      rawSurveyResponses.filter(response =>
+        updatedListOfEmployees.some(emp => emp.id === response.userId)
+      )
     );
-
-
-    const { data: beforeFilterfactorImportanceResponses } =
-      await client.models.FactorImportance.list({
-        filter: {
-          surveyId: {
-            eq: survey.id,
-          },
-        },
-      });
-
-    //Factor Importance Responses
-    const factorImportanceResponses =
-      beforeFilterfactorImportanceResponses.filter((response) =>
-        copyListOfEmployees.some((emp) => emp.id === response.userId)
-      );
-
-    preparingDataForStackedBarChart(factorImportanceResponses, ratingsData);
-
-    preparingDataForPercentagePieChart(factorImportanceResponses);
-
-    const { data: beforeFilteringindivdualSurveyResponses } =
-      await client.models.SurveyResults.list({
-        filter: {
-          surveyId: {
-            eq: survey.id,
-          },
-        },
-      });
-
-    const indivdualSurveyResponses =
-      beforeFilteringindivdualSurveyResponses.filter((response) =>
-        copyListOfEmployees.some((emp) => emp.id === response.userId)
-      );
-
+  
+    setFilteredFactorImportanceResponses(
+      rawFactorImportanceResponses.filter(response =>
+        updatedListOfEmployees.some(emp => emp.id === response.userId)
+      )
+    );
+  
+    setFilteredIndividualSurveyResponses(
+      rawIndividualSurveyResponses.filter(response =>
+        updatedListOfEmployees.some(emp => emp.id === response.userId)
+      )
+    );
+  }, [filter, listOfEmployees, rawSurveyResponses, rawFactorImportanceResponses, rawIndividualSurveyResponses]);
+  
+  
+  useEffect(() => {
+    preparingDataForStackedBarChart(filteredFactorImportanceResponses, ratingsData);
+    preparingDataForPercentagePieChart(filteredFactorImportanceResponses);
+  
+    // Process individual survey responses
     const tempIndividualSurveyResponses: any[] = [];
-    indivdualSurveyResponses.forEach((response) => {
+    filteredIndividualSurveyResponses.forEach((response: any) => {
       if (typeof response.allanswersjson === "string") {
         const surveyResponse = JSON.parse(response.allanswersjson);
         tempIndividualSurveyResponses.push(surveyResponse);
       } else {
-        console.error(
-          "Invalid type for surveyResultsjson:",
-          typeof response.allanswersjson
-        );
+        console.error("Invalid type for surveyResultsjson:", typeof response.allanswersjson);
       }
     });
-
     setAllIndividualSurveyResponses(tempIndividualSurveyResponses);
-
+  
+    // Process average scores
     const allResponses: any[] = [];
-    surveyResponses.forEach((response) => {
+    filteredSurveyResponses.forEach((response: any) => {
       if (typeof response.averageScorejson === "string") {
         const surveyResponse = JSON.parse(response.averageScorejson);
         allResponses.push(surveyResponse);
       } else {
-        console.error(
-          "Invalid type for averageScorejson:",
-          typeof response.averageScorejson
-        );
+        console.error("Invalid type for averageScorejson:", typeof response.averageScorejson);
       }
     });
     setAllSurveyResponses(allResponses);
-
+  
     const totalScores: { [key: string]: { total: number; count: number } } = {};
-    allResponses.forEach((response) => {
-      Object.keys(response).forEach((factor) => {
+    allResponses.forEach((response: any) => {
+      Object.keys(response).forEach((factor: string) => {
         if (!totalScores[factor]) {
           totalScores[factor] = { total: 0, count: 0 };
         }
@@ -563,20 +571,16 @@ const AdminPage: React.FC = () => {
         totalScores[factor].count += 1;
       });
     });
-
+  
     const avgScores = Object.keys(totalScores).reduce((acc, factor) => {
       acc[factor] = totalScores[factor].total / totalScores[factor].count;
       return acc;
     }, {} as { [key: string]: number });
-
+  
     setAverageScores(avgScores);
-  };
-
-  useEffect(() => {
-    if (searchParams.has("surveyId")) {
-      fetchData();
-    }
-  }, [listOfEmployees, filter]);
+  }, [filteredSurveyResponses, filteredFactorImportanceResponses, filteredIndividualSurveyResponses]);
+  
+  
 
   useEffect(() => {
     const handleFactorChange = () => {
@@ -584,8 +588,6 @@ const AdminPage: React.FC = () => {
         setAvgQuestionScoresArray({});
         return;
       }
-
-      console.log(`Factor changed to: ${selectedFactor}`);
 
       const questionIds = [];
       for (let i = 0; i < allIndividualSurveyResponses.length; i++) {
