@@ -269,7 +269,7 @@ const QuestionsComponent: React.FC = () => {
         );
       }
 
-      setTotalQuestions(() => questions.length);
+      setTotalQuestions(() => questions.length+1);
 
       // Group the questions by their factor
       const questionsByFactor: QuestionsByFactor = {};

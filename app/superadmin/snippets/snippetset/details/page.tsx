@@ -48,6 +48,7 @@ const SnippetSetDetails: React.FC = () => {
             },
           });
           const foundSet = snippetSets.find((set) => set.name === snippetSetName);
+          console.log(foundSet);
     
           if (foundSet) {
             setSnippetSet({
@@ -60,11 +61,13 @@ const SnippetSetDetails: React.FC = () => {
             const { data: textSnippets } = await client.models.TextSnippet.list({
               filter: {
                 snippetSetId: { eq: foundSet.id || "" },
+                disabled : {eq :true},
               },
             });
-    
+            console.log("textSnippets", textSnippets);
             // Only include snippets where disabled is false
-            const snippets = textSnippets.filter((snippet) => !snippet.disabled);
+            const snippets = textSnippets;
+            console.log(snippets);
     
             setTextSnippetsDetails(
               snippets.map((snippet) => ({

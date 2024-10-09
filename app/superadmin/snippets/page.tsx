@@ -13,6 +13,7 @@ import { create } from "zustand";
 import { FaChevronDown, FaEdit, FaTrash } from "react-icons/fa";
 import Breadcrumb from "@/components/normalBreadCrumb";
 import { Suspense } from "react";
+import { truncate } from "fs";
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
@@ -259,7 +260,7 @@ const CreateSnippetSetModal: React.FC<{
           score: snippet.score,
           snippetText: snippet.snippetText,
           type: snippet.type,
-          disabled: false,
+          disabled: true,
           snippetSetId: snippetSet.id,
         });
         console.log("saved snippet",mysavedsnippet);

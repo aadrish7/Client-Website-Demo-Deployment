@@ -42,7 +42,7 @@ const CreateCollectionModal: React.FC<{
           collectionId: collection.id,
           factor: question.factor || '',
           questionText: question.questionText || '',
-          disabled: false,
+          disabled: true,
         });
       }
 
@@ -594,7 +594,7 @@ const QuestionsPage: React.FC = () => {
                   className="bg-blue-600 text-white px-4 py-2 rounded-md flex items-center"
                   onClick={handleDropdownToggle}
                 >
-                  <span>Add a Question</span>
+                  <span>Add Question</span>
                   <FaChevronDown className="ml-2" />
                 </button>
                 {dropdownOpen && (
