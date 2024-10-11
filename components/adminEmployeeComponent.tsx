@@ -196,6 +196,7 @@ const EmployeesPage: React.FC = () => {
           eq: idOfSurvey,
         },
       },
+      limit: 10000,
     });
     if (surveys.length === 0) {
       console.error("No surveys found for company:");
@@ -211,6 +212,7 @@ const EmployeesPage: React.FC = () => {
           eq: "employee",
         },
       },
+      limit: 10000,
     });
     const { data: attemptedSurveyResponses } =
       await client.models.SurveyResults.list({
@@ -219,6 +221,7 @@ const EmployeesPage: React.FC = () => {
             eq: survey.id,
           },
         },
+        limit: 10000,
       });
     const attemptedSurveyUserIds = attemptedSurveyResponses.map(
       (response) => response.userId

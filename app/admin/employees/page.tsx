@@ -9,6 +9,8 @@ import Sidebar from "@/components/adminSideBar";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import Breadcrumb from "@/components/adminBreadCrumb";
+import { createPaginatedFetchFunctionForUser, createPaginatedFetchFunctionForSurveyResults, createPaginatedFetchFunctionForSurvey } from "@/constants/pagination";
+import { create } from "zustand";
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
@@ -190,42 +192,37 @@ const EmployeesPage: React.FC = () => {
   const fetchData = async () => {
     setLoading(true);
     const idOfSurvey = searchParams.get("surveyId") || "";
-
-    const { data: surveys } = await client.models.Survey.list({
-      filter: {
-        id: {
-          eq: idOfSurvey,
-        },
+    const filterForSurvey = {
+      id: {
+        eq: idOfSurvey,
       },
-    });
+    };
+
+    const surveys = await createPaginatedFetchFunctionForSurvey(client, filterForSurvey)();
     if (surveys.length === 0) {
       console.error("No surveys found for company:");
       return;
     }
     const survey = surveys[0];
-    const { data: listOfEmployees } = await client.models.User.list({
-      filter: {
-        surveyId: {
-          eq: survey.id,
-        },
-        role: {
-          eq: "employee",
-        },
+    const filterForEmployees = {
+      and: [
+        {surveyId: {eq: survey.id,},},
+        {role: {eq: "employee",},},
+      ],
+    };
+    const listOfEmployees = await createPaginatedFetchFunctionForUser(client, filterForEmployees)();
+    console.log("listOfEmployees", listOfEmployees);
+    const filterForSurveyResults = {
+      surveyId: {
+        eq: survey.id,
       },
-    });
-    const { data: attemptedSurveyResponses } =
-      await client.models.SurveyResults.list({
-        filter: {
-          surveyId: {
-            eq: survey.id,
-          },
-        },
-      });
+    };
+    const attemptedSurveyResponses = await createPaginatedFetchFunctionForSurveyResults(client, filterForSurveyResults)();
     const attemptedSurveyUserIds = attemptedSurveyResponses.map(
       (response) => response.userId
     );
     setTableHeaders(["name", "department", "email", "status"]);
-    const employees = listOfEmployees.map((surveyResponse) => ({
+    const employees = listOfEmployees.map((surveyResponse:any) => ({
       name: surveyResponse?.firstName + " " + surveyResponse?.lastName || "",
       department: surveyResponse?.department || "",
       email: surveyResponse?.email || "",
@@ -250,7 +247,6 @@ const EmployeesPage: React.FC = () => {
   useEffect(() => {
     console.log("search params value", searchParams.get("surveyId"));
     if (searchParams.has("surveyId")) {
-      
       fetchData();
     }
   }, []);
@@ -295,7 +291,7 @@ const EmployeesPage: React.FC = () => {
     {
       label: "📦 Overview",
       active: false,
-      href:`/admin/overview?surveyId=${searchParams.get("surveyId")}`,
+      href: `/admin/overview?surveyId=${searchParams.get("surveyId")}`,
     },
     {
       label: "📊 Analytics",
@@ -315,187 +311,187 @@ const EmployeesPage: React.FC = () => {
       <div className="flex flex-1">
         <Sidebar activePath="/admin/employees" />
         <div className="w-4/5 p-8 bg-gray-50">
-        <Breadcrumb/>
-        <div className="bg-white p-4">
-          <h1 className="text-2xl font-semibold mb-6">Employees</h1>
-          <div className="flex justify-between items-center mb-4">
-            {/* Left Side - Two Buttons */}
-            <div className="flex space-x-4">
-              {/* Department Filter Button */}
-              <div className="relative inline-block text-left">
-                <button
-                  onClick={() => {
-                    setShowDepartmentDropdown(!showDepartmentDropdown);
-                    setShowStatusDropdown(false);
-                  }}
-                  className="inline-flex justify-center w-48 rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
-                >
-                  <span className="truncate">
-                    {selectedDepartment || "All Departments"}
-                  </span>
-                </button>
-                {showDepartmentDropdown && (
-                  <div className="absolute mt-2 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
-                    <div className="py-1">
-                      <button
-                        onClick={() => {
-                          setSelectedDepartment(null);
-                          setShowDepartmentDropdown(false);
-                        }}
-                        className="block px-4 py-2 text-sm text-gray-700"
-                      >
-                        All Departments
-                      </button>
-                      {departments.map((dept) => (
+          <Breadcrumb />
+          <div className="bg-white p-4">
+            <h1 className="text-2xl font-semibold mb-6">Employees</h1>
+            <div className="flex justify-between items-center mb-4">
+              {/* Left Side - Two Buttons */}
+              <div className="flex space-x-4">
+                {/* Department Filter Button */}
+                <div className="relative inline-block text-left">
+                  <button
+                    onClick={() => {
+                      setShowDepartmentDropdown(!showDepartmentDropdown);
+                      setShowStatusDropdown(false);
+                    }}
+                    className="inline-flex justify-center w-48 rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  >
+                    <span className="truncate">
+                      {selectedDepartment || "All Departments"}
+                    </span>
+                  </button>
+                  {showDepartmentDropdown && (
+                    <div className="absolute mt-2 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                      <div className="py-1">
                         <button
-                          key={dept}
                           onClick={() => {
-                            setSelectedDepartment(dept);
+                            setSelectedDepartment(null);
                             setShowDepartmentDropdown(false);
                           }}
                           className="block px-4 py-2 text-sm text-gray-700"
                         >
-                          {dept}
+                          All Departments
                         </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Status Filter Button */}
-              <div className="relative inline-block text-left">
-                <button
-                  onClick={() => {
-                    setShowStatusDropdown(!showStatusDropdown);
-                    setShowDepartmentDropdown(false);
-                  }}
-                  className="inline-flex justify-center w-48 rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
-                >
-                  <span className="truncate">
-                    {selectedStatus || "All Status"}
-                  </span>
-                </button>
-                {showStatusDropdown && (
-                  <div className="absolute mt-2 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
-                    <div className="py-1">
-                      <button
-                        onClick={() => {
-                          setSelectedStatus(null);
-                          setShowStatusDropdown(false);
-                        }}
-                        className="block px-4 py-2 text-sm text-gray-700"
-                      >
-                        All Status
-                      </button>
-                      <button
-                        onClick={() => {
-                          setSelectedStatus("Completed");
-                          setShowStatusDropdown(false);
-                        }}
-                        className="block px-4 py-2 text-sm text-gray-700"
-                      >
-                        Completed
-                      </button>
-                      <button
-                        onClick={() => {
-                          setSelectedStatus("Not Started");
-                          setShowStatusDropdown(false);
-                        }}
-                        className="block px-4 py-2 text-sm text-gray-700"
-                      >
-                        Not Started
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Right Side - Search Bar */}
-            <div className="flex-grow max-w-md">
-              <input
-                type="text"
-                placeholder="Search"
-                value={searchTerm}
-                onChange={handleSearchChange}
-                className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-
-          <div className="border p-4">
-            {loading ? (
-              <div className="text-center py-4">
-                Loading Data for Employees...
-              </div>
-            ) : currentItems.length > 0 ? (
-              <>
-                <div className="overflow-x-auto border border-gray-200 rounded-md">
-                  <table className="min-w-full bg-white divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        {tableHeaders.map((header, index) => (
-                          <th
-                            key={index}
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        {departments.map((dept) => (
+                          <button
+                            key={dept}
+                            onClick={() => {
+                              setSelectedDepartment(dept);
+                              setShowDepartmentDropdown(false);
+                            }}
+                            className="block px-4 py-2 text-sm text-gray-700"
                           >
-                            {header}
-                          </th>
+                            {dept}
+                          </button>
                         ))}
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {currentItems.map((row, rowIndex) => (
-                        <tr key={rowIndex}>
-                          {tableHeaders.map((header, colIndex) => (
-                            <td
-                              key={colIndex}
-                              className="px-6 py-4 whitespace-nowrap text-sm"
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Status Filter Button */}
+                <div className="relative inline-block text-left">
+                  <button
+                    onClick={() => {
+                      setShowStatusDropdown(!showStatusDropdown);
+                      setShowDepartmentDropdown(false);
+                    }}
+                    className="inline-flex justify-center w-48 rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  >
+                    <span className="truncate">
+                      {selectedStatus || "All Status"}
+                    </span>
+                  </button>
+                  {showStatusDropdown && (
+                    <div className="absolute mt-2 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                      <div className="py-1">
+                        <button
+                          onClick={() => {
+                            setSelectedStatus(null);
+                            setShowStatusDropdown(false);
+                          }}
+                          className="block px-4 py-2 text-sm text-gray-700"
+                        >
+                          All Status
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedStatus("Completed");
+                            setShowStatusDropdown(false);
+                          }}
+                          className="block px-4 py-2 text-sm text-gray-700"
+                        >
+                          Completed
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedStatus("Not Started");
+                            setShowStatusDropdown(false);
+                          }}
+                          className="block px-4 py-2 text-sm text-gray-700"
+                        >
+                          Not Started
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Right Side - Search Bar */}
+              <div className="flex-grow max-w-md">
+                <input
+                  type="text"
+                  placeholder="Search"
+                  value={searchTerm}
+                  onChange={handleSearchChange}
+                  className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            <div className="border p-4">
+              {loading ? (
+                <div className="text-center py-4">
+                  Loading Data for Employees...
+                </div>
+              ) : currentItems.length > 0 ? (
+                <>
+                  <div className="overflow-x-auto border border-gray-200 rounded-md">
+                    <table className="min-w-full bg-white divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          {tableHeaders.map((header, index) => (
+                            <th
+                              key={index}
+                              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                             >
-                              {header.toLowerCase() === "status" ? (
-                                <span className={getStatusStyle(row[header])}>
-                                  {row[header]}
-                                </span>
-                              ) : (
-                                row[header]
-                              )}
-                            </td>
+                              {header}
+                            </th>
                           ))}
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                {/* Pagination */}
-                <div className="mt-4 flex justify-between items-center">
-                  <h6 className="ml-1 font-thin text-gray-500 opacity-98">
-                    Showing{" "}
-                    <span className="font-semibold text-black">
-                      {indexOfFirstItem + 1} -{" "}
-                      {Math.min(indexOfLastItem, filteredData.length)}
-                    </span>{" "}
-                    of{" "}
-                    <span className="font-semibold text-black">
-                      {filteredData.length}
-                    </span>
-                  </h6>
-                  <div>
-                    <nav
-                      className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
-                      aria-label="Pagination"
-                    >
-                      {renderPaginationButtons()}
-                    </nav>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {currentItems.map((row, rowIndex) => (
+                          <tr key={rowIndex}>
+                            {tableHeaders.map((header, colIndex) => (
+                              <td
+                                key={colIndex}
+                                className="px-6 py-4 whitespace-nowrap text-sm"
+                              >
+                                {header.toLowerCase() === "status" ? (
+                                  <span className={getStatusStyle(row[header])}>
+                                    {row[header]}
+                                  </span>
+                                ) : (
+                                  row[header]
+                                )}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
-                </div>
-              </>
-            ) : (
-              <div className="text-center py-4">No employees to display</div>
-            )}
+                  {/* Pagination */}
+                  <div className="mt-4 flex justify-between items-center">
+                    <h6 className="ml-1 font-thin text-gray-500 opacity-98">
+                      Showing{" "}
+                      <span className="font-semibold text-black">
+                        {indexOfFirstItem + 1} -{" "}
+                        {Math.min(indexOfLastItem, filteredData.length)}
+                      </span>{" "}
+                      of{" "}
+                      <span className="font-semibold text-black">
+                        {filteredData.length}
+                      </span>
+                    </h6>
+                    <div>
+                      <nav
+                        className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
+                        aria-label="Pagination"
+                      >
+                        {renderPaginationButtons()}
+                      </nav>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-4">No employees to display</div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
       </div>
     </div>
   );

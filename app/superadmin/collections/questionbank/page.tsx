@@ -13,6 +13,18 @@ import Papa from "papaparse";
 import { FaEdit, FaTrash } from "react-icons/fa";
 import { IoIosList } from "react-icons/io";
 import { FaChevronDown } from "react-icons/fa";
+import {
+  createPaginatedFetchFunctionForUser,
+  createPaginatedFetchFunctionForSurveyResults,
+  createPaginatedFetchFunctionForSurvey,
+  createPaginatedFetchFunctionForAverageSurveyResults,
+  createPaginatedFetchFunctionForFactorImportance,
+  createPaginatedFetchFunctionForCompany,
+  createPaginatedFetchFunctionForTextSnippet,
+  createPaginatedFetchFunctionForQuestion,
+  createPaginatedFetchFunctionForCollection,
+  createPaginatedFetchFunctionForSnippetSet
+} from "@/constants/pagination";
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
@@ -461,10 +473,15 @@ const QuestionsPage: React.FC = () => {
     fetchQuestions();
   };
 
-  const fetchQuestions = async () => {
-    try {
-      const { userId } = await getCurrentUser();
-      const { data: questionList } = await client.models.Question.list({
+  const fetchAllQuestions = async (client: any, pageSize: number = 100): Promise<any[]> => {
+    let allQuestions: any[] = [];
+    let nextToken: string | null = null;
+    let hasMorePages: boolean = true;
+  
+    while (hasMorePages) {
+      const { data: questions, nextToken: newNextToken }: { data: any[]; nextToken: any } = await client.models.Question.list({
+        nextToken,
+        limit: pageSize,
         filter: {
           and: [
             { disabled: { eq: false } },
@@ -472,6 +489,30 @@ const QuestionsPage: React.FC = () => {
           ],
         },
       });
+  
+      allQuestions = [...allQuestions, ...questions];
+      nextToken = newNextToken;
+  
+      if (!nextToken || questions.length < pageSize) {
+        hasMorePages = false;
+      }
+    }
+  
+    return allQuestions;
+  };
+
+  const fetchQuestions = async () => {
+    try {
+      const { userId } = await getCurrentUser();
+      const filterForQuestions = {
+        disabled : {
+          eq: false
+        },
+        collectionId: {
+          eq: ""
+        }
+      };
+      const questionList = await createPaginatedFetchFunctionForQuestion(client, filterForQuestions)();
       
       
       

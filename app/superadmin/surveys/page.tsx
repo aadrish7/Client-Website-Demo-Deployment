@@ -12,6 +12,19 @@ import { Schema } from "@/amplify/data/resource";
 import { Suspense } from "react";
 import Router, { useRouter } from "next/navigation";
 import Breadcrumb from "@/components/surveyBreadCrumb";
+import {
+  createPaginatedFetchFunctionForUser,
+  createPaginatedFetchFunctionForSurveyResults,
+  createPaginatedFetchFunctionForSurvey,
+  createPaginatedFetchFunctionForAverageSurveyResults,
+  createPaginatedFetchFunctionForFactorImportance,
+  createPaginatedFetchFunctionForCompany,
+  createPaginatedFetchFunctionForTextSnippet,
+  createPaginatedFetchFunctionForQuestion,
+  createPaginatedFetchFunctionForCollection,
+  createPaginatedFetchFunctionForSnippetSet
+} from "@/constants/pagination";
+import { create } from "domain";
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
@@ -254,9 +267,8 @@ const SurveysPage = () => {
     const fetchCompanyData = async () => {
       try {
         const filteredCompanyName = companyName || "";
-        const { data: companies } = await client.models.Company.list({
-          filter: { companyName: { eq: filteredCompanyName } },
-        });
+        const filterForCompany = { companyName: { eq: filteredCompanyName } };
+        const companies = await createPaginatedFetchFunctionForCompany(client, filterForCompany)();
         const company = companies.find((c) => c.companyName === companyName);
         setCompanyId(company?.id || "");
       } catch (error) {
@@ -269,7 +281,7 @@ const SurveysPage = () => {
   useEffect(() => {
     const fetchCollections = async () => {
       try {
-        const { data: collectionList } = await client.models.Collection.list();
+        const collectionList = await createPaginatedFetchFunctionForCollection(client, {})();
         setCollections(
           collectionList.map((c) => ({ id: c.id, name: c.name || "" }))
         );
@@ -279,7 +291,7 @@ const SurveysPage = () => {
     };
     const fetchSnippetSets = async () => {
       try {
-        const { data: SnippetSets } = await client.models.SnippetSet.list();
+        const SnippetSets = await createPaginatedFetchFunctionForSnippetSet(client, {})();
         setSnippetSets(
           SnippetSets.map((c) => ({ id: c.id, name: c.name || "" }))
         );
@@ -293,9 +305,8 @@ const SurveysPage = () => {
 
   const fetchSurveys = async () => {
     try {
-      const { data: surveyList } = await client.models.Survey.list({
-        filter: { companyId: { eq: companyId } },
-      });
+      const filterForCompany = { companyId: { eq: companyId } };
+      const surveyList = await createPaginatedFetchFunctionForSurvey(client, filterForCompany)();
       setTableHeaders(["survey name", "updated at", "status", "manage"]);
       setTableData(
         surveyList.map((s) => ({

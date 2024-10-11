@@ -10,6 +10,19 @@ import Sidebar from "@/components/superadminSidebar";
 import Table from "@/components/table";
 import { Suspense } from "react";
 import Breadcrumb from "@/components/normalBreadCrumb";
+import { disable } from "aws-amplify/analytics";
+import {
+  createPaginatedFetchFunctionForUser,
+  createPaginatedFetchFunctionForSurveyResults,
+  createPaginatedFetchFunctionForSurvey,
+  createPaginatedFetchFunctionForAverageSurveyResults,
+  createPaginatedFetchFunctionForFactorImportance,
+  createPaginatedFetchFunctionForCompany,
+  createPaginatedFetchFunctionForTextSnippet,
+  createPaginatedFetchFunctionForQuestion,
+  createPaginatedFetchFunctionForCollection,
+  createPaginatedFetchFunctionForSnippetSet
+} from "@/constants/pagination";
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
@@ -45,9 +58,12 @@ const CollectionDetailPage: React.FC = () => {
       const fetchCollectionAndQuestions = async () => {
         try {
           // Fetch the collection based on the name
-          const { data: collections } = await client.models.Collection.list({
-            filter: { name: { eq: collectionName } },
-          });
+          const filterForCollection = {
+            name: {
+              eq: collectionName,
+            },
+          };
+          const collections = await createPaginatedFetchFunctionForCollection(client, filterForCollection)();
 
           const selectedCollection = collections[0];
 
@@ -58,14 +74,15 @@ const CollectionDetailPage: React.FC = () => {
             });
 
             // Fetch questions by filtering with collectionId
-            const { data: fetchedQuestions } =
-              await client.models.Question.list({
-                filter: {
-                  collectionId: { eq: selectedCollection.id },
-                  disabled : {eq : true},
-                
-                }, 
-              });
+            const filterForQuestions = {
+              collectionId: {
+                eq: selectedCollection.id,
+              },
+              disabled: {
+                eq: true,
+              },
+            };
+            const fetchedQuestions = await createPaginatedFetchFunctionForQuestion(client, filterForQuestions)();
             console.log("fetchedQuestions", fetchedQuestions)
 
             // Ensure that 'disabled' and other nullable fields have default values

@@ -11,9 +11,18 @@ import dynamic from "next/dynamic";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import AdminEmployeeComponent from "@/components/adminEmployeeComponent";
-import { data } from '../../../amplify/data/resource';
+import { data } from "../../../amplify/data/resource";
 import Breadcrumb from "@/components/adminBreadCrumb";
-import { disable } from 'aws-amplify/analytics';
+import { disable } from "aws-amplify/analytics";
+import {
+  createPaginatedFetchFunctionForUser,
+  createPaginatedFetchFunctionForSurveyResults,
+  createPaginatedFetchFunctionForSurvey,
+  createPaginatedFetchFunctionForAverageSurveyResults,
+  createPaginatedFetchFunctionForFactorImportance,
+  createPaginatedFetchFunctionForCompany,
+  createPaginatedFetchFunctionForTextSnippet,
+} from "@/constants/pagination";
 
 const PieChart = dynamic(() => import("@/components/adminPieChart"), {
   ssr: false,
@@ -48,8 +57,6 @@ const OverviewPage: React.FC = () => {
     const max = rangeValue + 0.5;
     return score >= min && score <= max;
   };
-
-
 
   const preparingDataForPercentagePieChart = (
     factorImportanceResponses: { factor: string; score: number }[]
@@ -88,37 +95,38 @@ const OverviewPage: React.FC = () => {
     setPercentageFactorImportance(factorImportancePercentage);
   };
 
-
-
-
   const fetchData = async () => {
     const idOfSurvey = searchParams.get("surveyId") || "";
-
-    const { data: surveys } = await client.models.Survey.list({
-      filter: {
-        id: {
-          eq: idOfSurvey,
-        },
+    const filterForSurvey = {
+      id: {
+        eq: idOfSurvey,
       },
-    });
+    };
+
+    const surveys = await createPaginatedFetchFunctionForSurvey(
+      client,
+      filterForSurvey
+    )();
     if (surveys.length === 0) {
       console.error("No surveys found for company:");
       return;
     }
     const survey = surveys[0];
     setSurveyName(survey.surveyName);
-    setSnippetSetId(()=>survey.snippetSetId || "");
-   if (!survey.companyId) {
+    setSnippetSetId(() => survey.snippetSetId || "");
+    if (!survey.companyId) {
       console.error("No company found for survey:", survey);
       return;
-    } 
-    const { data: companies } = await client.models.Company.list({
-      filter: {
-        id: {
-          eq: survey.companyId,
-        },
+    }
+    const filterForCompany = {
+      id: {
+        eq: survey.companyId,
       },
-    });
+    };
+    const companies = await createPaginatedFetchFunctionForCompany(
+      client,
+      filterForCompany
+    )();
     if (companies.length === 0) {
       console.error("No companies found for survey:", survey);
       return;
@@ -129,29 +137,32 @@ const OverviewPage: React.FC = () => {
       return;
     }
     setComoanyName(company.companyName);
-
-    const { data: factorImportanceResponses } =
-    await client.models.FactorImportance.list({
-      filter: {
-        surveyId: {
-          eq: survey.id,
-        },
+    const filterForFactorImportance = {
+      surveyId: {
+        eq: survey.id,
       },
-    });
+    };
+    const factorImportanceResponses =
+      await createPaginatedFetchFunctionForFactorImportance(
+        client,
+        filterForFactorImportance
+      )();
 
-   
+    preparingDataForPercentagePieChart(factorImportanceResponses);
 
-    preparingDataForPercentagePieChart(factorImportanceResponses)
+    const filterForAverageSurveyResults = {
+      surveyId: {
+        eq: survey.id,
+      },
+    };
 
-    const {data : averageSurveyResponses} =  await client.models.AverageSurveyResults.list({
-      filter : {
-        surveyId: {
-          eq: survey.id,
-        },
-      }
-    })
-    if (averageSurveyResponses.length == 0){
-      console.error("No Average Surveys found")
+    const averageSurveyResponses =
+      await createPaginatedFetchFunctionForAverageSurveyResults(
+        client,
+        filterForAverageSurveyResults
+      )();
+    if (averageSurveyResponses.length == 0) {
+      console.error("No Average Surveys found");
     }
     const allResponses: any[] = [];
     averageSurveyResponses.forEach((response) => {
@@ -181,88 +192,79 @@ const OverviewPage: React.FC = () => {
       acc[factor] = totalScores[factor].total / totalScores[factor].count;
       return acc;
     }, {} as { [key: string]: number });
-    console.log("average", avgScores)
+    console.log("average", avgScores);
 
-    setAverageScores(avgScores)
+    setAverageScores(avgScores);
   };
 
   useEffect(() => {
     if (searchParams.has("surveyId")) {
       fetchData();
-
     }
   }, [searchParams]);
-  const fetchAllSnippets = async (client: any, pageSize: number = 100): Promise<any[]> => {
-    let allTodos: any[] = [];
-    let nextToken: string | null = null;
-    let hasMorePages: boolean = true;
-  
-    while (hasMorePages) {
-      const { data: todos, nextToken: newNextToken }: { data: any[]; nextToken: any } = await client.models.TextSnippet.list({
-        nextToken,
-        limit: pageSize,
-      });
-  
-      // Combine the new todos with the existing ones
-      allTodos = [...allTodos, ...todos];
-  
-      // Update the nextToken for the next request
-      nextToken = newNextToken;
-  
-      // If there's no more nextToken or fewer items than the page size, stop fetching
-      if (!nextToken || todos.length < pageSize) {
-        hasMorePages = false;
-      }
-    }
-  
-    return allTodos;
-  };
+
   const getSnippets = async () => {
-    const allSnippets = await fetchAllSnippets(client);
+    const filterForSnippets = {
+      snippetSetId: {
+        eq: snippetSetId,
+      },
+    };
+    const allSnippets = await createPaginatedFetchFunctionForTextSnippet(
+      client,
+      filterForSnippets
+    )();
     if (!allSnippets) {
       console.error("No snippets found for company:");
       return;
     }
-    const overviewSnippets = allSnippets.filter((snippet: any) => snippet.snippetSetId === snippetSetId && snippet.disabled === true && snippet.type === "adminoverview");
+    const overviewSnippets = allSnippets.filter(
+      (snippet: any) =>
+        snippet.snippetSetId === snippetSetId &&
+        snippet.disabled === true &&
+        snippet.type === "adminoverview"
+    );
 
-    console.log("Overview Snippets", overviewSnippets)
+    console.log("Overview Snippets", overviewSnippets);
 
     if (overviewSnippets.length === 0) {
       console.error("No snippets found for company:");
       return;
     }
     return overviewSnippets;
-  }
+  };
   useEffect(() => {
     const findMatchingSnippets = async () => {
       if (Object.keys(averageScores).length > 0) {
         // Convert the averageScores object to an array of entries and sort it by the score value
-        const sortedScores = Object.entries(averageScores).sort(([, scoreA], [, scoreB]) => scoreB - scoreA);
+        const sortedScores = Object.entries(averageScores).sort(
+          ([, scoreA], [, scoreB]) => scoreB - scoreA
+        );
 
         console.log("sortedScores", sortedScores);
-    
+
         // Fetch the snippets
         const snippets = await getSnippets();
         if (!snippets) {
           console.error("No snippets found for company:");
           return;
         }
-    
+
         // Filter snippets based on sortedScores
         const matchedSnippets = snippets.filter((snippet: any) => {
           // Find the factorScore from the sorted averageScores
-          const factorScoreEntry = sortedScores.find(([factor]) => factor === snippet.factor);
+          const factorScoreEntry = sortedScores.find(
+            ([factor]) => factor === snippet.factor
+          );
           const factorScore = factorScoreEntry ? factorScoreEntry[1] : null;
           return factorScore && isScoreInRange(factorScore, snippet.score);
         });
-    
+
         // Reverse the matchedSnippets and set them
         setMatchingSnippets(matchedSnippets);
       }
     };
-    
+
     findMatchingSnippets();
-    
   }, [averageScores]);
 
   return (
@@ -271,13 +273,18 @@ const OverviewPage: React.FC = () => {
       <div className="flex flex-1">
         <Sidebar activePath="/admin/overview" />
         <div className="w-4/5 p-3 bg-gray-50 flex flex-col">
-        <Breadcrumb/>
+          <Breadcrumb />
           {/* Section with charts and summary paragraph */}
           <div className="bg-white p-6 rounded-lg shadow-lg mb-6">
-            {surveyName.length > 0 ?(<h1 className="text-[20px] font-bold mb-6">
-              Hi <span className="text-blue-500">{companyName}</span>! Here is your
-              {" "}<span className="text-blue-500">{surveyName} </span> survey summary.
-            </h1>) : (<h1 className="text-[20px] font-bold mb-6"></h1>)}
+            {surveyName.length > 0 ? (
+              <h1 className="text-[20px] font-bold mb-6">
+                Hi <span className="text-blue-500">{companyName}</span>! Here is
+                your <span className="text-blue-500">{surveyName} </span> survey
+                summary.
+              </h1>
+            ) : (
+              <h1 className="text-[20px] font-bold mb-6"></h1>
+            )}
 
             <div className="flex mb-6">
               {/* Pie Chart Section */}
@@ -306,9 +313,9 @@ const OverviewPage: React.FC = () => {
             {/* Paragraph Summary */}
             <div className="text-gray-600 text-sm">
               <p>
-              {matchingSnippets.map((snippet: any, index: any) => (
-                <span key={index}>{snippet.snippetText} {" "}</span>
-              ))}
+                {matchingSnippets.map((snippet: any, index: any) => (
+                  <span key={index}>{snippet.snippetText} </span>
+                ))}
               </p>
             </div>
           </div>

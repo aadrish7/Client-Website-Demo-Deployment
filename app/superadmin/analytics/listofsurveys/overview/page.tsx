@@ -225,6 +225,7 @@ const AdminPage: React.FC = () => {
           },
         ],
       },
+      limit: 10000,
     });
 
     if (employees && employees.length > 0) {
@@ -419,6 +420,7 @@ const AdminPage: React.FC = () => {
           eq: idOfSurvey,
         },
       },
+      limit: 10000,
     });
   
     if (surveys.length === 0) {
@@ -432,14 +434,17 @@ const AdminPage: React.FC = () => {
     // Fetch data once and store it
     const { data: beforeFiltersurveyResponses } = await client.models.AverageSurveyResults.list({
       filter: { surveyId: { eq: survey.id } },
+      limit: 10000,
     });
   
     const { data: beforeFilterfactorImportanceResponses } = await client.models.FactorImportance.list({
       filter: { surveyId: { eq: survey.id } },
+      limit: 10000,
     });
   
     const { data: beforeFilteringIndividualSurveyResponses } = await client.models.SurveyResults.list({
       filter: { surveyId: { eq: survey.id } },
+      limit: 10000,
     });
   
     // Store raw data in state

@@ -7,8 +7,8 @@ interface UserState {
   userRole: string | null | undefined;
   userEmail: string | null | undefined;
   surveyId: string | null | undefined;
-  companyId: string | null | undefined; // Add companyId property
-  companyName: string | null | undefined; // Add companyName property
+  companyId: string | null | undefined; 
+  companyName: string | null | undefined; 
   setLoginState: (email: string, role: string) => void;
   setLogoutState: () => void;
   setSurveyId: (id: string) => void;
@@ -23,8 +23,8 @@ const useUserStore = create<UserState>()(
       userRole: null,
       userEmail: null,
       surveyId: null,
-      companyId: null, // Initialize companyId as null
-      companyName: null, // Initialize companyName as null
+      companyId: null, 
+      companyName: null, 
       setLoginState: (email: string, role: string) => set({
         isLoggedIn: true,
         userEmail: email,
@@ -35,17 +35,17 @@ const useUserStore = create<UserState>()(
         userEmail: null,
         userRole: null,
         surveyId: null,
-        companyId: null, // Reset companyId on logout
-        companyName: null, // Reset companyName on logout
+        companyId: null, 
+        companyName: null, 
       }),
       setSurveyId: (id: string) => set({
         surveyId: id,
       }),
       setCompanyId: (id: string) => set({
-        companyId: id, // Set companyId
+        companyId: id, 
       }),
       setCompanyName: (name: string) => set({
-        companyName: name, // Set companyName
+        companyName: name, 
       }),
     }),
     {

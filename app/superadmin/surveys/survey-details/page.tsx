@@ -12,6 +12,18 @@ import { Schema } from '@/amplify/data/resource';
 import { Suspense } from 'react';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import Breadcrumb from '@/components/surveyBreadCrumb';
+import {
+  createPaginatedFetchFunctionForUser,
+  createPaginatedFetchFunctionForSurveyResults,
+  createPaginatedFetchFunctionForSurvey,
+  createPaginatedFetchFunctionForAverageSurveyResults,
+  createPaginatedFetchFunctionForFactorImportance,
+  createPaginatedFetchFunctionForCompany,
+  createPaginatedFetchFunctionForTextSnippet,
+  createPaginatedFetchFunctionForQuestion,
+  createPaginatedFetchFunctionForCollection,
+  createPaginatedFetchFunctionForSnippetSet
+} from "@/constants/pagination";
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
@@ -196,21 +208,21 @@ const SurveyDetailsPage = () => {
   const fetchData = async () => {
     try {
       if (surveyName && companyId) { 
-        const { data: surveys } = await client.models.Survey.list({
-          filter: {
-            surveyName: { eq: surveyName },
-            companyId: { eq: companyId }
-          }
-        });
+        const filterForSurvey = {
+          surveyName: { eq: surveyName },
+          companyId: { eq: companyId }
+        };
+        const surveys = await createPaginatedFetchFunctionForSurvey(client, filterForSurvey)();
 
         if (surveys && surveys.length > 0) {
           const survey = surveys[0];
           const { collectionId, snippetSetId, id: surveyID } = survey;
           setSurveyId(surveyID)
           if (collectionId) {
-            const { data: collections } = await client.models.Collection.list({
-              filter: { id: { eq: collectionId } }
-            });
+            const filterForCollection = {
+              id: { eq: collectionId }
+            };
+            const collections = await createPaginatedFetchFunctionForCollection(client, filterForCollection)();
             
             if (collections && collections.length > 0) {
               const collection = collections[0];
@@ -219,19 +231,21 @@ const SurveyDetailsPage = () => {
           }
 
           if (snippetSetId) {
-            const { data: snippets } = await client.models.SnippetSet.list({
-              filter: { id: { eq: snippetSetId } }
-            });
+            const filterForSnippetSet = {
+              id: { eq: snippetSetId }
+            };
+            const snippets = await createPaginatedFetchFunctionForSnippetSet(client, filterForSnippetSet)();
 
             if (snippets && snippets.length > 0) {
               const snippet = snippets[0];
               setSnippetData([{ tags: snippet.tags || "", name: snippet.name || '' }]);
             }
           }
-
-          const { data: users } = await client.models.User.list({
-            filter: { surveyId: { eq: surveyID } }
-          });
+          const filterForUser = {
+            surveyId: { eq: surveyID }
+          };
+          const users = await createPaginatedFetchFunctionForUser(client, filterForUser)();
+          console.log('Employee List:', users);
 
           const formattedEmployees = users.map(emp => ({
             name: `${emp.firstName} ${emp.lastName}`,

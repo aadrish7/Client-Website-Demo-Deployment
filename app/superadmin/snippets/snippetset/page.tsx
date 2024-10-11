@@ -26,7 +26,9 @@ const SnippetSetsPage: React.FC = () => {
   // Fetch snippet sets from the server
   const fetchSnippetSets = async () => {
     try {
-      const { data: snippetSetList } = await client.models.SnippetSet.list({});
+      const { data: snippetSetList } = await client.models.SnippetSet.list({
+        limit: 10000,
+      });
       setTableHeaders(["name", "tags"]);
       setTableData(
         snippetSetList.map((set) => ({
