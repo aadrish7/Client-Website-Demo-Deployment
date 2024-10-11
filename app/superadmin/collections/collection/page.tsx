@@ -10,6 +10,18 @@ import Header from "@/components/superadminHeader";
 import Sidebar from "@/components/superadminSidebar";
 import Breadcrumb from "@/components/normalBreadCrumb";
 import { Suspense } from "react";
+import {
+  createPaginatedFetchFunctionForUser,
+  createPaginatedFetchFunctionForSurveyResults,
+  createPaginatedFetchFunctionForSurvey,
+  createPaginatedFetchFunctionForAverageSurveyResults,
+  createPaginatedFetchFunctionForFactorImportance,
+  createPaginatedFetchFunctionForCompany,
+  createPaginatedFetchFunctionForTextSnippet,
+  createPaginatedFetchFunctionForQuestion,
+  createPaginatedFetchFunctionForCollection,
+  createPaginatedFetchFunctionForSnippetSet
+} from "@/constants/pagination";
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
@@ -23,7 +35,7 @@ const CollectionsPage: React.FC = () => {
   // Fetch collections from the Collection model
   const fetchCollections = async () => {
     try {
-      const { data: collectionList } = await client.models.Collection.list({});
+      const collectionList = await createPaginatedFetchFunctionForCollection(client, {})();
       setTableHeaders(() => ["name", "tags"]); 
       setTableData(
         collectionList.map((collection) => ({

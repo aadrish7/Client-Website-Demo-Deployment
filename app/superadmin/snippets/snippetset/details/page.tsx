@@ -11,6 +11,18 @@ import Table from "@/components/table";
 import { Suspense } from "react";
 import Breadcrumb from "@/components/normalBreadCrumb";
 import { Pagination } from "@aws-amplify/ui-react";
+import {
+  createPaginatedFetchFunctionForUser,
+  createPaginatedFetchFunctionForSurveyResults,
+  createPaginatedFetchFunctionForSurvey,
+  createPaginatedFetchFunctionForAverageSurveyResults,
+  createPaginatedFetchFunctionForFactorImportance,
+  createPaginatedFetchFunctionForCompany,
+  createPaginatedFetchFunctionForTextSnippet,
+  createPaginatedFetchFunctionForQuestion,
+  createPaginatedFetchFunctionForCollection,
+  createPaginatedFetchFunctionForSnippetSet
+} from "@/constants/pagination";
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
@@ -71,11 +83,12 @@ const SnippetSetDetails: React.FC = () => {
       const fetchSnippetSet = async () => {
         try {
           if (!snippetSetName) return;
-          const { data: snippetSets } = await client.models.SnippetSet.list({
-            filter: {
-              name: { eq: snippetSetName },
+          const filterForSnippetSet = {
+            name: {
+              eq: snippetSetName,
             },
-          });
+          };
+          const snippetSets = await createPaginatedFetchFunctionForSnippetSet(client, filterForSnippetSet)();
           const foundSet = snippetSets.find((set) => set.name === snippetSetName);
     
           if (foundSet) {

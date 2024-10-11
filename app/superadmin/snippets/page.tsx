@@ -202,29 +202,21 @@ interface TextSnippet {
   snippetText: string;
   type: "adminoverview" | "employeeaggregated" | "employeeindividual";
 }
-const fetchAllSnippets = async (client: any, pageSize: number = 100): Promise<any[]> => {
+const fetchAllSnippets = async (client: any, pageSize: number = 500): Promise<any[]> => {
   let allTodos: any[] = [];
   let nextToken: string | null = null;
   let hasMorePages: boolean = true;
-
   while (hasMorePages) {
     const { data: todos, nextToken: newNextToken }: { data: any[]; nextToken: any } = await client.models.TextSnippet.list({
       nextToken,
       limit: pageSize,
     });
-
-    // Combine the new todos with the existing ones
     allTodos = [...allTodos, ...todos];
-
-    // Update the nextToken for the next request
     nextToken = newNextToken;
-
-    // If there's no more nextToken or fewer items than the page size, stop fetching
     if (!nextToken || todos.length < pageSize) {
       hasMorePages = false;
     }
   }
-
   return allTodos;
 };
 

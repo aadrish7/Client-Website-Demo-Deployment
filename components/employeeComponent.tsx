@@ -16,6 +16,16 @@ const BarChart = dynamic(() => import("@/components/barChartEmployee"), {
   loading: () => <div>Loading Graph...</div>,
 });
 import FactorImportance from "@/components/employeeFactorImportance";
+import {
+  createPaginatedFetchFunctionForUser,
+  createPaginatedFetchFunctionForSurveyResults,
+  createPaginatedFetchFunctionForSurvey,
+  createPaginatedFetchFunctionForAverageSurveyResults,
+  createPaginatedFetchFunctionForFactorImportance,
+  createPaginatedFetchFunctionForCompany,
+  createPaginatedFetchFunctionForTextSnippet,
+  createPaginatedFetchFunctionForQuestion,
+} from "@/constants/pagination";
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
@@ -162,13 +172,12 @@ const QuestionsComponent: React.FC = () => {
       if (!email) {
         throw new Error("User email is missing");
       }
-
-      const { data: userList } = await client.models.User.list({
-        filter: {
-          email: { eq: email },
+      const filterForUser = {
+        email: {
+          eq: email,
         },
-      });
-
+      };
+      const userList = await createPaginatedFetchFunctionForUser(client, filterForUser)();
       if (!userList || userList.length === 0) {
         throw new Error(`No user found with email: ${email}`);
       }
@@ -184,13 +193,13 @@ const QuestionsComponent: React.FC = () => {
       if (!companyId) {
         throw new Error("User's company ID is missing");
       }
-
-      const { data: SurveyList } = await client.models.Survey.list({
-        filter: {
-          companyId: { eq: companyId },
-          start: { eq: true },
+      const filterForSurvey = {
+        companyId: {
+          eq: companyId,
         },
-      });
+        start: { eq: true },
+      }
+      const SurveyList = await createPaginatedFetchFunctionForSurvey(client, filterForSurvey)();
 
       if (!SurveyList || SurveyList.length === 0) {
         setNoQuestions(() => true);
@@ -215,13 +224,15 @@ const QuestionsComponent: React.FC = () => {
 
       setSurveyId(() => survey.id);
 
-      const { data: averageSurveyResponses } =
-        await client.models.AverageSurveyResults.list({
-          filter: {
-            surveyId: { eq: survey.id },
-            userId: { eq: finalUser.id },
-          },
-        });
+      const filterForAverageSurveyResults = {
+        surveyId: {
+          eq: survey.id,
+        },
+        userId: {
+          eq: finalUser.id,
+        },
+      };
+      const averageSurveyResponses = await createPaginatedFetchFunctionForAverageSurveyResults(client, filterForAverageSurveyResults)();
 
       if (averageSurveyResponses && averageSurveyResponses.length > 0) {
         const allanswersjson = averageSurveyResponses[0].averageScorejson;
@@ -257,11 +268,12 @@ const QuestionsComponent: React.FC = () => {
       }
 
       // Fetch all questions that belong to the collection using collectionId
-      const { data: questions } = await client.models.Question.list({
-        filter: {
-          collectionId: { eq: collectionId }, // Use collectionId to fetch questions
+      const filterForQuestions = {
+        collectionId: {
+          eq: collectionId,
         },
-      });
+      };
+      const questions = await createPaginatedFetchFunctionForQuestion(client, filterForQuestions)();
 
       if (!questions || questions.length === 0) {
         throw new Error(
@@ -444,44 +456,24 @@ const QuestionsComponent: React.FC = () => {
     );
     return sortedAverages;
   };
-  const fetchAllSnippets = async (client: any, pageSize: number = 100): Promise<any[]> => {
-    let allTodos: any[] = [];
-    let nextToken: string | null = null;
-    let hasMorePages: boolean = true;
-  
-    while (hasMorePages) {
-      const { data: todos, nextToken: newNextToken }: { data: any[]; nextToken: any } = await client.models.TextSnippet.list({
-        nextToken,
-        limit: pageSize,
-      });
-  
-      // Combine the new todos with the existing ones
-      allTodos = [...allTodos, ...todos];
-  
-      // Update the nextToken for the next request
-      nextToken = newNextToken;
-  
-      // If there's no more nextToken or fewer items than the page size, stop fetching
-      if (!nextToken || todos.length < pageSize) {
-        hasMorePages = false;
-      }
-    }
-  
-    return allTodos;
-  };
+
   useEffect(() => {
     const fetchSnippets = async () => {
       if (viewSurveyResults) {
         const averageSurveyResults = calculateAverages(userSelections);
         try {
-        //   const { data: snippets } = await client.models.TextSnippet.list({
-        //     filter: {
-        //       snippetSetId: { eq: snippetId },
-        //       disabled : {eq: true},
-        //       type : {ne: "adminoverview"},
-        //     },
-        //   });
-          const beforeFilterSnippets = await fetchAllSnippets(client);
+          const filterForSnippets = {
+            snippetSetId: {
+              eq: snippetId,
+            },
+            disabled: {
+              eq: true,
+            },
+            type: {
+              ne: "adminoverview",
+            },
+          };
+          const beforeFilterSnippets = await createPaginatedFetchFunctionForTextSnippet(client, filterForSnippets)();
           const filteredSnippets = beforeFilterSnippets.filter((snippet:any) => snippet.snippetSetId === snippetId && snippet.disabled === true && snippet.type !== "adminoverview");
           const snippets = filteredSnippets;
           

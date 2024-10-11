@@ -12,6 +12,15 @@ import { data } from "../../amplify/data/resource";
 import { Suspense } from "react";
 import useUserStore from "@/store/userStore";
 import Breadcrumb from "@/components/adminBreadCrumb";
+import {
+  createPaginatedFetchFunctionForUser,
+  createPaginatedFetchFunctionForSurveyResults,
+  createPaginatedFetchFunctionForSurvey,
+  createPaginatedFetchFunctionForAverageSurveyResults,
+  createPaginatedFetchFunctionForFactorImportance,
+  createPaginatedFetchFunctionForCompany,
+  createPaginatedFetchFunctionForTextSnippet,
+} from "@/constants/pagination";
 
 
 Amplify.configure(outputs);
@@ -27,16 +36,15 @@ const AdminPage: React.FC = () => {
     const userAttributes = await fetchUserAttributes();
     
     // Fetch admin user data
-    const { data: usersdata } = await client.models.User.list({
-      filter: {
-        email: {
-          eq: userAttributes.email,
-        },
-        role: {
-          eq: "admin",
-        },
+    const filterForAdmin = {
+      email: {
+        eq: userAttributes.email,
       },
-    });
+      role: {
+        eq: "admin",
+      },
+    };
+    const usersdata:any[]= await createPaginatedFetchFunctionForUser(client, filterForAdmin)();
     if (usersdata.length === 0) {
       console.error("No user found with email:", userAttributes.email);
       return;
@@ -50,13 +58,12 @@ const AdminPage: React.FC = () => {
     }
     
     // Fetch surveys for the company
-    const { data: surveys } = await client.models.Survey.list({
-      filter: {
-        companyId: {
-          eq: companyId,
-        },
+    const filterForSurveys = {
+      companyId: {
+        eq: companyId,
       },
-    });
+    };
+    const surveys = await createPaginatedFetchFunctionForSurvey(client, filterForSurveys)();
     if (surveys.length === 0) {
       console.error("No surveys found for company:", companyId);
       return;
@@ -70,26 +77,24 @@ const AdminPage: React.FC = () => {
         const surveyId = survey.id;
   
         // Fetch total number of employees for this survey
-        const { data: listOfAllEmployees } = await client.models.User.list({
-          filter: {
-            companyId: {
-              eq: companyId,
-            },
-            surveyId: {
-              eq: surveyId,
-            },
+        const filterForEmployees = {
+          companyId: {
+            eq: companyId,
           },
-        });
+          surveyId: {
+            eq: surveyId,
+          },
+        };
+        const listOfAllEmployees = await createPaginatedFetchFunctionForUser(client, filterForEmployees);
         const lengthOfEmployees = listOfAllEmployees.length;
   
         // Fetch total number of survey results for this survey
-        const { data: SurveyResults } = await client.models.AverageSurveyResults.list({
-          filter: {
-            surveyId: {
-              eq: surveyId,
-            },
+        const filterForSurveyResults = {
+          surveyId: {
+            eq: surveyId,
           },
-        });
+        };
+        const SurveyResults = await createPaginatedFetchFunctionForSurveyResults(client, filterForSurveyResults);
         const lengthOfSurveyResults = SurveyResults.length;
   
         // Calculate Percentage Completion
@@ -113,13 +118,18 @@ const AdminPage: React.FC = () => {
   }, []);
 
   const handleTableClick = async (surveyName: string) => {
-    const { data: surveyData } = await client.models.Survey.list({
-      filter: {
-        surveyName: {
-          eq: surveyName,
-        },
+    console.log("surveyName", surveyName);
+    const filterForSurvey = {
+      surveyName: {
+        eq: surveyName,
       },
-    });
+    };
+    const surveyData:any = await createPaginatedFetchFunctionForSurvey(client, filterForSurvey)();
+    console.log("surveyData", surveyData);
+    if (surveyData.length === 0) {
+      console.error("No survey found with name:", surveyName);
+      return;
+    }
     setSurveyId(surveyData[0].id)
     router.push(`/admin/overview?surveyId=${surveyData[0].id}`);
   };

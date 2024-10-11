@@ -16,6 +16,14 @@ import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import Breadcrumb from "@/components/adminBreadCrumb";
+import {
+  createPaginatedFetchFunctionForAverageSurveyResults,
+  createPaginatedFetchFunctionForFactorImportance,
+  createPaginatedFetchFunctionForSurvey,
+  createPaginatedFetchFunctionForSurveyResults,
+  createPaginatedFetchFunctionForUser
+} from "@/constants/pagination";
+import { create } from "domain";
 
 const PieChart = dynamic(() => import("@/components/adminPieChart"), {
   ssr: false,
@@ -152,13 +160,8 @@ const AdminPage: React.FC = () => {
     yearsOfService: [],
   });
 
-  const ageCategories = [
-    "Age 18-24", 
-    "Age 25-39", 
-    "Age 40-55", 
-    "Age 56+"
-  ];
-  
+  const ageCategories = ["Age 18-24", "Age 25-39", "Age 40-55", "Age 56+"];
+
   const yearsOfServiceCategories = ["1-3 years", "3-5 years", "5+ years"];
 
   const [departments, setDepartments] = useState<string[]>([]);
@@ -208,23 +211,22 @@ const AdminPage: React.FC = () => {
 
   const fetchEmployees = async () => {
     const idOfSurvey = searchParams.get("surveyId") || "";
-    const { data: employees } = await client.models.User.list({
-      filter: {
-        and: [
-          {
-            surveyId: {
-              eq: idOfSurvey,
-            },
+    const filterForEmployees = {
+      and: [
+        {
+          surveyId: {
+            eq: idOfSurvey,
           },
-          {
-            role: {
-              eq: "employee",
-            },
+        },
+        {
+          role: {
+            eq: "employee",
           },
-        ],
-      },
-    });
+        },
+      ],
+    };
 
+    const employees = await createPaginatedFetchFunctionForUser(client, filterForEmployees)();
     if (employees && employees.length > 0) {
       setListOfEmployees(employees);
       const uniqueDepartments = Array.from(
@@ -410,57 +412,76 @@ const AdminPage: React.FC = () => {
   const fetchData = async () => {
     const idOfSurvey = searchParams.get("surveyId") || "";
     console.log("fetching data for surveyId:", idOfSurvey);
-  
-    const { data: surveys } = await client.models.Survey.list({
-      filter: {
-        id: {
-          eq: idOfSurvey,
-        },
+
+    const filterForSurvey = {
+      id: {
+        eq: idOfSurvey,
       },
-    });
-  
+    }
+    const surveys = await createPaginatedFetchFunctionForSurvey(client, filterForSurvey)();
+
     if (surveys.length === 0) {
       console.error("No surveys found for company:");
       return;
     }
-  
+
     const survey = surveys[0];
     setSurveyId(survey.id);
-  
+
     // Fetch data once and store it
-    const { data: beforeFiltersurveyResponses } = await client.models.AverageSurveyResults.list({
-      filter: { surveyId: { eq: survey.id } },
-    });
+    const filterForSurveyResponses = {
+      surveyId: {
+        eq: survey.id,
+      },
+    };
+
+    const beforeFiltersurveyResponses = await createPaginatedFetchFunctionForAverageSurveyResults(client, filterForSurveyResponses)();
   
-    const { data: beforeFilterfactorImportanceResponses } = await client.models.FactorImportance.list({
-      filter: { surveyId: { eq: survey.id } },
-    });
-  
-    const { data: beforeFilteringIndividualSurveyResponses } = await client.models.SurveyResults.list({
-      filter: { surveyId: { eq: survey.id } },
-    });
-  
+    const filterForFactorImportanceResponses = {
+      surveyId: {
+        eq: survey.id,
+      },
+    };
+    const beforeFilterfactorImportanceResponses = await createPaginatedFetchFunctionForFactorImportance(client, filterForFactorImportanceResponses)();
+
+    const filterForIndividualSurveyResponses = {
+      surveyId: {
+        eq: survey.id,
+      },
+    };
+    const beforeFilteringIndividualSurveyResponses = await createPaginatedFetchFunctionForSurveyResults(client, filterForIndividualSurveyResponses)();
+
     // Store raw data in state
     setRawSurveyResponses(beforeFiltersurveyResponses);
     setRawFactorImportanceResponses(beforeFilterfactorImportanceResponses);
     setRawIndividualSurveyResponses(beforeFilteringIndividualSurveyResponses);
   };
-  
+
   // State to store raw data and filtered data
   const [rawSurveyResponses, setRawSurveyResponses] = useState<any[]>([]);
-  const [rawFactorImportanceResponses, setRawFactorImportanceResponses] = useState<any[]>([]);
-  const [rawIndividualSurveyResponses, setRawIndividualSurveyResponses] = useState<any[]>([]);
-  const [filteredSurveyResponses, setFilteredSurveyResponses] = useState<any[]>([]);
-  const [filteredFactorImportanceResponses, setFilteredFactorImportanceResponses] = useState<any[]>([]);
-  const [filteredIndividualSurveyResponses, setFilteredIndividualSurveyResponses] = useState<any[]>([]);
+  const [rawFactorImportanceResponses, setRawFactorImportanceResponses] =
+    useState<any[]>([]);
+  const [rawIndividualSurveyResponses, setRawIndividualSurveyResponses] =
+    useState<any[]>([]);
+  const [filteredSurveyResponses, setFilteredSurveyResponses] = useState<any[]>(
+    []
+  );
+  const [
+    filteredFactorImportanceResponses,
+    setFilteredFactorImportanceResponses,
+  ] = useState<any[]>([]);
+  const [
+    filteredIndividualSurveyResponses,
+    setFilteredIndividualSurveyResponses,
+  ] = useState<any[]>([]);
   const [copyListOfEmployees, setCopyListOfEmployees] = useState<any[]>([]);
-  
+
   useEffect(() => {
     if (searchParams.has("surveyId")) {
       fetchData();
     }
   }, [searchParams]);
-  
+
   useEffect(() => {
     // Set default values for filters if they are undefined
     const {
@@ -469,26 +490,26 @@ const AdminPage: React.FC = () => {
       age = [],
       yearsOfService = [],
     } = filter || {};
-  
+
     // Update filtered list of employees based on filters
     let updatedListOfEmployees = [...listOfEmployees];
-  
+
     if (department.length > 0) {
-      updatedListOfEmployees = updatedListOfEmployees.filter(emp =>
+      updatedListOfEmployees = updatedListOfEmployees.filter((emp) =>
         department.includes(emp.department)
       );
     }
-  
+
     if (gender.length > 0) {
-      updatedListOfEmployees = updatedListOfEmployees.filter(emp =>
+      updatedListOfEmployees = updatedListOfEmployees.filter((emp) =>
         gender.includes(emp.gender)
       );
     }
-  
+
     if (age.length > 0) {
-      updatedListOfEmployees = updatedListOfEmployees.filter(emp => {
+      updatedListOfEmployees = updatedListOfEmployees.filter((emp) => {
         const ageValue = calculateAge(emp.dob);
-        return age.some(ageRange => {
+        return age.some((ageRange) => {
           if (ageRange === "Age 18-24") return ageValue >= 18 && ageValue <= 24;
           if (ageRange === "Age 25-39") return ageValue >= 25 && ageValue <= 39;
           if (ageRange === "Age 40-55") return ageValue >= 40 && ageValue <= 55;
@@ -497,11 +518,11 @@ const AdminPage: React.FC = () => {
         });
       });
     }
-  
+
     if (yearsOfService.length > 0) {
-      updatedListOfEmployees = updatedListOfEmployees.filter(emp => {
+      updatedListOfEmployees = updatedListOfEmployees.filter((emp) => {
         const years = calculateYearsOfService(emp.hireDate);
-        return yearsOfService.some(serviceRange => {
+        return yearsOfService.some((serviceRange) => {
           if (serviceRange === "1-3 years") return years >= 1 && years <= 3;
           if (serviceRange === "3-5 years") return years >= 3 && years <= 5;
           if (serviceRange === "5+ years") return years >= 5;
@@ -509,34 +530,42 @@ const AdminPage: React.FC = () => {
         });
       });
     }
-  
+
     setCopyListOfEmployees(updatedListOfEmployees);
-  
+
     // Filter the responses based on the updated list of employees
     setFilteredSurveyResponses(
-      rawSurveyResponses.filter(response =>
-        updatedListOfEmployees.some(emp => emp.id === response.userId)
+      rawSurveyResponses.filter((response) =>
+        updatedListOfEmployees.some((emp) => emp.id === response.userId)
       )
     );
-  
+
     setFilteredFactorImportanceResponses(
-      rawFactorImportanceResponses.filter(response =>
-        updatedListOfEmployees.some(emp => emp.id === response.userId)
+      rawFactorImportanceResponses.filter((response) =>
+        updatedListOfEmployees.some((emp) => emp.id === response.userId)
       )
     );
-  
+
     setFilteredIndividualSurveyResponses(
-      rawIndividualSurveyResponses.filter(response =>
-        updatedListOfEmployees.some(emp => emp.id === response.userId)
+      rawIndividualSurveyResponses.filter((response) =>
+        updatedListOfEmployees.some((emp) => emp.id === response.userId)
       )
     );
-  }, [filter, listOfEmployees, rawSurveyResponses, rawFactorImportanceResponses, rawIndividualSurveyResponses]);
-  
-  
+  }, [
+    filter,
+    listOfEmployees,
+    rawSurveyResponses,
+    rawFactorImportanceResponses,
+    rawIndividualSurveyResponses,
+  ]);
+
   useEffect(() => {
-    preparingDataForStackedBarChart(filteredFactorImportanceResponses, ratingsData);
+    preparingDataForStackedBarChart(
+      filteredFactorImportanceResponses,
+      ratingsData
+    );
     preparingDataForPercentagePieChart(filteredFactorImportanceResponses);
-  
+
     // Process individual survey responses
     const tempIndividualSurveyResponses: any[] = [];
     filteredIndividualSurveyResponses.forEach((response: any) => {
@@ -544,11 +573,14 @@ const AdminPage: React.FC = () => {
         const surveyResponse = JSON.parse(response.allanswersjson);
         tempIndividualSurveyResponses.push(surveyResponse);
       } else {
-        console.error("Invalid type for surveyResultsjson:", typeof response.allanswersjson);
+        console.error(
+          "Invalid type for surveyResultsjson:",
+          typeof response.allanswersjson
+        );
       }
     });
     setAllIndividualSurveyResponses(tempIndividualSurveyResponses);
-  
+
     // Process average scores
     const allResponses: any[] = [];
     filteredSurveyResponses.forEach((response: any) => {
@@ -556,11 +588,14 @@ const AdminPage: React.FC = () => {
         const surveyResponse = JSON.parse(response.averageScorejson);
         allResponses.push(surveyResponse);
       } else {
-        console.error("Invalid type for averageScorejson:", typeof response.averageScorejson);
+        console.error(
+          "Invalid type for averageScorejson:",
+          typeof response.averageScorejson
+        );
       }
     });
     setAllSurveyResponses(allResponses);
-  
+
     const totalScores: { [key: string]: { total: number; count: number } } = {};
     allResponses.forEach((response: any) => {
       Object.keys(response).forEach((factor: string) => {
@@ -571,16 +606,18 @@ const AdminPage: React.FC = () => {
         totalScores[factor].count += 1;
       });
     });
-  
+
     const avgScores = Object.keys(totalScores).reduce((acc, factor) => {
       acc[factor] = totalScores[factor].total / totalScores[factor].count;
       return acc;
     }, {} as { [key: string]: number });
-  
+
     setAverageScores(avgScores);
-  }, [filteredSurveyResponses, filteredFactorImportanceResponses, filteredIndividualSurveyResponses]);
-  
-  
+  }, [
+    filteredSurveyResponses,
+    filteredFactorImportanceResponses,
+    filteredIndividualSurveyResponses,
+  ]);
 
   useEffect(() => {
     const handleFactorChange = () => {
@@ -624,7 +661,6 @@ const AdminPage: React.FC = () => {
     handleFactorChange();
   }, [selectedFactor, allIndividualSurveyResponses]);
 
-
   const categories = [
     "Psychological Safety",
     "Growth Satisfaction",
@@ -639,7 +675,7 @@ const AdminPage: React.FC = () => {
       <div className="flex flex-1">
         <Sidebar activePath="/admin/analytics" />
         <div className="w-4/5 p-3 bg-gray-50">
-        <Breadcrumb/>
+          <Breadcrumb />
           <div className="flex mb-4 gap-0.5">
             {/* Year of Service Dropdown */}
             <MultiSelectDropdown

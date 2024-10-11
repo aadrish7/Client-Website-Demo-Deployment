@@ -10,6 +10,29 @@ import { generateClient } from "aws-amplify/data";
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
 
+const fetchAllUsers = async (client: any, email: string): Promise<any[]> => {
+  let allUsers: any[] = [];
+  let nextToken: string | null = null;
+  let hasMorePages: boolean = true;
+  while (hasMorePages) {
+    const { data: users, nextToken: newNextToken }: { data: any[]; nextToken: any } = await client.models.User.list({
+      filter: {
+        email: {
+          eq: email,
+        },
+      },
+      nextToken,
+      limit: 1000,
+    });
+    allUsers = [...allUsers, ...users];
+    nextToken = newNextToken;
+    if (!nextToken || users.length < 1000) {
+      hasMorePages = false;
+    }
+  }
+  return allUsers;
+};
+
 interface SignUpFormElements extends HTMLFormControlsCollection {
   email: HTMLInputElement;
   password: HTMLInputElement;
@@ -34,19 +57,12 @@ export default function SignUpPage() {
     const email = form.elements.email.value;
     const password = form.elements.password.value;
 
-    // Check if the passwords match before proceeding
     if (password !== retypePassword) {
       setErrorMessage("Passwords do not match. Please try again.");
       return;
     }
 
-    const { data: relevantUser } = await client.models.User.list({
-      filter: {
-        email: {
-          eq: email,
-        },
-      },
-    });
+    const relevantUser = await fetchAllUsers(client, email);
 
     if (relevantUser.length === 0) {
       setErrorMessage(

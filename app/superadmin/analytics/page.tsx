@@ -9,6 +9,18 @@ import Header from "@/components/superadminHeader";
 import Sidebar from "@/components/superadminSidebar";
 import Table from "@/components/table";
 import Breadcrumb from "@/components/breadCrumb";
+import {
+  createPaginatedFetchFunctionForUser,
+  createPaginatedFetchFunctionForSurveyResults,
+  createPaginatedFetchFunctionForSurvey,
+  createPaginatedFetchFunctionForAverageSurveyResults,
+  createPaginatedFetchFunctionForFactorImportance,
+  createPaginatedFetchFunctionForCompany,
+  createPaginatedFetchFunctionForTextSnippet,
+  createPaginatedFetchFunctionForQuestion,
+  createPaginatedFetchFunctionForCollection,
+  createPaginatedFetchFunctionForSnippetSet
+} from "@/constants/pagination";
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
@@ -35,7 +47,7 @@ const Analytics = () => {
   
     const fetchCompanies = async () => {
       try {
-        const { data: companyList } = await client.models.Company.list({});
+        const companyList = await createPaginatedFetchFunctionForCompany(client, {})();
         setCompanies(()=>companyList);
         setTableHeaders(() => ["company name", "admin email"]);
         setTableData(
