@@ -36,6 +36,8 @@ const AdminPage: React.FC = () => {
 
   const fetchData = async () => {
     const CompanyId = searchParams.get("companyId");
+    const companyId = searchParams.get("companyId");
+    console.log("CompanyId", CompanyId);
     if (!CompanyId) {
       console.error("No company id found in query params");
       return;
@@ -50,6 +52,7 @@ const AdminPage: React.FC = () => {
       console.error("No company found with id:", CompanyId);
       return;
     }
+    console.log("companyData", companyData);
 
     const userAttributes = companyData[0].adminEmail;
     const filterForUser = {
@@ -63,11 +66,6 @@ const AdminPage: React.FC = () => {
     const usersdata = await createPaginatedFetchFunctionForUser(client, filterForUser)();
     if (usersdata.length === 0) {
       console.error("No user found with email:", userAttributes);
-      return;
-    }
-    const companyId = usersdata[0].companyId;
-    if (!companyId) {
-      console.error("No company found for user:", userAttributes);
       return;
     }
     const filterForSurvey = {
