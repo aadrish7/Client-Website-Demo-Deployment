@@ -11,6 +11,7 @@ const BarChart: React.FC<BarChartProps> = ({ data }) => {
   const sortedNames = Object.keys(data).sort((a, b) => data[b] - data[a]);
   const scores = sortedNames.map(name => data[name]);
   const remainingScores = sortedNames.map(name => 5 - data[name]);
+  console.log("data in bar chart", data);
 
   const colorMapping: { [key: string]: string } = {
     "Psychological Safety": '#0971CE',

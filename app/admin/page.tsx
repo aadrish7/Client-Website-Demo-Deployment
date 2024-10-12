@@ -75,6 +75,7 @@ const AdminPage: React.FC = () => {
     const tableData = await Promise.all(
       surveys.map(async (survey) => {
         const surveyId = survey.id;
+        console.log("surveyId", surveyId);
   
         // Fetch total number of employees for this survey
         const filterForEmployees = {
@@ -85,7 +86,8 @@ const AdminPage: React.FC = () => {
             eq: surveyId,
           },
         };
-        const listOfAllEmployees = await createPaginatedFetchFunctionForUser(client, filterForEmployees);
+        const listOfAllEmployees = await createPaginatedFetchFunctionForUser(client, filterForEmployees)();
+        console.log("listOfAllEmployees", listOfAllEmployees);
         const lengthOfEmployees = listOfAllEmployees.length;
   
         // Fetch total number of survey results for this survey
@@ -94,7 +96,7 @@ const AdminPage: React.FC = () => {
             eq: surveyId,
           },
         };
-        const SurveyResults = await createPaginatedFetchFunctionForSurveyResults(client, filterForSurveyResults);
+        const SurveyResults = await createPaginatedFetchFunctionForSurveyResults(client, filterForSurveyResults)();
         const lengthOfSurveyResults = SurveyResults.length;
   
         // Calculate Percentage Completion

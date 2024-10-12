@@ -272,7 +272,6 @@ const AdminPage: React.FC = () => {
         return acc;
       }, {} as { [factor: string]: { [score: number]: number } });
 
-    console.log("after step 1", EachfactorImportanceIndividualCount);
 
     // Step 2: Calculate percentages
     const EachfactorImportanceIndividualPercentage = Object.keys(
@@ -297,8 +296,6 @@ const AdminPage: React.FC = () => {
 
       return acc;
     }, {} as { [factor: string]: { [score: string]: number } });
-
-    console.log("after step 2", EachfactorImportanceIndividualPercentage);
 
     // Step 3: Map factor scores to ratings data
     const factorWithIndexes: { [key: string]: number } = {
@@ -331,8 +328,6 @@ const AdminPage: React.FC = () => {
         }
       }
     }
-
-    console.log("after step 3", ratingsData);
     setRatingsData(ratingsData);
   };
 
@@ -342,10 +337,6 @@ const AdminPage: React.FC = () => {
     // Step 1: Filter responses to include only those with a score of 5
     const factorImportanceResponsesFiltered = factorImportanceResponses.filter(
       (response) => response.score === 5
-    );
-    console.log(
-      "5factorImportanceResponsesFiltered",
-      factorImportanceResponsesFiltered
     );
 
     // Step 2: Count occurrences of each factor
@@ -412,7 +403,6 @@ const AdminPage: React.FC = () => {
 
   const fetchData = async () => {
     const idOfSurvey = searchParams.get("surveyId") || "";
-    console.log("fetching data for surveyId:", idOfSurvey);
   
     const { data: surveys } = await client.models.Survey.list({
       filter: {
@@ -436,6 +426,7 @@ const AdminPage: React.FC = () => {
       filter: { surveyId: { eq: survey.id } },
       limit: 10000,
     });
+    
   
     const { data: beforeFilterfactorImportanceResponses } = await client.models.FactorImportance.list({
       filter: { surveyId: { eq: survey.id } },
@@ -479,6 +470,7 @@ const AdminPage: React.FC = () => {
   
     // Update filtered list of employees based on filters
     let updatedListOfEmployees = [...listOfEmployees];
+    console.log("--------------updatedListOfEmployees------------------", updatedListOfEmployees);
   
     if (department.length > 0) {
       updatedListOfEmployees = updatedListOfEmployees.filter(emp =>
@@ -525,6 +517,7 @@ const AdminPage: React.FC = () => {
         updatedListOfEmployees.some(emp => emp.id === response.userId)
       )
     );
+    console.log("--------------filteredSurveyResponses------------------", filteredSurveyResponses);
   
     setFilteredFactorImportanceResponses(
       rawFactorImportanceResponses.filter(response =>
