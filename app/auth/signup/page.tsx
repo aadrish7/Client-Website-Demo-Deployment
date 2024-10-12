@@ -57,22 +57,22 @@ export default function SignUpPage() {
     const email = form.elements.email.value;
     const password = form.elements.password.value;
 
-    // if (password !== retypePassword) {
-    //   setErrorMessage("Passwords do not match. Please try again.");
-    //   return;
-    // }
+    if (password !== retypePassword) {
+      setErrorMessage("Passwords do not match. Please try again.");
+      return;
+    }
 
-    // const relevantUser = await fetchAllUsers(client, email);
+    const relevantUser = await fetchAllUsers(client, email);
 
-    // if (relevantUser.length === 0) {
-    //   setErrorMessage(
-    //     "User does not exist in the database. Please contact the admin to add you to the database."
-    //   );
-    //   return;
-    // }
+    if (relevantUser.length === 0) {
+      setErrorMessage(
+        "User does not exist in the database. Please contact the admin to add you to the database."
+      );
+      return;
+    }
 
-    // const finalUser = relevantUser[0];
-    // const roleInDB = finalUser.role;
+    const finalUser = relevantUser[0];
+    const roleInDB = finalUser.role;
 
     try {
       // Sign up the user with the email and password
@@ -81,7 +81,7 @@ export default function SignUpPage() {
         password,
         options: {
           userAttributes: {
-            "custom:role": "employee",
+            "custom:role": roleInDB,
           },
         },
       });
