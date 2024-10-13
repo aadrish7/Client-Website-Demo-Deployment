@@ -2,7 +2,7 @@
 export const createPaginatedFetchFunctionForUser = (
     client: any,
     filters: any, 
-    pageSize: number = 500
+    pageSize: number = 1200
   ) => {
     return async (): Promise<any[]> => {
       let allData: any[] = [];
@@ -19,7 +19,7 @@ export const createPaginatedFetchFunctionForUser = (
         allData = [...allData, ...results];
         nextToken = newNextToken;
   
-        if (!nextToken || results.length < pageSize) {
+        if (!nextToken) {
           hasMorePages = false;
         }
       }
@@ -31,7 +31,7 @@ export const createPaginatedFetchFunctionForUser = (
   export const createPaginatedFetchFunctionForSurveyResults = (
     client: any,
     filters: any, 
-    pageSize: number = 500
+    pageSize: number = 1200
   ) => {
     return async (): Promise<any[]> => {
       let allData: any[] = [];
@@ -48,7 +48,7 @@ export const createPaginatedFetchFunctionForUser = (
         allData = [...allData, ...results];
         nextToken = newNextToken;
   
-        if (!nextToken || results.length < pageSize) {
+        if (!nextToken) {
           hasMorePages = false;
         }
       }
@@ -60,7 +60,7 @@ export const createPaginatedFetchFunctionForUser = (
   export const createPaginatedFetchFunctionForSurvey = (
     client: any,
     filters: any, 
-    pageSize: number = 500
+    pageSize: number = 1200
   ) => {
     return async (): Promise<any[]> => {
       let allData: any[] = [];
@@ -77,7 +77,7 @@ export const createPaginatedFetchFunctionForUser = (
         allData = [...allData, ...results];
         nextToken = newNextToken;
   
-        if (!nextToken || results.length < pageSize) {
+        if (!nextToken) {
           hasMorePages = false;
         }
       }
@@ -89,7 +89,7 @@ export const createPaginatedFetchFunctionForUser = (
   export const createPaginatedFetchFunctionForAverageSurveyResults = (
     client: any,
     filters: any, 
-    pageSize: number = 500
+    pageSize: number = 1200
   ) => {
     return async (): Promise<any[]> => {
       let allData: any[] = [];
@@ -106,7 +106,7 @@ export const createPaginatedFetchFunctionForUser = (
         allData = [...allData, ...results];
         nextToken = newNextToken;
   
-        if (!nextToken || results.length < pageSize) {
+        if (!nextToken) {
           hasMorePages = false;
         }
       }
@@ -118,7 +118,7 @@ export const createPaginatedFetchFunctionForUser = (
   export const createPaginatedFetchFunctionForFactorImportance = (
     client: any,
     filters: any, 
-    pageSize: number = 500
+    pageSize: number = 1200
   ) => {
     return async (): Promise<any[]> => {
       let allData: any[] = [];
@@ -135,7 +135,7 @@ export const createPaginatedFetchFunctionForUser = (
         allData = [...allData, ...results];
         nextToken = newNextToken;
   
-        if (!nextToken || results.length < pageSize) {
+        if (!nextToken) {
           hasMorePages = false;
         }
       }
@@ -148,7 +148,7 @@ export const createPaginatedFetchFunctionForUser = (
   export const createPaginatedFetchFunctionForCompany = (
     client: any,
     filters: any, 
-    pageSize: number = 500
+    pageSize: number = 1200
   ) => {
     return async (): Promise<any[]> => {
       let allData: any[] = [];
@@ -165,7 +165,7 @@ export const createPaginatedFetchFunctionForUser = (
         allData = [...allData, ...results];
         nextToken = newNextToken;
   
-        if (!nextToken || results.length < pageSize) {
+        if (!nextToken) {
           hasMorePages = false;
         }
       }
@@ -177,7 +177,7 @@ export const createPaginatedFetchFunctionForUser = (
   export const createPaginatedFetchFunctionForTextSnippet = (
     client: any,
     filters: any, 
-    pageSize: number = 500
+    pageSize: number = 1200
   ) => {
     return async (): Promise<any[]> => {
       let allData: any[] = [];
@@ -194,7 +194,7 @@ export const createPaginatedFetchFunctionForUser = (
         allData = [...allData, ...results];
         nextToken = newNextToken;
   
-        if (!nextToken || results.length < pageSize) {
+        if (!nextToken) {
           hasMorePages = false;
         }
       }
@@ -206,7 +206,7 @@ export const createPaginatedFetchFunctionForUser = (
   export const createPaginatedFetchFunctionForQuestion = (
     client: any,
     filters: any, 
-    pageSize: number = 500
+    pageSize: number = 1200
   ) => {
     return async (): Promise<any[]> => {
       let allData: any[] = [];
@@ -223,7 +223,7 @@ export const createPaginatedFetchFunctionForUser = (
         allData = [...allData, ...results];
         nextToken = newNextToken;
   
-        if (!nextToken || results.length < pageSize) {
+        if (!nextToken) {
           hasMorePages = false;
         }
       }
@@ -235,7 +235,7 @@ export const createPaginatedFetchFunctionForUser = (
   export const createPaginatedFetchFunctionForCollection = (
     client: any,
     filters: any, 
-    pageSize: number = 500
+    pageSize: number = 1200
   ) => {
     return async (): Promise<any[]> => {
       let allData: any[] = [];
@@ -252,7 +252,7 @@ export const createPaginatedFetchFunctionForUser = (
         allData = [...allData, ...results];
         nextToken = newNextToken;
   
-        if (!nextToken || results.length < pageSize) {
+        if (!nextToken) {
           hasMorePages = false;
         }
       }
@@ -264,7 +264,7 @@ export const createPaginatedFetchFunctionForUser = (
   export const createPaginatedFetchFunctionForSnippetSet = (
     client: any,
     filters: any, 
-    pageSize: number = 500
+    pageSize: number = 1200
   ) => {
     return async (): Promise<any[]> => {
       let allData: any[] = [];
@@ -281,7 +281,7 @@ export const createPaginatedFetchFunctionForUser = (
         allData = [...allData, ...results];
         nextToken = newNextToken;
   
-        if (!nextToken || results.length < pageSize) {
+        if (!nextToken) {
           hasMorePages = false;
         }
       }
