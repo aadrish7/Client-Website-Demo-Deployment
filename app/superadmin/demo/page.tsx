@@ -43,6 +43,7 @@ const CsvParser = () => {
         alert("Please provide both surveyId and companyId.");
         return;
       }
+      var count = 0;
       for (const employee of csvData) {
         const user = {
           firstName: employee["First Name"],
@@ -71,9 +72,13 @@ const CsvParser = () => {
             surveyId : user.surveyId,   
             role : "employee",    
         })
-        console.log(userstored);
+        if (userstored) {
+          count++;
+        }else{
+          console.log("Failed to store user", user);
+        }
       }
-      alert("Data Stored Successfully");
+      alert("Data Stored Successfully, with " + count + " records");
     } catch (error) {
       console.error("Failed to process employees", error);
     }
