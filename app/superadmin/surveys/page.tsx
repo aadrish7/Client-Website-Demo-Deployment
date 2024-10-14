@@ -317,7 +317,7 @@ const SurveysPage = () => {
           month: 'long',   
           year: 'numeric',  
         }),
-          status: s.start ? "Started" : "Not Started",
+          status: s.start ? "In Progress" : "Completed",
           start: s.start ?? false,
         })))
     } catch (error) {
@@ -449,7 +449,7 @@ const SurveysPage = () => {
                             ) : header.toLowerCase() === "status" ? (
                               <span
                                 className={`${
-                                  row[header] === "Started"
+                                  row[header] === "In Progress"
                                     ? "inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
                                     : "inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-medium bg-red-100 text-red-800"
                                 }`}

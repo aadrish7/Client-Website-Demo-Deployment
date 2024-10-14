@@ -31,7 +31,25 @@ const AdminBarChart: React.FC<BarChartProps> = ({ data, factor }) => {
   const scores = sortedNames.map(name => data[name]);
   const remainingScores = sortedNames.map(name => 5 - data[name]);
 
-  const safeNames = sortedNames.map((name, index) => `SAFE${index + 1}`);
+  // Generate names based on the factor
+  const generateNames = (factor: string, count: number) => {
+    switch (factor) {
+      case 'Psychological Safety':
+        return sortedNames.map((_, index) => `SAFE${index + 1}`);
+      case 'Flexibility':
+        return sortedNames.map((_, index) => `FLEX${index + 1}`);
+      case 'Purpose':
+        return sortedNames.map((_, index) => `PURP${index + 1}`);
+      case 'Growth Satisfaction':
+        return sortedNames.map((_, index) => `GROW${index + 1}`);
+      case 'Advocacy':
+        return sortedNames.map((_, index) => `ADVO${index + 1}`);
+      default:
+        return sortedNames; // Default to the original names if the factor is not recognized
+    }
+  };
+
+  const names = generateNames(factor, sortedNames.length);
 
   // Set colors dynamically based on the factor names (sortedNames)
   const colors = sortedNames.map(name => colorMapping[factor] || '#4D9FFF'); // Default to blue if not found
@@ -41,7 +59,7 @@ const AdminBarChart: React.FC<BarChartProps> = ({ data, factor }) => {
     <Plot
       data={[
         {
-          x: safeNames,
+          x: names,
           y: scores,
           type: 'bar',
           name: 'Score',
@@ -52,7 +70,7 @@ const AdminBarChart: React.FC<BarChartProps> = ({ data, factor }) => {
           hoverinfo: 'none', // Disable hover interaction for this trace
         },
         {
-          x: safeNames,
+          x: names,
           y: remainingScores,
           type: 'bar',
           name: 'Remaining',
