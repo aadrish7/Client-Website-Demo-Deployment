@@ -1,7 +1,14 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Plot from 'react-plotly.js';
+import {
+  createPaginatedFetchFunctionForQuestion,
+} from "@/constants/pagination";
+import { generateClient } from "aws-amplify/data";
+import { Amplify } from "aws-amplify";
+import outputs from "@/amplify_outputs.json";
+import { Schema } from "@/amplify/data/resource";
 
 type BarChartProps = {
   data: {
@@ -9,6 +16,9 @@ type BarChartProps = {
   };
   factor: string;
 };
+
+Amplify.configure(outputs);
+const client = generateClient<Schema>();
 
 const colorMapping: { [key: string]: string } = {
   "Psychological Safety": '#0971CE',
@@ -27,6 +37,36 @@ const lightColorMapping: { [key: string]: string } = {
 };
 
 const AdminBarChart: React.FC<BarChartProps> = ({ data, factor }) => {
+  const [questionTexts, setQuestionTexts] = useState<{ [key: string]: string }>({});
+
+  // Fetch question texts based on the question IDs
+  useEffect(() => {
+    const fetchQuestionTexts = async () => {
+      const questionIds = Object.keys(data);
+
+      const fetchPromises = questionIds.map(async (id) => {
+        const filterForQuestions = {
+          id: {
+            eq: id,
+          },
+        };
+        const questionText = await createPaginatedFetchFunctionForQuestion(client, filterForQuestions)();
+        return { id, text: questionText[0]?.questionText || 'No text available' };
+      });
+
+      const results = await Promise.all(fetchPromises);
+
+      const questionTextsMap: { [key: string]: string } = {};
+      results.forEach(({ id, text }) => {
+        questionTextsMap[id] = text;
+      });
+
+      setQuestionTexts(questionTextsMap);
+    };
+
+    fetchQuestionTexts();
+  }, [data]);
+
   const sortedNames = Object.keys(data).sort((a, b) => data[b] - data[a]).slice(0, 3);
   const scores = sortedNames.map(name => data[name]);
   const remainingScores = sortedNames.map(name => 5 - data[name]);
@@ -55,6 +95,7 @@ const AdminBarChart: React.FC<BarChartProps> = ({ data, factor }) => {
   const colors = sortedNames.map(name => colorMapping[factor] || '#4D9FFF'); // Default to blue if not found
   const lightColors = sortedNames.map(name => lightColorMapping[factor] || '#E5F2FF'); // Default to light blue
 
+  // Update hoverinfo to show question text on hover and score on the bar graph
   return (
     <Plot
       data={[
@@ -64,10 +105,10 @@ const AdminBarChart: React.FC<BarChartProps> = ({ data, factor }) => {
           type: 'bar',
           name: 'Score',
           marker: { color: colors },
-          text: scores.map(score => score.toFixed(2)),
-          textposition: 'auto',
+          text: scores.map(score => score.toFixed(2)), // Show score on the bars
+          hovertext: sortedNames.map(name => questionTexts[name] || 'Loading...'), // Show question text on hover
+          hoverinfo: 'text', // Display both score and question text on hover
           showlegend: false,
-          hoverinfo: 'none', // Disable hover interaction for this trace
         },
         {
           x: names,
@@ -91,7 +132,7 @@ const AdminBarChart: React.FC<BarChartProps> = ({ data, factor }) => {
           b: 100,
         },
         showlegend: false,
-        hovermode: false, // Disable hover interaction for the entire chart
+        hovermode: 'closest', // Enable hover for the bars
         autosize: true, // Enable autosizing based on the container
       }}
       config={{
@@ -100,7 +141,7 @@ const AdminBarChart: React.FC<BarChartProps> = ({ data, factor }) => {
         displayModeBar: false, // Removes the mode bar with zoom and pan options
         responsive: true, // Enables responsiveness to container resizing
       }}
-      style={{ width: '100%', height: '100%', cursor: 'default' }} // Ensure it uses 100% of the parent container's width and height
+      style={{ width: '100%', height: '100%', cursor: 'pointer' }} // Ensure it uses 100% of the parent container's width and height
     />
   );
 };

@@ -34,10 +34,12 @@ const StackedBarChart = dynamic(
     loading: () => <div className="text-center py-4">Loading Graph...</div>,
   }
 );
+
+
 type MultiSelectDropdownProps = {
   label: string;
   options: string[];
-  selectedOptions: any;
+  selectedOptions: string[]; // Ensure it's a string array for type safety
   onChange: (selected: string[]) => void;
 };
 
@@ -47,30 +49,44 @@ const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({
   selectedOptions,
   onChange,
 }) => {
-  const [isOpen, setIsOpen] = useState(false); // State to control dropdown open/close
+  const [isOpen, setIsOpen] = useState(false);
 
+  // Check if "Select All" should be checked
+  const isAllSelected = selectedOptions.length === options.length;
+
+  // Handle individual checkbox change
   const handleCheckboxChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { value, checked } = event.target;
     if (checked) {
       onChange([...selectedOptions, value]);
     } else {
-      onChange(selectedOptions.filter((option: any) => option !== value));
+      onChange(selectedOptions.filter(option => option !== value));
+    }
+  };
+
+  // Handle "Select All" change
+  const handleSelectAllChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const { checked } = event.target;
+    if (checked) {
+      onChange(options); // Select all options
+    } else {
+      onChange([]); // Deselect all options
     }
   };
 
   const toggleDropdown = () => {
-    setIsOpen(!isOpen); // Toggle dropdown visibility
+    setIsOpen(!isOpen);
   };
 
-  // Dynamically determine styles based on selected options
-  const isSingleOptionSelected = selectedOptions.length === 1;
-  const isMultipleOptionsSelected = selectedOptions.length > 1;
-
-  const buttonClasses = isSingleOptionSelected
-    ? "text-blue-500 border-blue-500"
-    : isMultipleOptionsSelected
-    ? "bg-blue-500 text-white border-blue-500"
-    : "text-gray-700 border-gray-300";
+    // Dynamically determine styles based on selected options
+    const isSingleOptionSelected = selectedOptions.length === 1;
+    const isMultipleOptionsSelected = selectedOptions.length > 1;
+  
+    const buttonClasses = isSingleOptionSelected
+      ? "text-blue-500 border-blue-500"
+      : isMultipleOptionsSelected
+      ? "bg-blue-500 text-white border-blue-500"
+      : "text-gray-700 border-gray-300";
 
   return (
     <div className="relative inline-block text-left w-3/5">
@@ -83,9 +99,7 @@ const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({
         >
           {label}
           <svg
-            className={`ml-2 h-5 w-5 transition-transform ${
-              isOpen ? "rotate-180" : ""
-            }`}
+            className={`ml-2 h-5 w-5 transition-transform ${isOpen ? 'rotate-180' : ''}`}
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 20 20"
             fill="currentColor"
@@ -100,11 +114,22 @@ const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({
         </button>
       </div>
 
-      {/* Dropdown menu */}
+      {/* Dropdown Menu */}
       {isOpen && (
         <div className="origin-top-right absolute z-10 mt-2 w-full rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
           <div className="py-1">
-            {options.map((option) => (
+            {/* Select All Option */}
+            <label className="flex items-center px-4 py-2">
+              <input
+                type="checkbox"
+                checked={isAllSelected}
+                onChange={handleSelectAllChange}
+              />
+              <span className="ml-2">Select All</span>
+            </label>
+
+            {/* Individual Options */}
+            {options.map(option => (
               <label key={option} className="flex items-center px-4 py-2">
                 <input
                   type="checkbox"
@@ -121,6 +146,7 @@ const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({
     </div>
   );
 };
+
 const AdminBarChart = dynamic(
   () => import("@/components/adminBarChartQuestions"),
   {
@@ -250,9 +276,17 @@ const AdminPage: React.FC = () => {
 
       if (uniqueDepartments.length > 0) {
         setDepartments(uniqueDepartments);
+        setFilter(prev => ({ ...prev, department: uniqueDepartments }));
+
       }
       if (uniqueGenders.length > 0) {
         setGenders(uniqueGenders);
+        setFilter(prev => ({ ...prev, gender: uniqueGenders }));
+        setFilter(prev => ({
+          ...prev,
+          age: ageCategories, // Select all age categories by default
+          yearsOfService: yearsOfServiceCategories, // Select all years of service categories by default
+        }));
       }
     }
   };
@@ -458,6 +492,7 @@ const AdminPage: React.FC = () => {
       fetchData();
     }
   }, [searchParams]);
+
   
   useEffect(() => {
     // Set default values for filters if they are undefined
@@ -471,7 +506,14 @@ const AdminPage: React.FC = () => {
     // Update filtered list of employees based on filters
     let updatedListOfEmployees = [...listOfEmployees];
     console.log("--------------updatedListOfEmployees------------------", updatedListOfEmployees);
-  
+    if (
+      department.length === 0 &&
+      gender.length === 0 &&
+      age.length === 0 &&
+      yearsOfService.length === 0
+    ) {
+      updatedListOfEmployees = []; // No data if any filter is empty
+    } else {
     if (department.length > 0) {
       updatedListOfEmployees = updatedListOfEmployees.filter(emp =>
         department.includes(emp.department)
@@ -530,6 +572,7 @@ const AdminPage: React.FC = () => {
         updatedListOfEmployees.some(emp => emp.id === response.userId)
       )
     );
+  }
   }, [filter, listOfEmployees, rawSurveyResponses, rawFactorImportanceResponses, rawIndividualSurveyResponses]);
   
   
@@ -645,7 +688,7 @@ const AdminPage: React.FC = () => {
             <MultiSelectDropdown
               label="Department"
               options={departments}
-              selectedOptions={filter.department}
+              selectedOptions={filter.department || []}
               onChange={(selectedDepartments: any) =>
                 setFilter((prev) => ({
                   ...prev,
@@ -657,7 +700,7 @@ const AdminPage: React.FC = () => {
             <MultiSelectDropdown
               label="Gender"
               options={genders}
-              selectedOptions={filter.gender}
+              selectedOptions={filter.gender || []}
               onChange={(selectedGenders: any) =>
                 setFilter((prev) => ({ ...prev, gender: selectedGenders }))
               }
@@ -666,7 +709,7 @@ const AdminPage: React.FC = () => {
             <MultiSelectDropdown
               label="Age"
               options={ageCategories}
-              selectedOptions={filter.age}
+              selectedOptions={filter.age || []}
               onChange={(selectedAges: any) =>
                 setFilter((prev) => ({ ...prev, age: selectedAges }))
               }
@@ -675,7 +718,7 @@ const AdminPage: React.FC = () => {
             <MultiSelectDropdown
               label="Years of Service"
               options={yearsOfServiceCategories}
-              selectedOptions={filter.yearsOfService}
+              selectedOptions={filter.yearsOfService || []}
               onChange={(selectedYearsOfService: any) =>
                 setFilter((prev) => ({
                   ...prev,
