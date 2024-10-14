@@ -17,8 +17,8 @@ export const handler: Schema["bulkCreateSnippets"]["functionHandler"] = async (e
         
         try {
             await client.models.TextSnippet.create({
-              factor:  String(snippetObject.factor) || '',
-              score: snippetObject.questionText,
+              factor:  snippetObject.factor,
+              score: snippetObject.score,
               snippetText: snippetObject.snippetText,
               type: snippetObject.sanitizedType,
               disabled: false,
