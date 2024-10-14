@@ -657,7 +657,6 @@ const SuperAdminMainPage: React.FC = () => {
       header: true,
       complete: async (results) => {
         const data = results.data as SnippetRow[];
-        let snippetArray: string[] = []
         try {
           for (const row of data) {
             const { factor, score, text: snippetText, type } = row;
@@ -676,12 +675,15 @@ const SuperAdminMainPage: React.FC = () => {
               continue;
             }
 
-            snippetArray.push(`${factor}:${Number(score)}:${snippetText}:${sanitizedType}`)
+            await client.models.TextSnippet.create({
+              factor,
+              score: Number(score),
+              snippetText,
+              type: sanitizedType,
+              disabled: false,
+              snippetSetId: "",
+            });
           }
-          await client.mutations.bulkCreateSnippets({
-            snippetsArray: snippetArray
-            
-          });
           await fetchTextSnippets();
           setShowCsvPopup(false);
         } catch (error) {

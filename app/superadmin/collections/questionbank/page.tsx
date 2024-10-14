@@ -566,27 +566,23 @@ const QuestionsPage: React.FC = () => {
   };
 
   const handleCSVUpload = async (groupedQuestions: Map<string, string[]>) => {
-    let questionArray: string[] = [];
     try {
       for (const [factor, questions] of Array.from(groupedQuestions.entries())) {
         for (const questionText of questions) {
-          questionArray.push(
-          `${factor}:${questionText}`);
+          await client.models.Question.create({
+            factor,
+            questionText,
+            disabled: false,
+            collectionId: "",
+          });
         }
       }
-
-      const { data, errors } = await client.mutations.bulkCreateQuestions({
-        questionArray: questionArray
-        
-      });
       fetchQuestions();
       setIsCSVModalOpen(false);
     } catch (error) {
       console.error("Failed to create questions from CSV", error);
     }
   };
-
-  
 
   const handleDelete = async (question: any) => {
     try {
