@@ -1,5 +1,4 @@
 import { type ClientSchema, a, defineData, defineFunction } from "@aws-amplify/backend";
-import { disable } from "aws-amplify/analytics";
 
 /*== STEP 1 ===============================================================
 The section below creates a Todo database table with a "content" field. Try
