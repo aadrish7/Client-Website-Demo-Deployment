@@ -7,27 +7,15 @@ import outputs from "@/amplify_outputs.json";
 import { Amplify } from "aws-amplify";
 import Header from "@/components/superadminHeader";
 import Sidebar from "@/components/superadminSidebar";
-import Table from "@/components/table";
 import { Suspense } from "react";
 import Breadcrumb from "@/components/normalBreadCrumb";
 import { Pagination } from "@aws-amplify/ui-react";
 import {
-  createPaginatedFetchFunctionForUser,
-  createPaginatedFetchFunctionForSurveyResults,
-  createPaginatedFetchFunctionForSurvey,
-  createPaginatedFetchFunctionForAverageSurveyResults,
-  createPaginatedFetchFunctionForFactorImportance,
-  createPaginatedFetchFunctionForCompany,
-  createPaginatedFetchFunctionForTextSnippet,
-  createPaginatedFetchFunctionForQuestion,
-  createPaginatedFetchFunctionForCollection,
   createPaginatedFetchFunctionForSnippetSet
 } from "@/constants/pagination";
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
-
-
 
 // Define a type for text snippet details
 type TextSnippetDetails = {
@@ -38,6 +26,20 @@ type TextSnippetDetails = {
   disabled: boolean; // Disabled field is required
 };
 
+// Function to map enum values to hardcoded display values with spaces
+const displayType = (type: string | null | undefined): string => {
+  switch (type) {
+    case "adminoverview":
+      return "Admin Overview";
+    case "employeeaggregated":
+      return "Employee Aggregated";
+    case "employeeindividual":
+      return "Employee Individual";
+    default:
+      return "Unknown";
+  }
+};
+
 const SnippetSetDetails: React.FC = () => {
   const [snippetSet, setSnippetSet] = useState<{
     name: string;
@@ -45,9 +47,8 @@ const SnippetSetDetails: React.FC = () => {
     textSnippets: string[];
   }>({ name: "", textSnippets: [], tags: "" });
 
-  const [textSnippetsDetails, setTextSnippetsDetails] = useState<
-    TextSnippetDetails[]
-  >([]);
+  const [textSnippetsDetails, setTextSnippetsDetails] = useState<TextSnippetDetails[]>([]);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc"); // Sort direction state
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -57,86 +58,94 @@ const SnippetSetDetails: React.FC = () => {
     let allTodos: any[] = [];
     let nextToken: string | null = null;
     let hasMorePages: boolean = true;
-  
+
     while (hasMorePages) {
       const { data: todos, nextToken: newNextToken }: { data: any[]; nextToken: any } = await client.models.TextSnippet.list({
         nextToken,
         limit: pageSize,
       });
-  
-      // Combine the new todos with the existing ones
+
       allTodos = [...allTodos, ...todos];
-  
-      // Update the nextToken for the next request
       nextToken = newNextToken;
-  
-      // If there's no more nextToken or fewer items than the page size, stop fetching
+
       if (!nextToken || todos.length < pageSize) {
         hasMorePages = false;
       }
     }
-  
+
     return allTodos;
   };
 
-    useEffect(() => {
-      const fetchSnippetSet = async () => {
-        try {
-          if (!snippetSetName) return;
-          const filterForSnippetSet = {
-            name: {
-              eq: snippetSetName,
-            },
-          };
-          const snippetSets = await createPaginatedFetchFunctionForSnippetSet(client, filterForSnippetSet)();
-          const foundSet = snippetSets.find((set) => set.name === snippetSetName);
-    
-          if (foundSet) {
-            setSnippetSet({
-              name: foundSet.name ?? "",
-              tags: foundSet.tags ?? "",
-              textSnippets: [], // No longer used, but kept for structure
-            });
-    
-            if (!foundSet.id) {
-              console.error("Snippet set ID not found");
-              return;
-            }
-      
-            
-            var snippets = await fetchAllTextSnippets(client);
-            //filter the ones that have the disabled field set to true and the snippetSetId is equal to the foundSet.id
-            const filteredSnippets = snippets.filter((snippet:any) => snippet.snippetSetId === foundSet.id && snippet.disabled === true);
-            snippets = filteredSnippets;
+  useEffect(() => {
+    const fetchSnippetSet = async () => {
+      try {
+        if (!snippetSetName) return;
+        const filterForSnippetSet = {
+          name: {
+            eq: snippetSetName,
+          },
+        };
+        const snippetSets = await createPaginatedFetchFunctionForSnippetSet(client, filterForSnippetSet)();
+        const foundSet = snippetSets.find((set) => set.name === snippetSetName);
 
-            console.log("filteredSnippets", filteredSnippets);
-    
-            setTextSnippetsDetails(
-              snippets.map((snippet:any) => ({
-                factor: snippet.factor,
-                score: snippet.score,
-                snippetText: snippet.snippetText,
-                type: snippet.type,
-                disabled: snippet.disabled ?? false,
-              }))
-            );
+        if (foundSet) {
+          setSnippetSet({
+            name: foundSet.name ?? "",
+            tags: foundSet.tags ?? "",
+            textSnippets: [],
+          });
+
+          if (!foundSet.id) {
+            console.error("Snippet set ID not found");
+            return;
           }
-        } catch (error) {
-          console.error("Failed to fetch snippet set or text snippets", error);
+
+          var snippets = await fetchAllTextSnippets(client);
+          const filteredSnippets = snippets.filter((snippet: any) => snippet.snippetSetId === foundSet.id && snippet.disabled === true);
+          snippets = filteredSnippets;
+
+          setTextSnippetsDetails(
+            snippets.map((snippet: any) => ({
+              factor: snippet.factor,
+              score: snippet.score,
+              snippetText: snippet.snippetText,
+              type: snippet.type,
+              disabled: snippet.disabled ?? false,
+            }))
+          );
         }
-      };
-    
-      if (snippetSetName) fetchSnippetSet();
-    }, [snippetSetName]);
-    
+      } catch (error) {
+        console.error("Failed to fetch snippet set or text snippets", error);
+      }
+    };
+
+    if (snippetSetName) fetchSnippetSet();
+  }, [snippetSetName]);
+
+  // Function to sort snippets by "Type" column
+  const sortSnippetsByType = () => {
+    const sortedSnippets = [...textSnippetsDetails].sort((a, b) => {
+      const typeA = displayType(a.type ?? "").toLowerCase();
+      const typeB = displayType(b.type ?? "").toLowerCase();
+      if (sortDirection === "asc") {
+        return typeA > typeB ? 1 : -1;
+      } else {
+        return typeA < typeB ? 1 : -1;
+      }
+    });
+
+    setTextSnippetsDetails(sortedSnippets);
+    setSortDirection(sortDirection === "asc" ? "desc" : "asc"); // Toggle sort direction
+  };
 
   const headers = ["Factor", "Score", "Snippet Text", "Type"];
+  console.log(textSnippetsDetails);
 
   const tableData = textSnippetsDetails.map((snippet) => ({
     Factor: snippet.factor,
     Score: snippet.score.toString(),
     "Snippet Text": snippet.snippetText,
-    Type: snippet.type ?? "Unknown", // Ensure Type is always a string
+    Type: displayType(snippet.type), // Use hardcoded display for the Type column
   }));
 
   return (
@@ -145,7 +154,7 @@ const SnippetSetDetails: React.FC = () => {
       <div className="flex flex-1">
         <Sidebar activePath="/superadmin/snippets/snippetset" />
         <div className="w-4/5 p-8">
-        <Breadcrumb/>
+          <Breadcrumb />
           <h1 className="text-2xl font-semibold mb-6">{snippetSetName}</h1>
           <div className="border p-4">
             {snippetSet.tags.length > 0 ? (
@@ -155,12 +164,42 @@ const SnippetSetDetails: React.FC = () => {
             ) : null}
 
             {textSnippetsDetails.length > 0 ? (
-              <Table
-                headers={headers}
-                data={tableData}
-                underlineColumn=""
-                handleClick={() => {}}
-              />
+              <div className="overflow-x-auto border border-gray-200 rounded-md">
+                <table className="min-w-full bg-white divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      {headers.map((header, index) => (
+                        <th
+                          key={index}
+                          className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer ${header === "Type" ? "hover:underline" : ""}`}
+                          onClick={header === "Type" ? sortSnippetsByType : undefined} // Add sorting functionality for "Type"
+                        >
+                          {header}
+                          {header === "Type" && (
+                            <span>
+                              {sortDirection === "asc" ? " ↑" : " ↓"}
+                            </span>
+                          )}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {tableData.map((row:any, rowIndex) => (
+                      <tr key={rowIndex}>
+                        {headers.map((header, colIndex) => (
+                          <td
+                            key={colIndex}
+                            className="px-6 py-4 whitespace-nowrap text-sm"
+                          >
+                            {row[header]}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             ) : (
               <p>Loading snippets...</p>
             )}

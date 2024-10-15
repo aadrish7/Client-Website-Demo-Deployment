@@ -24,11 +24,14 @@ import {
   createPaginatedFetchFunctionForCollection,
   createPaginatedFetchFunctionForSnippetSet
 } from "@/constants/pagination";
+import { FaTrash } from 'react-icons/fa';
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
 
+
 import Papa from 'papaparse';
+import Employee from '../../../assessment/page';
 
 interface EmployeeUploadPopupProps {
   surveyId: string;
@@ -182,28 +185,22 @@ const EmployeeUploadPopup: React.FC<EmployeeUploadPopupProps> = ({ surveyId, com
 
 const SurveyDetailsPage = () => {
   const router = useRouter();
-  const handleCollectionClick = (collectionName: string) => {
-    const newPath = `/superadmin/collections/collection/collection-details?name=${encodeURIComponent(collectionName)}`;
-    router.push(newPath);
-    
-  };
   const searchParams = useSearchParams();
   const surveyName = searchParams.get('surveyName');
   const companyId = searchParams.get('companyId');
 
   const [isPopupOpen, setIsPopupOpen] = useState(false);
-
-  const handleOpenPopup = () => setIsPopupOpen(true);
-  const handleClosePopup = () => setIsPopupOpen(false);
-
   const [collectionData, setCollectionData] = useState<Record<string, string>[]>([]);
   const [snippetData, setSnippetData] = useState<Record<string, string>[]>([]);
-  const [employeeData, setEmployeeData] = useState<Record<string, string>[]>([]);
+  const [employeeData, setEmployeeData] = useState<{ id: string, name: string, department: string, jobTitle: string, email: string }[]>([]);
   const [surveyId, setSurveyId] = useState<string>("")
 
   const collectionTableHeaders = ['name', 'tags']; 
   const snippetTableHeaders = ['name', 'tags']
-  const employeeHeaders = ['name', 'department', 'job title', 'email'];
+  const employeeHeaders = ['name', 'department', 'job title', 'email', 'manage']; // Adding 'manage' column
+
+  const handleOpenPopup = () => setIsPopupOpen(true);
+  const handleClosePopup = () => setIsPopupOpen(false);
 
   const fetchData = async () => {
     try {
@@ -241,6 +238,7 @@ const SurveyDetailsPage = () => {
               setSnippetData([{ tags: snippet.tags || "", name: snippet.name || '' }]);
             }
           }
+
           const filterForUser = {
             surveyId: { eq: surveyID }
           };
@@ -248,10 +246,11 @@ const SurveyDetailsPage = () => {
           console.log('Employee List:', users);
 
           const formattedEmployees = users.map(emp => ({
+            id: emp.id, // Store the employee ID for deletion
             name: `${emp.firstName} ${emp.lastName}`,
             department: emp.department || '',
-            "job title": emp.jobLevel || '',
-            email: emp.email || '',
+            jobTitle: emp.jobLevel || '',
+            email: emp.email || ''
           }));
 
           setEmployeeData(formattedEmployees);
@@ -266,12 +265,26 @@ const SurveyDetailsPage = () => {
     fetchData();
   }, [surveyName, companyId]);
 
-  const handleIdClick = (id: string) => {
-    router.push(`/superadmin/snippets/snippetset/details?name=${id}`);
-  };
-
-  const handleEmployeesCreated = () => {
-    fetchData();
+  // Function to handle employee deletion
+  const handleDeleteEmployee = async (employeeId: string) => {
+    try {
+      const toBeDeletedEmployee = { id: employeeId };
+      const surveyData = await createPaginatedFetchFunctionForSurveyResults(client, { userId: { eq: employeeId } })();
+      if (surveyData.length > 0) {
+        alert("Cannot delete employee as survey data exists for this employee");
+        return;
+      }
+      const { data: deletedEmployee, errors } = await client.models.User.delete(toBeDeletedEmployee);
+      if (errors) {
+        console.error("Error deleting employee:", errors);
+      } else {
+        console.log("Employee deleted successfully:", deletedEmployee);
+        // Refresh the employee data after deletion
+        fetchData();
+      }
+    } catch (error) {
+      console.error("Failed to delete employee", error);
+    }
   };
 
   return (
@@ -282,14 +295,15 @@ const SurveyDetailsPage = () => {
         <div className="w-4/5 p-8">
           <Breadcrumb />
           <h1 className="text-2xl font-semibold mb-6">{surveyName}</h1>
+
           <div className="flex space-x-4">
             <div className="border p-4 w-1/2">
               <h1 className='mb-4'>Collections</h1>
-              <Table headers={collectionTableHeaders} data={collectionData} handleClick={handleCollectionClick} underlineColumn='name' />
+              <Table headers={collectionTableHeaders} data={collectionData} handleClick={() => {}} underlineColumn='name' />
             </div>
             <div className="border p-4 w-1/2">
               <h1 className='mb-4'>Snippets</h1>
-              <Table headers={snippetTableHeaders} data={snippetData} handleClick={handleIdClick} underlineColumn='naME' />
+              <Table headers={snippetTableHeaders} data={snippetData} handleClick={() => {}} underlineColumn='name' />
             </div>
           </div>
 
@@ -304,14 +318,50 @@ const SurveyDetailsPage = () => {
             </div>
             <h1 className='mb-4 font-bold'>Employees</h1>
             {employeeData.length > 0 ? (
-              <Table headers={employeeHeaders} data={employeeData} handleClick={handleIdClick} underlineColumn='' />
+              <div className="overflow-x-auto border border-gray-200 rounded-md">
+                <table className="min-w-full bg-white divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      {employeeHeaders.map((header, index) => (
+                        <th
+                          key={index}
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          {header}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {employeeData.map((row:any, rowIndex) => (
+                      <tr key={rowIndex}>
+                        {employeeHeaders.map((header, colIndex) => (
+                          <td
+                            key={colIndex}
+                            className="px-6 py-4 whitespace-nowrap text-sm"
+                          >
+                            {header === "manage" ? (
+                              <FaTrash
+                                className="text-red-500 cursor-pointer"
+                                onClick={() => handleDeleteEmployee(row.id)} // Delete employee on click
+                              />
+                            ) : (
+                              row[header]
+                            )}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             ) : (
               <p></p>
             )}
           </div>
         </div>
       </div>
-      {isPopupOpen && <EmployeeUploadPopup surveyId={surveyId} companyId={companyId || ''} onClose={handleClosePopup}  onEmployeesCreated={handleEmployeesCreated} />}
+      {isPopupOpen && <EmployeeUploadPopup surveyId={surveyId} companyId={companyId || ''} onClose={handleClosePopup} onEmployeesCreated={fetchData} />}
     </div>
   );
 };
