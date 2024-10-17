@@ -78,6 +78,28 @@ const CreateCompanyPage: React.FC<CreateCompanyPageProps> = ({ onClose }) => {
 
     setLoading(true);
 
+    const filterForAdmin  = {
+      role: {
+        eq: "admin",
+      },
+    }
+
+    const adminData = await createPaginatedFetchFunctionForUser(client, filterForAdmin)();
+    if (adminData.length > 0) {
+      const adminEmails = adminData.map((admin) => admin.email);
+      if (adminEmails.includes(adminEmail)) {
+        setErrorMessage("Admin with this email already exists.");
+        setLoading(false);
+        return;
+      }
+    }
+    const companyData = await createPaginatedFetchFunctionForCompany(client, {})();
+    const companyNames = companyData.map((company) => company.companyName);
+    if (companyNames.includes(companyName)) {
+      setErrorMessage("Company with this name already exists.");
+      setLoading(false);
+      return;
+    }
     try {
       const { data: company } = await client.models.Company.create({
         companyName,

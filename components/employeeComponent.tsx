@@ -75,7 +75,7 @@ const QuestionsComponent: React.FC = () => {
     "Growth Satisfaction": null,
     Purpose: null,
     Advocacy: null,
-    Alignment: null,
+    "Flexibility": null,
   });
   const [isViewingResults, setIsViewingResults] = useState<boolean>(false);
   const [snippetId, setSnippetId] = useState<string>("");
@@ -145,7 +145,7 @@ const QuestionsComponent: React.FC = () => {
     const newSelectedValues = Object.fromEntries(
       Object.entries(selectedValues).map(([key, selectedValue]) => [
         key,
-        selectedValue === value ? null : selectedValue,
+        selectedValue,
       ])
     );
 

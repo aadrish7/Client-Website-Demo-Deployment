@@ -21,7 +21,7 @@ import {
   createPaginatedFetchFunctionForFactorImportance,
   createPaginatedFetchFunctionForSurvey,
   createPaginatedFetchFunctionForSurveyResults,
-  createPaginatedFetchFunctionForUser
+  createPaginatedFetchFunctionForUser,
 } from "@/constants/pagination";
 import { create } from "domain";
 
@@ -66,7 +66,7 @@ const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({
     if (checked) {
       onChange([...selectedOptions, value]);
     } else {
-      onChange(selectedOptions.filter(option => option !== value));
+      onChange(selectedOptions.filter((option) => option !== value));
     }
   };
 
@@ -84,15 +84,15 @@ const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({
     setIsOpen(!isOpen);
   };
 
-    // Dynamically determine styles based on selected options
-    const isSingleOptionSelected = selectedOptions.length === 1;
-    const isMultipleOptionsSelected = selectedOptions.length > 1;
-  
-    const buttonClasses = isSingleOptionSelected
-      ? "text-blue-500 border-blue-500"
-      : isMultipleOptionsSelected
-      ? "bg-blue-500 text-white border-blue-500"
-      : "text-gray-700 border-gray-300";
+  // Dynamically determine styles based on selected options
+  const isSingleOptionSelected = selectedOptions.length === 1;
+  const isMultipleOptionsSelected = selectedOptions.length > 1;
+
+  const buttonClasses = isSingleOptionSelected
+    ? "text-blue-500 border-blue-500"
+    : isMultipleOptionsSelected
+    ? "bg-blue-500 text-white border-blue-500"
+    : "text-gray-700 border-gray-300";
 
   return (
     <div className="relative inline-block text-left w-3/5">
@@ -105,7 +105,9 @@ const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({
         >
           {label}
           <svg
-            className={`ml-2 h-5 w-5 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+            className={`ml-2 h-5 w-5 transition-transform ${
+              isOpen ? "rotate-180" : ""
+            }`}
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 20 20"
             fill="currentColor"
@@ -135,7 +137,7 @@ const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({
             </label>
 
             {/* Individual Options */}
-            {options.map(option => (
+            {options.map((option) => (
               <label key={option} className="flex items-center px-4 py-2">
                 <input
                   type="checkbox"
@@ -182,6 +184,10 @@ const AdminPage: React.FC = () => {
     age: [],
     yearsOfService: [],
   });
+  const [loadingPieChart, setLoadingPieChart] = useState(true);
+  const [loadingStackedBarChart, setLoadingStackedBarChart] = useState(true);
+  const [loadingBarChart, setLoadingBarChart] = useState(true);
+  const [loadingAdminBarChart, setLoadingAdminBarChart] = useState(true);
 
   const ageCategories = ["Age 18-24", "Age 25-39", "Age 40-55", "Age 56+"];
 
@@ -249,7 +255,10 @@ const AdminPage: React.FC = () => {
       ],
     };
 
-    const employees = await createPaginatedFetchFunctionForUser(client, filterForEmployees)();
+    const employees = await createPaginatedFetchFunctionForUser(
+      client,
+      filterForEmployees
+    )();
     if (employees && employees.length > 0) {
       setListOfEmployees(employees);
       const uniqueDepartments = Array.from(
@@ -276,8 +285,8 @@ const AdminPage: React.FC = () => {
       }
       if (uniqueGenders.length > 0) {
         setGenders(uniqueGenders);
-        setFilter(prev => ({ ...prev, gender: uniqueGenders }));
-        setFilter(prev => ({
+        setFilter((prev) => ({ ...prev, gender: uniqueGenders }));
+        setFilter((prev) => ({
           ...prev,
           age: ageCategories, // Select all age categories by default
           yearsOfService: yearsOfServiceCategories, // Select all years of service categories by default
@@ -447,8 +456,11 @@ const AdminPage: React.FC = () => {
       id: {
         eq: idOfSurvey,
       },
-    }
-    const surveys = await createPaginatedFetchFunctionForSurvey(client, filterForSurvey)();
+    };
+    const surveys = await createPaginatedFetchFunctionForSurvey(
+      client,
+      filterForSurvey
+    )();
 
     if (surveys.length === 0) {
       console.error("No surveys found for company:");
@@ -465,21 +477,33 @@ const AdminPage: React.FC = () => {
       },
     };
 
-    const beforeFiltersurveyResponses = await createPaginatedFetchFunctionForAverageSurveyResults(client, filterForSurveyResponses)();
-  
+    const beforeFiltersurveyResponses =
+      await createPaginatedFetchFunctionForAverageSurveyResults(
+        client,
+        filterForSurveyResponses
+      )();
+
     const filterForFactorImportanceResponses = {
       surveyId: {
         eq: survey.id,
       },
     };
-    const beforeFilterfactorImportanceResponses = await createPaginatedFetchFunctionForFactorImportance(client, filterForFactorImportanceResponses)();
+    const beforeFilterfactorImportanceResponses =
+      await createPaginatedFetchFunctionForFactorImportance(
+        client,
+        filterForFactorImportanceResponses
+      )();
 
     const filterForIndividualSurveyResponses = {
       surveyId: {
         eq: survey.id,
       },
     };
-    const beforeFilteringIndividualSurveyResponses = await createPaginatedFetchFunctionForSurveyResults(client, filterForIndividualSurveyResponses)();
+    const beforeFilteringIndividualSurveyResponses =
+      await createPaginatedFetchFunctionForSurveyResults(
+        client,
+        filterForIndividualSurveyResponses
+      )();
 
     // Store raw data in state
     setRawSurveyResponses(beforeFiltersurveyResponses);
@@ -520,10 +544,11 @@ const AdminPage: React.FC = () => {
       age = [],
       yearsOfService = [],
     } = filter || {};
-    
+    // make an if condition to check if the length of rawSurveyResponses is greater than 0
+    if (rawSurveyResponses.length > 0) {
     // Update filtered list of employees based on filters
     let updatedListOfEmployees = [...listOfEmployees];
-    
+
     if (
       department.length === 0 &&
       gender.length === 0 &&
@@ -532,64 +557,72 @@ const AdminPage: React.FC = () => {
     ) {
       updatedListOfEmployees = []; // No data if any filter is empty
     } else {
+      if (department.length > 0) {
+        updatedListOfEmployees = updatedListOfEmployees.filter((emp) =>
+          department.includes(emp.department)
+        );
+      }
 
-    if (department.length > 0) {
-      updatedListOfEmployees = updatedListOfEmployees.filter((emp) =>
-        department.includes(emp.department)
-      );
-    }
+      if (gender.length > 0) {
+        updatedListOfEmployees = updatedListOfEmployees.filter((emp) =>
+          gender.includes(emp.gender)
+        );
+      }
 
-    if (gender.length > 0) {
-      updatedListOfEmployees = updatedListOfEmployees.filter((emp) =>
-        gender.includes(emp.gender)
-      );
-    }
-
-    if (age.length > 0) {
-      updatedListOfEmployees = updatedListOfEmployees.filter((emp) => {
-        const ageValue = calculateAge(emp.dob);
-        return age.some((ageRange) => {
-          if (ageRange === "Age 18-24") return ageValue >= 18 && ageValue <= 24;
-          if (ageRange === "Age 25-39") return ageValue >= 25 && ageValue <= 39;
-          if (ageRange === "Age 40-55") return ageValue >= 40 && ageValue <= 55;
-          if (ageRange === "Age 56+") return ageValue >= 56;
-          return false;
+      if (age.length > 0) {
+        updatedListOfEmployees = updatedListOfEmployees.filter((emp) => {
+          const ageValue = calculateAge(emp.dob);
+          return age.some((ageRange) => {
+            if (ageRange === "Age 18-24")
+              return ageValue >= 18 && ageValue <= 24;
+            if (ageRange === "Age 25-39")
+              return ageValue >= 25 && ageValue <= 39;
+            if (ageRange === "Age 40-55")
+              return ageValue >= 40 && ageValue <= 55;
+            if (ageRange === "Age 56+") return ageValue >= 56;
+            return false;
+          });
         });
-      });
-    }
+      }
 
-    if (yearsOfService.length > 0) {
-      updatedListOfEmployees = updatedListOfEmployees.filter((emp) => {
-        const years = calculateYearsOfService(emp.hireDate);
-        return yearsOfService.some((serviceRange) => {
-          if (serviceRange === "1-3 years") return years >= 1 && years <= 3;
-          if (serviceRange === "3-5 years") return years >= 3 && years <= 5;
-          if (serviceRange === "5+ years") return years >= 5;
-          return false;
+      if (yearsOfService.length > 0) {
+        updatedListOfEmployees = updatedListOfEmployees.filter((emp) => {
+          const years = calculateYearsOfService(emp.hireDate);
+          return yearsOfService.some((serviceRange) => {
+            if (serviceRange === "1-3 years") return years >= 1 && years <= 3;
+            if (serviceRange === "3-5 years") return years >= 3 && years <= 5;
+            if (serviceRange === "5+ years") return years >= 5;
+            return false;
+          });
         });
-      });
+      }
+
+      setCopyListOfEmployees(updatedListOfEmployees);
+
+      // Filter the responses based on the updated list of employees
+      setFilteredSurveyResponses(
+        rawSurveyResponses.filter((response) =>
+          updatedListOfEmployees.some((emp) => emp.id === response.userId)
+        )
+      );
+
+      setFilteredFactorImportanceResponses(
+        rawFactorImportanceResponses.filter((response) =>
+          updatedListOfEmployees.some((emp) => emp.id === response.userId)
+        )
+      );
+
+      setFilteredIndividualSurveyResponses(
+        rawIndividualSurveyResponses.filter((response) =>
+          updatedListOfEmployees.some((emp) => emp.id === response.userId)
+        )
+      );
+
+      setLoadingPieChart(() => false);
+      setLoadingStackedBarChart(() => false);
+      setLoadingBarChart(() => false);
+      setLoadingAdminBarChart(() => false);
     }
-
-    setCopyListOfEmployees(updatedListOfEmployees);
-
-    // Filter the responses based on the updated list of employees
-    setFilteredSurveyResponses(
-      rawSurveyResponses.filter((response) =>
-        updatedListOfEmployees.some((emp) => emp.id === response.userId)
-      )
-    );
-
-    setFilteredFactorImportanceResponses(
-      rawFactorImportanceResponses.filter((response) =>
-        updatedListOfEmployees.some((emp) => emp.id === response.userId)
-      )
-    );
-
-    setFilteredIndividualSurveyResponses(
-      rawIndividualSurveyResponses.filter((response) =>
-        updatedListOfEmployees.some((emp) => emp.id === response.userId)
-      )
-    );
   }
   }, [
     filter,
@@ -721,7 +754,7 @@ const AdminPage: React.FC = () => {
             <MultiSelectDropdown
               label="Department"
               options={departments}
-              selectedOptions={filter.department || []} 
+              selectedOptions={filter.department || []}
               onChange={(selectedDepartments: any) =>
                 setFilter((prev) => ({
                   ...prev,
@@ -768,7 +801,15 @@ const AdminPage: React.FC = () => {
                   Factor Importance Amongst Employees
                 </h2>
                 <div className="w-full h-full">
-                  <PieChart data={percentageFactorImportance} />
+                  {loadingPieChart ? (
+                    <div className="text-center py-4">Loading Graph...</div>
+                  ) : Object.keys(percentageFactorImportance).length > 0 ? (
+                    <PieChart data={percentageFactorImportance} />
+                  ) : (
+                    <div className="text-center py-4">
+                      No data found for the graph
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="flex flex-col items-center w-full h-[400px] border-2 border-white rounded-sm p-4 bg-white overflow-hidden">
@@ -776,10 +817,20 @@ const AdminPage: React.FC = () => {
                   How important each factor is to employees
                 </h2>
                 <div className="w-full h-full">
-                  <StackedBarChart
-                    ratings={ratingsData}
-                    categories={categories}
-                  />
+                  {loadingStackedBarChart ? (
+                    <div className="text-center py-4">Loading Graph...</div>
+                  ) : ratingsData.some((data) =>
+                      data.values.some((value) => value !== 0)
+                    ) ? (
+                    <StackedBarChart
+                      ratings={ratingsData}
+                      categories={categories}
+                    />
+                  ) : (
+                    <div className="text-center py-4">
+                      No data found for the graph
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="flex flex-col items-center w-full h-[400px] border-2 border-white rounded-sm p-4 bg-white">
@@ -787,7 +838,15 @@ const AdminPage: React.FC = () => {
                   Average Score for each factor
                 </h2>
                 <div className="w-full h-full">
-                  <BarChart data={averageScores} />
+                  {loadingBarChart ? (
+                    <div className="text-center py-4">Loading Graph...</div>
+                  ) : Object.keys(averageScores).length > 0 ? (
+                    <BarChart data={averageScores} />
+                  ) : (
+                    <div className="text-center py-4">
+                      No data found for the graph
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="flex flex-col items-center w-full h-[400px] border-2 border-white rounded-sm p-4 bg-white">
@@ -801,10 +860,20 @@ const AdminPage: React.FC = () => {
                   />
                 </div>
                 <div className="w-full h-full">
-                  <AdminBarChart
-                    data={avgQuesstionScoresArray}
-                    factor={selectedFactor}
-                  />
+                  <div className="w-full h-full">
+                    {loadingAdminBarChart ? (
+                      <div className="text-center py-4">Loading Graph....</div>
+                    ) : Object.keys(avgQuesstionScoresArray).length > 0 ? (
+                      <AdminBarChart
+                        data={avgQuesstionScoresArray}
+                        factor={selectedFactor}
+                      />
+                    ) : (
+                      <div className="text-center py-4">
+                        No data found for the graph
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

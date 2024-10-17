@@ -13,6 +13,7 @@ import Papa from "papaparse";
 import { FaEdit, FaTrash } from "react-icons/fa";
 import { IoIosList } from "react-icons/io";
 import { FaChevronDown } from "react-icons/fa";
+import '@fortawesome/fontawesome-free/css/all.min.css';
 import {
   createPaginatedFetchFunctionForUser,
   createPaginatedFetchFunctionForSurveyResults,
@@ -41,6 +42,16 @@ const CreateCollectionModal: React.FC<{
   const handleSubmit = async () => {
     setIsCreating(true);
     try {
+      const allCollections = await createPaginatedFetchFunctionForCollection(client, {})();
+      const collectionNames = allCollections.map((collection) => collection.name);
+      if (collectionNames.includes(name)) {
+        alert('Collection name already exists. Choose a different name for the collection');
+        return;
+      }
+      if (!name || !tags) {
+        alert('Please fill in all the fields');
+        return;
+      }
       const { data: collection } = await client.models.Collection.create({
         name,
         tags,
@@ -209,43 +220,54 @@ const CSVUploadModal: React.FC<{
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-10">
-      <div className="bg-white p-6 rounded-md shadow-lg w-full max-w-md max-h-[80vh] overflow-y-auto">
-        <h2 className="text-lg font-semibold mb-7">Upload Questions CSV</h2>
+<div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center z-50">
+  <div className="bg-white p-8 rounded-md w-full max-w-lg">
+    <h2 className="text-xl font-semibold mb-4">Upload Questions CSV</h2>
 
-        {/* Display error message if any */}
-        {error && <p className="text-red-600 mb-4">{error}</p>}
-
-        <input
-          type="file"
-          accept=".csv"
-          onChange={handleFileUpload}
-          className="mb-6"
-          disabled={isCreating}
-        />
-
-        <div className="flex justify-end mt-4">
-          <button
-            onClick={onClose}
-            className="bg-gray-500 text-white px-4 py-2 rounded-md mr-2"
-            disabled={isCreating}
-          >
-            Cancel
-          </button>
-          {parsedData && (
-            <button
-              onClick={handleCreate}
-              className={`bg-blue-600 text-white px-4 py-2 rounded-md ${
-                isCreating ? "opacity-50 cursor-not-allowed" : ""
-              }`}
-              disabled={isCreating}
-            >
-              {isCreating ? "Creating..." : "Create Questions"}
-            </button>
-          )}
-        </div>
-      </div>
+    <div
+      className="border-2 border-dashed border-gray-300 p-6 rounded-md flex flex-col items-center justify-center mb-4 cursor-pointer"
+      onClick={() => document.getElementById('csvFileInput')?.click()}
+    >
+      <i className="fas fa-file-csv text-5xl text-gray-500"></i>
+      <label className="text-lg mt-4 text-gray-700 cursor-pointer">
+        Click to upload or drag and drop
+      </label>
+      <input
+        id="csvFileInput"
+        type="file"
+        accept=".csv"
+        onChange={handleFileUpload}
+        style={{ display: 'none' }}
+        disabled={isCreating}
+      />
+      {parsedData && (
+        <p className="text-green-600 mt-2">File selected.</p>
+      )}
     </div>
+
+    {error && <p className="text-red-500 mb-4">{error}</p>}
+
+    <div className="flex justify-end space-x-2">
+      <button
+        onClick={onClose}
+        className="bg-gray-600 text-white px-4 py-2 rounded-md"
+        disabled={isCreating}
+      >
+        Cancel
+      </button>
+      {parsedData && (
+        <button
+          onClick={handleCreate}
+          className={`bg-blue-600 text-white px-4 py-2 rounded-md ${isCreating ? 'opacity-50 cursor-not-allowed' : ''}`}
+          disabled={isCreating}
+        >
+          {isCreating ? 'Creating...' : 'Create Questions'}
+        </button>
+      )}
+    </div>
+  </div>
+</div>
+
   );
 };
 
@@ -271,6 +293,10 @@ const EditQuestionModal: React.FC<{
 
   const handleSave = async () => {
     try {
+      if (!factor || !questionText) {
+        alert("Please fill in all the fields");
+        return;
+      }
       // Step 1: Disable the current question
       await client.models.Question.update({
         id: question.id,
@@ -368,6 +394,10 @@ const CreateQuestionModal: React.FC<{
   const handleSubmit = async () => {
     setIsCreating(true);
     try {
+      if (!factor || !questionText) {
+        alert("Please fill in all the fields");
+        return;
+      }
       await client.models.Question.create({
         factor,
         questionText,

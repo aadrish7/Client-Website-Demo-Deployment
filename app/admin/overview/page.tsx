@@ -15,8 +15,6 @@ import { data } from "../../../amplify/data/resource";
 import Breadcrumb from "@/components/adminBreadCrumb";
 import { disable } from "aws-amplify/analytics";
 import {
-  createPaginatedFetchFunctionForUser,
-  createPaginatedFetchFunctionForSurveyResults,
   createPaginatedFetchFunctionForSurvey,
   createPaginatedFetchFunctionForAverageSurveyResults,
   createPaginatedFetchFunctionForFactorImportance,
@@ -31,7 +29,7 @@ const PieChart = dynamic(() => import("@/components/adminPieChart"), {
 
 const BarChart = dynamic(() => import("@/components/barChartEmployee"), {
   ssr: false,
-  loading: () => <div className="text-center py-4">Loading Graph...</div>,
+  loading: () => <div className="text-center py-4 mt-9">Loading Graph...</div>,
 });
 
 Amplify.configure(outputs);

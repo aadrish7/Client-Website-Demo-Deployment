@@ -287,24 +287,6 @@ const EmployeesPage: React.FC = () => {
     return "";
   };
 
-  const navItems = [
-    {
-      label: "📦 Overview",
-      active: false,
-      href: `/admin/overview?surveyId=${searchParams.get("surveyId")}`,
-    },
-    {
-      label: "📊 Analytics",
-      active: false,
-      href: `/admin/analytics?surveyId=${searchParams.get("surveyId")}`,
-    },
-    {
-      label: "🏢 Employees",
-      active: true,
-      href: `/admin/employees?surveyId=${searchParams.get("surveyId")}`,
-    },
-  ].filter((item) => item !== undefined);
-
   return (
     <div className="h-screen flex flex-col">
       <Header userName="Neil Sims" userEmail="neilsimsemail@example.com" />

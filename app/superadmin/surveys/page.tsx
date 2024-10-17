@@ -35,6 +35,7 @@ interface CreateSurveyModalProps {
   collections: { id: string; name: string }[];
   snippetSets: { id: string; name: string }[];
   companyId: string;
+  listOfSurveyNames: string[];
 }
 interface SnippetSet {
   id: string;
@@ -47,6 +48,7 @@ const CreateSurveyModal: React.FC<CreateSurveyModalProps> = ({
   collections,
   snippetSets,
   companyId,
+  listOfSurveyNames,
 }) => {
   const [surveyName, setSurveyName] = useState("");
   const [collectionId, setCollectionId] = useState("");
@@ -63,6 +65,14 @@ const CreateSurveyModal: React.FC<CreateSurveyModalProps> = ({
         companyId,
         start,
       };
+      if (!surveyName || !collectionId || !snippetSetId) {
+        alert("Please fill or select in all fields");
+        return;
+      }
+      if (listOfSurveyNames.includes(surveyName)) {
+        alert("Survey name already exists, Change the name and try again");
+        return;
+      }
       await client.models.Survey.create(survey);
       onCreate();
       onClose();
@@ -230,6 +240,7 @@ const EditSurveyModal: React.FC<EditSurveyModalProps> = ({
 
 const SurveysPage = () => {
   const [tableHeaders, setTableHeaders] = useState<string[]>([]);
+  const [listOfSurveyNames, setListOfSurveyNames] = useState<string[]>([]);
   const [tableData, setTableData] = useState<
     {
       id: string;
@@ -307,6 +318,11 @@ const SurveysPage = () => {
     try {
       const filterForCompany = { companyId: { eq: companyId } };
       const surveyList = await createPaginatedFetchFunctionForSurvey(client, filterForCompany)();
+      if (surveyList.length === 0) {
+        setTableData([]);
+        return;
+      }
+      setListOfSurveyNames(surveyList.map((s) => s.surveyName));
       setTableHeaders(["survey name", "updated at", "status", "manage"]);
       setTableData(
         surveyList.map((s) => ({
@@ -334,59 +350,6 @@ const SurveysPage = () => {
     setEditingSurveyStatus(currentStatus);
     setIsEditModalOpen(true);
   };
-
-  const navItems = [
-    {
-      label: "📦 Collections",
-      active: false,
-      subItems: [
-        {
-          label: "📋 Question Bank",
-          active: false,
-          href: "/superadmin/collections/questionbank",
-        },
-        {
-          label: "📦 Collection",
-          active: false,
-          href: "/superadmin/collections/collection",
-        },
-      ],
-    },
-    {
-      label: "📦 Snippets",
-      active: false,
-      subItems: [
-        {
-          label: "📋 Snippet Bank",
-          active: false,
-          href: "/superadmin/snippets",
-        },
-        {
-          label: "📦 Snippet Set",
-          active: false,
-          href: "/superadmin/snippets/snippetset",
-        },
-      ],
-    },
-    {
-      label: "📦 Overview Snippets",
-      active: false,
-      subItems: [
-        {
-          label: "📋 Snippet Bank",
-          active: false,
-          href: "/superadmin/overviewsnippets",
-        },
-        {
-          label: "📦 Snippet Set",
-          active: false,
-          href: "/superadmin/overviewsnippets/overviewsnippetset",
-        },
-      ],
-    },
-    { label: "🏢 Company", active: true, href: "/superadmin" },
-    { label: "📊 Analytics", active: false, href: "/superadmin/analytics" },
-  ].filter((item) => item !== undefined);
 
   return (
     <div className="h-screen flex flex-col">
@@ -479,6 +442,7 @@ const SurveysPage = () => {
           collections={collections}
           snippetSets={snippetSets}
           companyId={companyId}
+          listOfSurveyNames={listOfSurveyNames}
         />
       )}
       {isEditModalOpen && (

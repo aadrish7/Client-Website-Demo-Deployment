@@ -13,7 +13,9 @@ import { create } from "zustand";
 import { FaChevronDown, FaEdit, FaTrash } from "react-icons/fa";
 import Breadcrumb from "@/components/normalBreadCrumb";
 import { Suspense } from "react";
+import "@fortawesome/fontawesome-free/css/all.min.css";
 import { truncate } from "fs";
+import { createPaginatedFetchFunctionForSnippetSet } from "@/constants/pagination";
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
@@ -69,19 +71,18 @@ const EditSnippetModal: React.FC<{
         setLoading(false);
         return;
       }
-      await client.models.TextSnippet.update({
-        id : snippet.id,
+      const {data:updated} = await client.models.TextSnippet.update({
+        id: snippet.id,
         disabled: true,
       });
-      // Update the snippet in Amplify with the type without spaces
-      await client.models.TextSnippet.create({
-        id: snippet.id,
+
+      const {data: newTextSnippet} = await client.models.TextSnippet.create({
         factor,
         score: Number(score),
         snippetText,
-        type, 
+        type,
         disabled: false,
-        snippetSetId: "", 
+        snippetSetId: "",
       });
 
       setSuccessMessage("Text Snippet updated successfully!");
@@ -202,12 +203,18 @@ interface TextSnippet {
   snippetText: string;
   type: "adminoverview" | "employeeaggregated" | "employeeindividual";
 }
-const fetchAllSnippets = async (client: any, pageSize: number = 500): Promise<any[]> => {
+const fetchAllSnippets = async (
+  client: any,
+  pageSize: number = 500
+): Promise<any[]> => {
   let allTodos: any[] = [];
   let nextToken: string | null = null;
   let hasMorePages: boolean = true;
   while (hasMorePages) {
-    const { data: todos, nextToken: newNextToken }: { data: any[]; nextToken: any } = await client.models.TextSnippet.list({
+    const {
+      data: todos,
+      nextToken: newNextToken,
+    }: { data: any[]; nextToken: any } = await client.models.TextSnippet.list({
       nextToken,
       limit: pageSize,
     });
@@ -233,21 +240,23 @@ const CreateSnippetSetModal: React.FC<{
     const fetchTextSnippets = async () => {
       try {
         const allSnippets = await fetchAllSnippets(client);
-        const snippetList = allSnippets.filter((snippet: any) => !snippet.disabled && snippet.snippetSetId === "");
+
+        const snippetList = allSnippets.filter(
+          (snippet: any) => !snippet.disabled && snippet.snippetSetId === ""
+        );
         // const { data: snippetList } = await client.models.TextSnippet.list({
         //   filter: {
         //     and: [{ disabled: { eq: false } }, { snippetSetId: { eq: "" } }],
         //   },
         // });
-        console.log("fetched snippetl list", snippetList )
 
         setTextSnippets(
           snippetList.map((snippet: any) => ({
             id: snippet.id,
             factor: snippet.factor, // Include required fields
-            score: snippet.score,   // Include required fields
+            score: snippet.score, // Include required fields
             snippetText: snippet.snippetText,
-            type: snippet.type,     // Include required fields
+            type: snippet.type, // Include required fields
           }))
         );
       } catch (error) {
@@ -261,6 +270,14 @@ const CreateSnippetSetModal: React.FC<{
   const handleSubmit = async () => {
     setIsCreating(true);
     try {
+      const snippetsets= await createPaginatedFetchFunctionForSnippetSet(client, {})();
+      //store all the snippet sets name
+      const snippetSetNames = snippetsets.map((snippetset) => snippetset.name);
+      console.log("snippet set names", snippetSetNames)
+      if (snippetSetNames.includes(name)) {
+        alert("Snippet set name already exists. Choose a different name.");
+        return;
+      }
       const { data: snippetSet } = await client.models.SnippetSet.create({
         name,
         tags,
@@ -274,14 +291,16 @@ const CreateSnippetSetModal: React.FC<{
         return;
       }
       for (const snippet of textSnippets) {
-        const {data:mysavedsnippet} = await client.models.TextSnippet.create({
-          factor: snippet.factor,
-          score: snippet.score,
-          snippetText: snippet.snippetText,
-          type: snippet.type,
-          disabled: true,
-          snippetSetId: snippetSet.id,
-        });
+        const { data: mysavedsnippet } = await client.models.TextSnippet.create(
+          {
+            factor: snippet.factor,
+            score: snippet.score,
+            snippetText: snippet.snippetText,
+            type: snippet.type,
+            disabled: true,
+            snippetSetId: snippetSet.id,
+          }
+        );
       }
       onCreate();
     } catch (error) {
@@ -322,7 +341,9 @@ const CreateSnippetSetModal: React.FC<{
 
         {/* Text Snippets Info */}
         <div className="mb-6 mt-4">
-          <label className="text-sm block font-medium mb-2">Text Snippets</label>
+          <label className="text-sm block font-medium mb-2">
+            Text Snippets
+          </label>
           <p className="text-sm">
             {textSnippets.length} snippets will be added to this set by default.
           </p>
@@ -537,8 +558,9 @@ const SuperAdminMainPage: React.FC = () => {
   const [editSnippet, setEditSnippet] = useState<any | null>(null);
   const [createSnippetSetModalOpen, setCreateSnippetSetModalOpen] =
     useState(false);
-  const [sortColumn, setSortColumn] = useState<string | null>("factor"); 
+  const [sortColumn, setSortColumn] = useState<string | null>("factor");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [error, setError] = useState<string | null>(null);
 
   const displayTypes: any = {
     adminoverview: "Admin Overview",
@@ -553,7 +575,9 @@ const SuperAdminMainPage: React.FC = () => {
   const fetchTextSnippets = async () => {
     try {
       const allSnippets = await fetchAllSnippets(client);
-      const textSnippetList = allSnippets.filter((snippet: any) => !snippet.disabled);
+      const textSnippetList = allSnippets.filter(
+        (snippet: any) => !snippet.disabled
+      );
       // const { data: textSnippetList } = await client.models.TextSnippet.list({
       //   filter: { disabled: { eq: false } },
       // });
@@ -639,61 +663,93 @@ const SuperAdminMainPage: React.FC = () => {
 
   const handleCsvSubmit = async () => {
     setIsUploading(true);
-    if (!csvFile) return;
-
+    setError(null);
+    if (!csvFile) {
+      setIsUploading(false);
+      console.error("No file selected.");
+      // Add error message for no file selected
+      setError("Please select a CSV file to upload.");
+      return;
+    }
+  
     type SnippetRow = {
       factor: string;
       score: string;
       text: string;
-      type:
-        | "adminoverview"
-        | "employeeaggregated"
-        | "employeeindividual"
-        | null
-        | undefined;
+      type: "adminoverview" | "employeeaggregated" | "employeeindividual" | null | undefined;
     };
-
+  
+    const allowedHeaders = ["factor", "score", "text", "type"];
+  
     Papa.parse(csvFile, {
       header: true,
+      skipEmptyLines: true,
       complete: async (results) => {
+        if (results.errors.length > 0) {
+          setIsUploading(false);
+          setError(`Error parsing CSV file: ${results.errors.map(e => e.message).join(", ")}`);
+          return;
+        }
+  
         const data = results.data as SnippetRow[];
+        const parsedHeaders = results.meta.fields || [];
+  
+        // Validate CSV headers
+        const hasValidHeaders = allowedHeaders.every(header => parsedHeaders.includes(header));
+        if (!hasValidHeaders) {
+          setIsUploading(false);
+          setError("Invalid CSV headers. Allowed headers are: 'factor', 'score', 'text', 'type'.");
+          return;
+        }
+  
         try {
           for (const row of data) {
             const { factor, score, text: snippetText, type } = row;
-            const sanitizedType = type?.replace(/\s/g, "") as
-              | "adminoverview"
-              | "employeeaggregated"
-              | "employeeindividual"
-              | null;
-
-            if (
-              sanitizedType !== "adminoverview" &&
-              sanitizedType !== "employeeaggregated" &&
-              sanitizedType !== "employeeindividual"
-            ) {
-              console.error(`Invalid type: ${sanitizedType}`);
+            const sanitizedType = type?.replace(/\s/g, "") as "adminoverview" | "employeeaggregated" | "employeeindividual" | null;
+  
+            if (!factor || !score || !snippetText || !sanitizedType) {
+              setError(`Invalid data in row: ${JSON.stringify(row)}`);
               continue;
             }
-
+  
+            // Check if score is a number
+            if (isNaN(Number(score))) {
+              setError(`Invalid score value in row: ${JSON.stringify(row)}. 'Score' must be a number.`);
+              continue;
+            }
+  
+            if (sanitizedType !== "adminoverview" && sanitizedType !== "employeeaggregated" && sanitizedType !== "employeeindividual") {
+              setError(`Invalid type in row: ${sanitizedType}.`);
+              continue;
+            }
+  
             await client.models.TextSnippet.create({
               factor,
               score: Number(score),
               snippetText,
               type: sanitizedType,
               disabled: false,
-              snippetSetId: "",
+              snippetSetId: "", // Pass the correct snippet set ID
             });
           }
+  
           await fetchTextSnippets();
           setShowCsvPopup(false);
-        } catch (error) {
+        } catch (error: any) {
           console.error("Failed to create snippets:", error);
+          setError(`Failed to create snippets: ${error.message}`);
         } finally {
           setIsUploading(false);
         }
       },
+      error: (error) => {
+        console.error("Parsing error:", error);
+        setError(`Error while parsing CSV: ${error.message}`);
+        setIsUploading(false);
+      }
     });
   };
+  
 
   return (
     <div className="h-screen flex flex-col">
@@ -803,36 +859,48 @@ const SuperAdminMainPage: React.FC = () => {
         </div>
       </div>
 
-      {/* CSV Upload Popup */}
       {showCsvPopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-10">
-          <div className="bg-white p-6 rounded-md shadow-lg w-full max-w-md">
-            <h2 className="text-lg font-semibold mb-7">
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-8 rounded-md w-full max-w-lg">
+            <h2 className="text-xl font-semibold mb-4">
               Upload CSV to Create Snippets
             </h2>
 
-            {/* File Input */}
-            <div className="mb-6 mt-4">
+            {/* File Input Area */}
+            <div
+              className="border-2 border-dashed border-gray-300 p-6 rounded-md flex flex-col items-center justify-center mb-4 cursor-pointer"
+              onClick={() => document.getElementById("csvFileInput")?.click()}
+            >
+              <i className="fas fa-file-csv text-5xl text-gray-500"></i>
+              <label className="text-lg mt-4 text-gray-700 cursor-pointer">
+                Click to upload or drag and drop
+              </label>
               <input
+                id="csvFileInput"
                 type="file"
                 accept=".csv"
                 onChange={handleFileChange}
-                className="border border-gray-300 rounded p-2 w-full bg-gray-100 text-sm"
+                style={{ display: "none" }}
               />
+              {csvFile && (
+                <p className="text-green-600 mt-2">{csvFile.name} selected.</p>
+              )}
             </div>
-
+            {error && <p className="text-red-500 mb-2">{error}</p>}
             {/* Buttons */}
-            <div className="flex justify-center">
+            <div className="flex justify-end space-x-2">
               <button
                 onClick={() => setShowCsvPopup(false)}
-                className="bg-gray-500 text-white px-4 py-2 rounded-md mr-2"
+                className="bg-gray-600 text-white px-4 py-2 rounded-md"
               >
                 Cancel
               </button>
               <button
                 onClick={handleCsvSubmit}
                 disabled={isUploading}
-                className="bg-blue-600 text-white px-4 py-2 rounded-md"
+                className={`bg-blue-600 text-white px-4 py-2 rounded-md ${
+                  isUploading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
               >
                 {isUploading ? "Uploading..." : "Upload"}
               </button>

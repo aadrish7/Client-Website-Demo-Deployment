@@ -68,11 +68,26 @@ const EmployeeUploadPopup: React.FC<EmployeeUploadPopupProps> = ({ surveyId, com
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
+    setErrorMessage('')
+    const expectedHeaders = [
+      'First Name', 'Last Name', 'Email', 'DOB', 'Hire Date', 
+      'Gender', 'Ethnicity', 'Manager/Supervisor', 'Location', 
+      'Veteran Status', 'Disability Status', 'Job Level', 'Department'
+    ];
+  
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
       complete: (results) => {
+        const headers = results.meta.fields || [];
+        
+        // Check if the headers match the expected headers
+        const headerMismatch = expectedHeaders.some(header => !headers.includes(header));
+        if (headerMismatch) {
+          setErrorMessage('CSV headers do not match the expected format.');
+          return;
+        }
+  
         const parsedData: UserData[] = results.data.map((row: any) => ({
           firstName: row['First Name'],
           lastName: row['Last Name'],
@@ -99,6 +114,7 @@ const EmployeeUploadPopup: React.FC<EmployeeUploadPopupProps> = ({ surveyId, com
       },
     });
   };
+  
 
   // Function to create users in the database
   const createUserCollections = async () => {
