@@ -597,16 +597,18 @@ const QuestionsPage: React.FC = () => {
 
   const handleCSVUpload = async (groupedQuestions: Map<string, string[]>) => {
     try {
-      for (const [factor, questions] of Array.from(groupedQuestions.entries())) {
-        for (const questionText of questions) {
-          await client.models.Question.create({
-            factor,
-            questionText,
-            disabled: false,
-            collectionId: "",
-          });
+      let questionArray: string[] = [];
+        for (const [factor, questions] of Array.from(groupedQuestions.entries())) {
+          for (const questionText of questions) {
+            questionArray.push(
+            `${factor}:${questionText}`);
+          }
         }
-      }
+  
+        const { data, errors } = await client.mutations.bulkCreateQuestions({
+          questionArray: questionArray
+          
+        });
       fetchQuestions();
       setIsCSVModalOpen(false);
     } catch (error) {

@@ -120,28 +120,17 @@ const EmployeeUploadPopup: React.FC<EmployeeUploadPopupProps> = ({ surveyId, com
   const createUserCollections = async () => {
     try {
       setLoading(true);
+      let employeeArray: string[] =[]
       for (const user of users) {
         const formattedDOB = user.dob ? new Date(user.dob).toISOString().split('T')[0] : null;
         const formattedHireDate = user.hireDate ? new Date(user.hireDate).toISOString().split('T')[0] : null;
-        const {data: clients} = await client.models.User.create({
-          firstName: user.firstName,
-          lastName: user.lastName,
-          email: user.email,
-          dob: formattedDOB,
-          hireDate: formattedHireDate,
-          gender: user.gender,
-          ethnicity: user.ethnicity,
-          manager: user.manager,
-          location: user.location,
-          veteranStatus: user.veteranStatus,
-          disabilityStatus: user.disabilityStatus,
-          jobLevel: user.jobLevel,
-          department: user.department,
-          companyId: user.companyId,
-          surveyId: surveyId, // Store surveyId
-          role: 'employee',
-        });
+        employeeArray.push(`${user.firstName}:${user.lastName}:${user.email}:${formattedDOB}:${formattedHireDate}:${user.gender}:${user.ethnicity}:${user.manager}:${user.location}:${user.veteranStatus}:${user.disabilityStatus}:${user.jobLevel}:${user.department}:${user.companyId}:${surveyId}:employee`)        
       }
+
+      await client.mutations.bulkCreateEmployees({
+        employeesArray: employeeArray
+        
+      });
       alert('Employees created successfully!');
       onEmployeesCreated();
       setLoading(false);

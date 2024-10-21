@@ -692,6 +692,7 @@ const SuperAdminMainPage: React.FC = () => {
         }
   
         const data = results.data as SnippetRow[];
+        let snippetArray: string[] = []
         const parsedHeaders = results.meta.fields || [];
   
         // Validate CSV headers
@@ -722,17 +723,12 @@ const SuperAdminMainPage: React.FC = () => {
               setError(`Invalid type in row: ${sanitizedType}.`);
               continue;
             }
-  
-            await client.models.TextSnippet.create({
-              factor,
-              score: Number(score),
-              snippetText,
-              type: sanitizedType,
-              disabled: false,
-              snippetSetId: "", // Pass the correct snippet set ID
-            });
+            snippetArray.push(`${factor}:${Number(score)}:${snippetText}:${sanitizedType}`)
           }
-  
+          await client.mutations.bulkCreateSnippets({
+            snippetsArray: snippetArray
+            
+          });
           await fetchTextSnippets();
           setShowCsvPopup(false);
         } catch (error: any) {
