@@ -19,14 +19,24 @@ export const handler: Schema["bulkCreateSnippets"]["functionHandler"] = async (
     );
 
     try {
+      if (snippetObject.snippetSetId === "") {
       await client.models.TextSnippet.create({
         factor: snippetObject.factor,
         score: snippetObject.score,
         snippetText: snippetObject.snippetText,
         type: snippetObject.sanitizedType,
         disabled: false,
-        snippetSetId: "",
-      });
+        snippetSetId: snippetObject.snippetSetId || "", // Now assigning snippetSetId
+      });} else {
+        await client.models.TextSnippet.create({
+          factor: snippetObject.factor,
+          score: snippetObject.score,
+          snippetText: snippetObject.snippetText,
+          type: snippetObject.sanitizedType,
+          disabled: true,
+          snippetSetId: snippetObject.snippetSetId || "", // Now assigning snippetSetId
+        });
+        }
     } catch (error) {
       throw new Error(`${error}`);
     }
@@ -42,18 +52,20 @@ export function parseTextToObj(
   score: number;
   snippetText: string;
   sanitizedType: string;
+  snippetSetId: string;
 } | null {
-  // Regular expression to match the structure: factor, score, snippetText, sanitizedType
-  const regex = /^([^:]+):(\d+):([^:]+):([^:]+)$/;
+  // Regular expression to match the structure: factor, score, snippetText, sanitizedType, snippetSetId
+  const regex = /^([^:]+):(\d+):([^:]+):([^:]+):([^:]+)$/;
 
   // Execute the regex to capture the parts of the string
   const match = input.match(regex);
 
-  if (match && match.length === 5) {
+  if (match) {
     const factor = match[1].trim();
     const score = Number(match[2]);
     const snippetText = match[3].trim();
     const sanitizedType = match[4].trim();
+    const snippetSetId = match[5].trim(); // Extract snippetSetId
 
     // Array of valid sanitized types
     const validTypes = [
@@ -62,18 +74,13 @@ export function parseTextToObj(
       "employeeindividual",
     ];
 
-    // Validate the sanitizedType
-    if (!validTypes.includes(sanitizedType)) {
-      console.error(`Invalid type: ${sanitizedType}`);
-      return null; // Return null if the type is invalid
-    }
-
     // Return the object if all checks pass
     return {
       factor,
       score,
       snippetText,
       sanitizedType,
+      snippetSetId, // Include snippetSetId in the return object
     };
   } else {
     throw new Error(`Invalid format: ${input}`); // Throw error if input doesn't match

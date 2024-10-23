@@ -60,15 +60,14 @@ const CreateCollectionModal: React.FC<{
         console.error('Failed to create collection');
         return;
       }
+      let questionArray: string[] = [];
       for (const question of questions) {
-        await client.models.Question.create({
-          collectionId: collection.id,
-          factor: question.factor || '',
-          questionText: question.questionText || '',
-          disabled: true,
-        });
+        questionArray.push(`${question.factor}:${question.questionText}:${collection.id}`);
       }
-
+      console.log("Question Array:", questionArray);
+      const { data, errors } = await client.mutations.bulkCreateQuestions({
+        questionArray: questionArray,
+      });
       onCreate();
 
     } catch (error) {
@@ -503,6 +502,31 @@ const QuestionsPage: React.FC = () => {
     fetchQuestions();
   };
 
+  const handleClearAll = async () => {
+    const confirmed = window.confirm("Are you sure you want to disable all questions?");
+    if (confirmed) {
+      try {
+        let questionArray: string[] = [];
+        for (const question of questions) {
+          questionArray.push(`${question.id}:"dummy-data":true`);
+        }
+        console.log("Question Array:", questionArray);
+        const { data, errors } = await client.mutations.bulkUpdateQuestions({
+          questionsArray: questionArray,
+        });
+        // for (const question of questions) {
+        //   await client.models.Question.update({
+        //     id: question.id,
+        //     disabled: true,
+        //   });
+        // }
+        fetchQuestions(); 
+      } catch (error) {
+        console.error("Failed to disable all questions", error);
+      }
+    }
+  };
+
   const fetchAllQuestions = async (client: any, pageSize: number = 100): Promise<any[]> => {
     let allQuestions: any[] = [];
     let nextToken: string | null = null;
@@ -542,7 +566,10 @@ const QuestionsPage: React.FC = () => {
           eq: ""
         }
       };
+
       const questionList = await createPaginatedFetchFunctionForQuestion(client, filterForQuestions)();
+      const allQuestions = await createPaginatedFetchFunctionForQuestion(client, {})();
+      console.log("All Question :::", allQuestions)
       
       
       
@@ -598,10 +625,11 @@ const QuestionsPage: React.FC = () => {
   const handleCSVUpload = async (groupedQuestions: Map<string, string[]>) => {
     try {
       let questionArray: string[] = [];
+      let emptyCollectionId = "";
         for (const [factor, questions] of Array.from(groupedQuestions.entries())) {
           for (const questionText of questions) {
             questionArray.push(
-            `${factor}:${questionText}`);
+            `${factor}:${questionText}:${emptyCollectionId}`);
           }
         }
   
@@ -655,11 +683,18 @@ const QuestionsPage: React.FC = () => {
 
           <div className="border p-4">
             <div className="flex items-center mb-4 justify-end space-x-2">
+              
               <button
                 className="bg-blue-600 text-white px-4 py-2 rounded-md"
                 onClick={() => setIsCollectionModalOpen(true)}
               >
                 Create Collection
+              </button>
+              <button
+                className="bg-blue-600 text-white px-4 py-2 rounded-md"
+                onClick={handleClearAll}
+              >
+                Clear All
               </button>
 
               <div className="relative">

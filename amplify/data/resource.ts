@@ -21,6 +21,16 @@ const employeeHandler = defineFunction({
   timeoutSeconds: 900 // 15 minute timeout
 })
 
+const updateSnippetsHandler = defineFunction({
+  entry: './update-snippets/updateSnippetsHandler.ts',
+  timeoutSeconds: 900 // 15 minute timeout
+})
+
+const updateQuestionsHandler = defineFunction({
+  entry: './update-questions/updateQuestionsHandler.ts',
+  timeoutSeconds: 900 // 15 minute timeout
+})
+
 const schema = a.schema({
   User: a
     .model({
@@ -111,6 +121,24 @@ const schema = a.schema({
     // Only allow signed-in users to call this API
     .authorization((allow) => [allow.publicApiKey()])
     .handler(a.handler.function(snippetsHandler)), 
+  
+  bulkUpdateSnippets: a
+    .mutation()
+    .arguments({snippetsArray: a.string().array()})
+    // Return type (an array of Question objects)
+    .returns(a.string())
+    // Only allow signed-in users to call this API
+    .authorization((allow) => [allow.publicApiKey()])
+    .handler(a.handler.function(updateSnippetsHandler)),
+  
+  bulkUpdateQuestions: a
+    .mutation()
+    .arguments({questionsArray: a.string().array()})
+    // Return type (an array of Question objects)
+    .returns(a.string())
+    // Only allow signed-in users to call this API
+    .authorization((allow) => [allow.publicApiKey()])
+    .handler(a.handler.function(updateQuestionsHandler)),
   
   Collection: a
     .model({

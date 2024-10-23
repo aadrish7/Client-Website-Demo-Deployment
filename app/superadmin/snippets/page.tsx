@@ -15,7 +15,8 @@ import Breadcrumb from "@/components/normalBreadCrumb";
 import { Suspense } from "react";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import { truncate } from "fs";
-import { createPaginatedFetchFunctionForSnippetSet } from "@/constants/pagination";
+import { createPaginatedFetchFunctionForSnippetSet, createPaginatedFetchFunctionForTextSnippet } from "@/constants/pagination";
+import { BsFillTrainFreightFrontFill } from "react-icons/bs";
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
@@ -290,18 +291,26 @@ const CreateSnippetSetModal: React.FC<{
         console.error("Snippet set ID not found");
         return;
       }
+      let snippetArray: string[] = []
       for (const snippet of textSnippets) {
-        const { data: mysavedsnippet } = await client.models.TextSnippet.create(
-          {
-            factor: snippet.factor,
-            score: snippet.score,
-            snippetText: snippet.snippetText,
-            type: snippet.type,
-            disabled: true,
-            snippetSetId: snippetSet.id,
-          }
-        );
+        snippetArray.push(`${snippet.factor}:${snippet.score}:${snippet.snippetText}:${snippet.type}:${snippetSet.id}`);
       }
+      await client.mutations.bulkCreateSnippets({
+        snippetsArray: snippetArray
+        
+      });
+      // for (const snippet of textSnippets) {
+      //   const { data: mysavedsnippet } = await client.models.TextSnippet.create(
+      //     {
+      //       factor: snippet.factor,
+      //       score: snippet.score,
+      //       snippetText: snippet.snippetText,
+      //       type: snippet.type,
+      //       disabled: true,
+      //       snippetSetId: snippetSet.id,
+      //     }
+      //   );
+      // }
       onCreate();
     } catch (error) {
       console.error("Failed to create snippet set", error);
@@ -661,6 +670,30 @@ const SuperAdminMainPage: React.FC = () => {
     fetchTextSnippets();
   };
 
+  const handleClearAll = async () => {
+    const confirmed = window.confirm("Are you sure you want to disable all snippets?");
+    if (confirmed) {
+      try {
+        const filterForAllSnippets = {
+          disabled: { eq: false },
+        };
+        const snippetsToClear = await createPaginatedFetchFunctionForTextSnippet(client, filterForAllSnippets)();
+        console.log("snippets to clear", snippetsToClear)
+        let snippetArray: string[] = []
+        for (const snippet of snippetsToClear) {
+          snippetArray.push(`${snippet.id}:dummy-data:true`);
+        }
+        console.log("snippet array", snippetArray[0])
+        await client.mutations.bulkUpdateSnippets({
+          snippetsArray: snippetArray
+        });
+        fetchTextSnippets(); // Refresh the list after clearing
+      } catch (error) {
+        console.error("Failed to clear all snippets", error);
+      }
+    }
+  };
+
   const handleCsvSubmit = async () => {
     setIsUploading(true);
     setError(null);
@@ -723,11 +756,12 @@ const SuperAdminMainPage: React.FC = () => {
               setError(`Invalid type in row: ${sanitizedType}.`);
               continue;
             }
-            snippetArray.push(`${factor}:${Number(score)}:${snippetText}:${sanitizedType}`)
+            const emptySnippetSetId = " ";
+            snippetArray.push(`${factor}:${score}:${snippetText}:${sanitizedType}:${emptySnippetSetId}`);
           }
+          console.log("snippet array", snippetArray)
           await client.mutations.bulkCreateSnippets({
             snippetsArray: snippetArray
-            
           });
           await fetchTextSnippets();
           setShowCsvPopup(false);
@@ -763,6 +797,13 @@ const SuperAdminMainPage: React.FC = () => {
                 className="bg-blue-600 text-white px-4 py-2 rounded-md"
               >
                 Create Snippet Set
+              </button>
+
+              <button
+                onClick={handleClearAll}
+                className="bg-blue-600 text-white px-4 py-2 rounded-md"
+              >
+                Clear All
               </button>
 
               <div className="relative">
