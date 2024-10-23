@@ -55,7 +55,7 @@ export function parseTextToObj(
   snippetSetId: string;
 } | null {
   // Regular expression to match the structure: factor, score, snippetText, sanitizedType, snippetSetId
-  const regex = /^([^:]+):(\d+):([^:]+):([^:]+):([^:]+)$/;
+  const regex = /^([^@]+)@(\d+)@([^@]+)@([^@]+)@([^@]+)$/;
 
   // Execute the regex to capture the parts of the string
   const match = input.match(regex);
@@ -73,6 +73,11 @@ export function parseTextToObj(
       "employeeaggregated",
       "employeeindividual",
     ];
+
+    // Check if the sanitized type is valid
+    if (!validTypes.includes(sanitizedType)) {
+      throw new Error(`Invalid sanitized type: ${sanitizedType}`);
+    }
 
     // Return the object if all checks pass
     return {

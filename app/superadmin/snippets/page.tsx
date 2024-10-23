@@ -293,7 +293,7 @@ const CreateSnippetSetModal: React.FC<{
       }
       let snippetArray: string[] = []
       for (const snippet of textSnippets) {
-        snippetArray.push(`${snippet.factor}:${snippet.score}:${snippet.snippetText}:${snippet.type}:${snippetSet.id}`);
+        snippetArray.push(`${snippet.factor}@${snippet.score}@${snippet.snippetText}@${snippet.type}@${snippetSet.id}`);
       }
       await client.mutations.bulkCreateSnippets({
         snippetsArray: snippetArray
@@ -757,7 +757,7 @@ const SuperAdminMainPage: React.FC = () => {
               continue;
             }
             const emptySnippetSetId = " ";
-            snippetArray.push(`${factor}:${score}:${snippetText}:${sanitizedType}:${emptySnippetSetId}`);
+            snippetArray.push(`${factor}@${score}@${snippetText}@${sanitizedType}@${emptySnippetSetId}`);
           }
           console.log("snippet array", snippetArray)
           await client.mutations.bulkCreateSnippets({
