@@ -531,7 +531,7 @@ const QuestionsComponent: React.FC = () => {
             survey result.
           </h2>
 
-          <div className="my-4">
+          <div className="my-4" style={{ height: '450px' }}>
             <BarChart data={calculateAverages(userSelections)} />
           </div>
           
