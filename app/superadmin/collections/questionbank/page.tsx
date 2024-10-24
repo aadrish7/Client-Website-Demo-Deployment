@@ -486,6 +486,7 @@ const QuestionsPage: React.FC = () => {
     factor: string; 
     questionText: string; 
   }[]>([]);
+  const [isClearing, setIsClearing] = useState<boolean>(false);
   
 
   const handleEdit = (question: any) => {
@@ -506,6 +507,7 @@ const QuestionsPage: React.FC = () => {
     const confirmed = window.confirm("Are you sure you want to disable all questions?");
     if (confirmed) {
       try {
+        setIsClearing(() => true);
         let questionArray: string[] = [];
         for (const question of questions) {
           questionArray.push(`${question.id}:"dummy-data":true`);
@@ -523,6 +525,8 @@ const QuestionsPage: React.FC = () => {
         fetchQuestions(); 
       } catch (error) {
         console.error("Failed to disable all questions", error);
+      }finally {
+        setIsClearing(false); // End loading state
       }
     }
   };
@@ -693,8 +697,9 @@ const QuestionsPage: React.FC = () => {
               <button
                 className="bg-blue-600 text-white px-4 py-2 rounded-md"
                 onClick={handleClearAll}
+                disabled={isClearing} // Disable button when clearing
               >
-                Clear All
+                {isClearing ? "Clearing..." : "Clear All"}
               </button>
 
               <div className="relative">

@@ -1097,6 +1097,36 @@
               "isArrayNullable": true
             }
           }
+        },
+        "bulkUpdateSnippets": {
+          "name": "bulkUpdateSnippets",
+          "isArray": false,
+          "type": "String",
+          "isRequired": false,
+          "arguments": {
+            "snippetsArray": {
+              "name": "snippetsArray",
+              "isArray": true,
+              "type": "String",
+              "isRequired": false,
+              "isArrayNullable": true
+            }
+          }
+        },
+        "bulkUpdateQuestions": {
+          "name": "bulkUpdateQuestions",
+          "isArray": false,
+          "type": "String",
+          "isRequired": false,
+          "arguments": {
+            "questionsArray": {
+              "name": "questionsArray",
+              "isArray": true,
+              "type": "String",
+              "isRequired": false,
+              "isArrayNullable": true
+            }
+          }
         }
       }
     }

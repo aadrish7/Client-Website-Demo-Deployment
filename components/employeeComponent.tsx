@@ -79,6 +79,7 @@ const QuestionsComponent: React.FC = () => {
   });
   const [isViewingResults, setIsViewingResults] = useState<boolean>(false);
   const [snippetId, setSnippetId] = useState<string>("");
+  const [userName, setUserName] = useState<string>("");
 
   const steps = ["Create Account", "Assessment", "Survey Results"];
   const email = useUserStore((state) => state.userEmail);
@@ -186,6 +187,7 @@ const QuestionsComponent: React.FC = () => {
       if (!finalUser.id) {
         throw new Error("User ID is missing");
       }
+      setUserName(() => finalUser.firstName);
 
       setUserId(() => finalUser.id);
 
@@ -525,7 +527,7 @@ const QuestionsComponent: React.FC = () => {
         </div>
         <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">
-            Hi <span className="text-blue-600">{email}!</span> Here is your
+            Hi <span className="text-blue-600">{userName}!</span> Here are your
             survey result.
           </h2>
 

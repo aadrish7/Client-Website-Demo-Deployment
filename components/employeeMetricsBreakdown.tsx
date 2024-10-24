@@ -1,6 +1,59 @@
 import React, { useState } from "react";
 import Circle from "./circle";
-import TextSnippetDisplay from "./employeeTextSnippet";
+// import TextSnippetDisplay from "./employeeTextSnippet";
+import { useEffect
+  
+ } from "react";
+type Props = {
+  factors: Record<string, number>;
+  arrOfTextSnippetsId: string[];
+  selectedMetric: string;
+  snippets: any[];
+};
+
+const TextSnippetDisplay: React.FC<Props> = ({
+  factors,
+  arrOfTextSnippetsId,
+  selectedMetric,
+  snippets,
+}) => {
+  const [matchingSnippets, setMatchingSnippets] = useState<any>([]);
+
+  const isScoreInRange = (score: number, range: Number): boolean => {
+    const rangeValue = range.valueOf();
+    const min = rangeValue - 0.49;
+    const max = rangeValue + 0.5;
+    return score >= min && score <= max;
+  };
+
+  useEffect(() => {
+    if (snippets.length > 0) {
+      const matchedSnippets = snippets.filter((snippet: any) => {
+        const factorScore = factors[snippet.factor];
+        return factorScore && isScoreInRange(factorScore, snippet.score);
+      });
+      setMatchingSnippets(matchedSnippets);
+    }
+  }, [snippets, factors]);
+
+  return (
+    <>
+      {matchingSnippets.length > 0 ? (
+        <p className="text-sm text-gray-700 leading-relaxed">
+          {matchingSnippets
+            .filter(
+              (snippet: any) =>
+                snippet.type === "employeeindividual" &&
+                snippet.factor === selectedMetric
+            )
+            .map((snippet: any, index: any) => (
+              <span key={index}>{snippet.snippetText} </span>
+            ))}
+        </p>
+      ) : null}
+    </>
+  );
+};
 
 interface MetricsBreakdownProps {
   averages: Record<string, number>;

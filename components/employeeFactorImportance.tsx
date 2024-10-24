@@ -3,6 +3,8 @@ import QuestionStepper from "@/components/questionStepper";
 import Header from "@/components/superadminHeader";
 import ProgressBar from "@/components/progressBar";
 
+
+
 const categoriesQuestions = {
   "Psychological Safety":
     "Feeling safe to share my ideas at my job is important to me.",
@@ -127,7 +129,7 @@ const SurveyComponent: React.FC<SurveyComponentProps> = ({
 
         {/* Error message for duplicate rankings */}
         {error && (
-          <div className="text-[#1A56DB] font-semibold text-center mt-4">
+          <div className="text-[#e22c13] font-semibold text-center mt-4">
             {error}
           </div>
         )}

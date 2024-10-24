@@ -1,4 +1,4 @@
-"use client";
+'use client'
 import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { generateClient } from "aws-amplify/data";
@@ -22,8 +22,8 @@ type TextSnippetDetails = {
   factor: string;
   score: number;
   snippetText: string;
-  type: "adminoverview"| "employeeaggregated" |"employeeindividual" | null | undefined;
-  disabled: boolean; // Disabled field is required
+  type: "adminoverview" | "employeeaggregated" | "employeeindividual" | null | undefined;
+  disabled: boolean;
 };
 
 // Function to map enum values to hardcoded display values with spaces
@@ -48,6 +48,7 @@ const SnippetSetDetails: React.FC = () => {
   }>({ name: "", textSnippets: [], tags: "" });
 
   const [textSnippetsDetails, setTextSnippetsDetails] = useState<TextSnippetDetails[]>([]);
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc"); // Sort direction state
 
   const router = useRouter();
@@ -100,12 +101,11 @@ const SnippetSetDetails: React.FC = () => {
             return;
           }
 
-          var snippets = await fetchAllTextSnippets(client);
+          const snippets = await fetchAllTextSnippets(client);
           const filteredSnippets = snippets.filter((snippet: any) => snippet.snippetSetId === foundSet.id && snippet.disabled === true);
-          snippets = filteredSnippets;
 
           setTextSnippetsDetails(
-            snippets.map((snippet: any) => ({
+            filteredSnippets.map((snippet: any) => ({
               factor: snippet.factor,
               score: snippet.score,
               snippetText: snippet.snippetText,
@@ -122,25 +122,42 @@ const SnippetSetDetails: React.FC = () => {
     if (snippetSetName) fetchSnippetSet();
   }, [snippetSetName]);
 
-  // Function to sort snippets by "Type" column
-  const sortSnippetsByType = () => {
-    const sortedSnippets = [...textSnippetsDetails].sort((a, b) => {
-      const typeA = displayType(a.type ?? "").toLowerCase();
-      const typeB = displayType(b.type ?? "").toLowerCase();
-      if (sortDirection === "asc") {
-        return typeA > typeB ? 1 : -1;
+  // General sorting function for all columns
+  const handleSort = (column: string) => {
+    const isAsc = sortColumn === column && sortDirection === "asc";
+    const direction = isAsc ? "desc" : "asc";
+    setSortDirection(direction);
+    setSortColumn(column);
+
+    const sortedData = [...textSnippetsDetails].sort((a:any, b:any) => {
+      let valueA, valueB;
+
+      if (column === "score") {
+        // Sort numbers for the "score" column
+        valueA = a.score;
+        valueB = b.score;
+      } else if (column === "type") {
+        // Sort by type display values
+        valueA = displayType(a.type ?? "").toLowerCase();
+        valueB = displayType(b.type ?? "").toLowerCase();
       } else {
-        return typeA < typeB ? 1 : -1;
+        // Sort strings for other columns
+        valueA = a[column]?.toString().toLowerCase();
+        valueB = b[column]?.toString().toLowerCase();
+      }
+
+      if (direction === "asc") {
+        return valueA < valueB ? -1 : valueA > valueB ? 1 : 0;
+      } else {
+        return valueA > valueB ? -1 : valueA < valueB ? 1 : 0;
       }
     });
 
-    setTextSnippetsDetails(sortedSnippets);
-    setSortDirection(sortDirection === "asc" ? "desc" : "asc"); // Toggle sort direction
+    setTextSnippetsDetails(sortedData);
   };
 
-  const headers = ["Factor", "Score", "Snippet Text", "Type"];
-  console.log(textSnippetsDetails);
-
+  const headers = ["Factor", "Score", "Type", "Snippet Text"];
+  
   const tableData = textSnippetsDetails.map((snippet) => ({
     Factor: snippet.factor,
     Score: snippet.score.toString(),
@@ -171,13 +188,13 @@ const SnippetSetDetails: React.FC = () => {
                       {headers.map((header, index) => (
                         <th
                           key={index}
-                          className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer ${header === "Type" ? "hover:underline" : ""}`}
-                          onClick={header === "Type" ? sortSnippetsByType : undefined} // Add sorting functionality for "Type"
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                          onClick={() => handleSort(header.toLowerCase())}
                         >
                           {header}
-                          {header === "Type" && (
-                            <span>
-                              {sortDirection === "asc" ? " ↑" : " ↓"}
+                          {sortColumn === header.toLowerCase() && (
+                            <span className="ml-1">
+                              {sortDirection === "asc" ? "↑" : "↓"}
                             </span>
                           )}
                         </th>

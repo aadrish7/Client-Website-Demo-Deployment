@@ -570,6 +570,7 @@ const SuperAdminMainPage: React.FC = () => {
   const [sortColumn, setSortColumn] = useState<string | null>("factor");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [error, setError] = useState<string | null>(null);
+  const [isClearing, setIsClearing] = useState(false); 
 
   const displayTypes: any = {
     adminoverview: "Admin Overview",
@@ -622,13 +623,26 @@ const SuperAdminMainPage: React.FC = () => {
   }, []);
 
   // Sorting function
-  const handleSort = (column: string) => {
-    const isAsc = sortColumn === column && sortDirection === "asc";
-    const direction = isAsc ? "desc" : "asc";
-    setSortDirection(direction);
-    setSortColumn(column);
+// Sorting function with numeric support for the 'score' column
+const handleSort = (column: string) => {
+  const isAsc = sortColumn === column && sortDirection === "asc";
+  const direction = isAsc ? "desc" : "asc";
+  setSortDirection(direction);
+  setSortColumn(column);
 
-    const sortedData = [...tableData].sort((a, b) => {
+  const sortedData = [...tableData].sort((a, b) => {
+    // If sorting by 'score', treat values as numbers
+    if (column === "score") {
+      const valueA = parseFloat(a[column]);
+      const valueB = parseFloat(b[column]);
+
+      if (direction === "asc") {
+        return valueA - valueB;
+      } else {
+        return valueB - valueA;
+      }
+    } else {
+      // For other columns, sort alphabetically
       const valueA = a[column]?.toString().toLowerCase();
       const valueB = b[column]?.toString().toLowerCase();
 
@@ -637,10 +651,12 @@ const SuperAdminMainPage: React.FC = () => {
       } else {
         return valueA > valueB ? -1 : valueA < valueB ? 1 : 0;
       }
-    });
+    }
+  });
 
-    setTableData(sortedData);
-  };
+  setTableData(sortedData);
+};
+
 
   const handleDelete = async (snippet: any) => {
     try {
@@ -674,6 +690,8 @@ const SuperAdminMainPage: React.FC = () => {
     const confirmed = window.confirm("Are you sure you want to disable all snippets?");
     if (confirmed) {
       try {
+        console.log("clearing all snippets");
+        setIsClearing(()=>true);
         const filterForAllSnippets = {
           disabled: { eq: false },
         };
@@ -690,6 +708,8 @@ const SuperAdminMainPage: React.FC = () => {
         fetchTextSnippets(); // Refresh the list after clearing
       } catch (error) {
         console.error("Failed to clear all snippets", error);
+      }finally {
+        setIsClearing(false); // End loading state
       }
     }
   };
@@ -802,8 +822,9 @@ const SuperAdminMainPage: React.FC = () => {
               <button
                 onClick={handleClearAll}
                 className="bg-blue-600 text-white px-4 py-2 rounded-md"
+                disabled={isClearing}
               >
-                Clear All
+                {isClearing ? "Clearing..." : "Clear All"}
               </button>
 
               <div className="relative">

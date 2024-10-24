@@ -63,7 +63,7 @@ const CreateSurveyModal: React.FC<CreateSurveyModalProps> = ({
         collectionId,
         snippetSetId,
         companyId,
-        start,
+        start: true,
       };
       if (!surveyName || !collectionId || !snippetSetId) {
         alert("Please fill or select in all fields");
@@ -137,7 +137,7 @@ const CreateSurveyModal: React.FC<CreateSurveyModalProps> = ({
         </div>
 
         {/* Start Checkbox */}
-        <div className="flex items-center mb-6 mt-4">
+        {/* <div className="flex items-center mb-6 mt-4">
           <input
             type="checkbox"
             checked={start}
@@ -145,7 +145,7 @@ const CreateSurveyModal: React.FC<CreateSurveyModalProps> = ({
             className="mr-2"
           />
           <label className="text-sm">Start</label>
-        </div>
+        </div> */}
 
         {/* Buttons */}
         <div className="flex justify-center">
