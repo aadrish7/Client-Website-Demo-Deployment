@@ -531,8 +531,10 @@ const QuestionsComponent: React.FC = () => {
             survey result.
           </h2>
 
-          <div className="my-4"></div>
-          <BarChart data={calculateAverages(userSelections)} />
+          <div className="my-4">
+            <BarChart data={calculateAverages(userSelections)} />
+          </div>
+          
           <div className="mt-6">
             <h3 className="text-lg font-semibold text-gray-800">Overview</h3>
             {matchingSnippets.length > 0 &&
