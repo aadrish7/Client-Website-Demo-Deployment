@@ -195,12 +195,12 @@ const QuestionsComponent: React.FC = () => {
       if (!companyId) {
         throw new Error("User's company ID is missing");
       }
+
       const filterForSurvey = {
-        companyId: {
-          eq: companyId,
-        },
-        start: { eq: true },
+       id : {
+        eq : finalUser.surveyId
       }
+    };
       const SurveyList = await createPaginatedFetchFunctionForSurvey(client, filterForSurvey)();
 
       if (!SurveyList || SurveyList.length === 0) {
@@ -476,7 +476,9 @@ const QuestionsComponent: React.FC = () => {
             },
           };
           const beforeFilterSnippets = await createPaginatedFetchFunctionForTextSnippet(client, filterForSnippets)();
+          console.log("beforeFilterSnippets", beforeFilterSnippets);
           const filteredSnippets = beforeFilterSnippets.filter((snippet:any) => snippet.snippetSetId === snippetId && snippet.disabled === true && snippet.type !== "adminoverview");
+          console.log("filteredSnippets", filteredSnippets);
           const snippets = filteredSnippets;
           
           if (snippets.length > 0) {
@@ -531,8 +533,10 @@ const QuestionsComponent: React.FC = () => {
             survey result.
           </h2>
 
-          <div className="my-4"></div>
-          <BarChart data={calculateAverages(userSelections)} />
+          <div className="my-4" style={{ height: '450px' }}>
+            <BarChart data={calculateAverages(userSelections)} />
+          </div>
+          
           <div className="mt-6">
             <h3 className="text-lg font-semibold text-gray-800">Overview</h3>
             {matchingSnippets.length > 0 &&

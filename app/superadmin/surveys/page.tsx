@@ -65,6 +65,7 @@ const CreateSurveyModal: React.FC<CreateSurveyModalProps> = ({
         companyId,
         start: true,
       };
+
       if (!surveyName || !collectionId || !snippetSetId) {
         alert("Please fill or select in all fields");
         return;
@@ -73,7 +74,8 @@ const CreateSurveyModal: React.FC<CreateSurveyModalProps> = ({
         alert("Survey name already exists, Change the name and try again");
         return;
       }
-      await client.models.Survey.create(survey);
+      const {data:surveyCreated} = await client.models.Survey.create(survey);
+      console.log("Survey created", surveyCreated);
       onCreate();
       onClose();
     } catch (error) {
