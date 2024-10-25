@@ -66,6 +66,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({ ratings, categories }
         displaylogo: false,     // Removes the "Made with Plotly" logo
         modeBarButtonsToRemove: ['toImage'],  // Remove the download image button
         responsive: true,  // Ensure chart resizes with its container
+        staticPlot: true,  // Make the chart non-interactive
       }}
       style={{ width: '100%', height: '100%' }}  // Chart takes full width and height of the container
     />

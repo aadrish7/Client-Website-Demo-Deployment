@@ -25,7 +25,7 @@ const BarChart: React.FC<BarChartProps> = ({ data }) => {
     "Psychological Safety": '#E0F0FC', 
     "Growth Satisfaction": '#EAFCD9',  
     "Purpose": '#FFF5D9',             
-    "Advocacy": '#FFE5E4',             
+    "Advocacy": '#FFE5E4',            
     "Flexibility": '#D8F9F8',      
   };
 
@@ -50,7 +50,7 @@ const BarChart: React.FC<BarChartProps> = ({ data }) => {
           textfont: {
             color: 'white',
           },
-          hoverinfo: 'none', // Disable hover information for the 'Score' bars
+          hoverinfo: 'none',
           showlegend: false,  
         },
         {
@@ -59,7 +59,7 @@ const BarChart: React.FC<BarChartProps> = ({ data }) => {
           type: 'bar',
           name: 'Remaining',
           marker: { color: chartLightColors },
-          hoverinfo: 'none', // Disable hover information for the 'Remaining' bars
+          hoverinfo: 'none',
           showlegend: false,  
         },
       ]}
@@ -80,13 +80,14 @@ const BarChart: React.FC<BarChartProps> = ({ data }) => {
           b: 100, 
         },
         showlegend: false,
-        autosize: true, // Enable auto-sizing to the container
+        autosize: true,
       }}
       config={{
-        displayModeBar: false,  // Removes the "Download plot as PNG" button
-        responsive: true,       // Make the chart responsive to container size changes
+        displayModeBar: false,
+        responsive: true,
+        staticPlot: true,  // Make the chart non-interactive
       }}
-      style={{ width: '100%', height: '100%' }} // Takes full width and height of the parent container
+      style={{ width: '100%', height: '100%' }}
     />
   );
 };
