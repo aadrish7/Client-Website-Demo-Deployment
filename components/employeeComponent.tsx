@@ -711,7 +711,7 @@ const QuestionsComponent: React.FC = () => {
         <p className="text-gray-700 mb-6">{currentQuestion.questionText}</p>
 
         <div className="border border-gray-300 rounded-lg">
-          {Object.entries(optionMapping).map(([value, text], index, array) => (
+          {Object.entries(optionMapping).reverse().map(([value, text], index, array) => (
             <div
               key={value}
               className={`flex items-center p-3 cursor-pointer hover:bg-gray-100 ${

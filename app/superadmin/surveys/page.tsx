@@ -247,7 +247,7 @@ const SurveysPage = () => {
     {
       id: string;
       "survey name": string;
-      "updated at": string; // Update to use updatedAt field
+      "updated at": string;
       status: string;
       start: boolean;
     }[]
@@ -256,25 +256,12 @@ const SurveysPage = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
   const [editingSurveyId, setEditingSurveyId] = useState<string>("");
-  const [editingSurveyStatus, setEditingSurveyStatus] =
-    useState<boolean>(false);
-  const [collections, setCollections] = useState<
-    { id: string; name: string }[]
-  >([]);
-  const [snippetSets, setSnippetSets] = useState<
-    { id: string; name: string }[]
-  >([]);
+  const [editingSurveyStatus, setEditingSurveyStatus] = useState<boolean>(false);
+  const [collections, setCollections] = useState<{ id: string; name: string }[]>([]);
+  const [snippetSets, setSnippetSets] = useState<{ id: string; name: string }[]>([]);
   const [companyId, setCompanyId] = useState<string>("");
   const searchParams = useSearchParams();
   const companyName = searchParams.get("companyName");
-
-  const handleSurveyClick = (surveyName: string) => {
-    router.push(
-      `surveys/survey-details?surveyName=${encodeURIComponent(
-        surveyName
-      )}&companyId=${encodeURIComponent(companyId || "")}`
-    );
-  };
 
   useEffect(() => {
     const fetchCompanyData = async () => {
@@ -295,9 +282,7 @@ const SurveysPage = () => {
     const fetchCollections = async () => {
       try {
         const collectionList = await createPaginatedFetchFunctionForCollection(client, {})();
-        setCollections(
-          collectionList.map((c) => ({ id: c.id, name: c.name || "" }))
-        );
+        setCollections(collectionList.map((c) => ({ id: c.id, name: c.name || "" })));
       } catch (error) {
         console.error("Failed to fetch collections", error);
       }
@@ -305,9 +290,7 @@ const SurveysPage = () => {
     const fetchSnippetSets = async () => {
       try {
         const SnippetSets = await createPaginatedFetchFunctionForSnippetSet(client, {})();
-        setSnippetSets(
-          SnippetSets.map((c) => ({ id: c.id, name: c.name || "" }))
-        );
+        setSnippetSets(SnippetSets.map((c) => ({ id: c.id, name: c.name || "" })));
       } catch (error) {
         console.error("Failed to fetch Snippets", error);
       }
@@ -315,6 +298,24 @@ const SurveysPage = () => {
     fetchCollections();
     fetchSnippetSets();
   }, []);
+
+  const toggleStatus = async (surveyId: string) => {
+    //get the start status of the survey id provided
+    const survey = tableData.find((s) => s.id === surveyId);
+    if (!survey) return;
+    const {data:updatedSurvey} = await client.models.Survey.update({
+      id: surveyId,
+      start: !survey.start,
+    });
+    console.log("Survey updated", updatedSurvey);
+    setTableData((prevData) =>
+      prevData.map((survey) =>
+        survey.id === surveyId
+          ? { ...survey, start: !survey.start, status: !survey.start ? "In Progress" : "Completed" }
+          : survey
+      )
+    );
+  };
 
   const fetchSurveys = async () => {
     try {
@@ -325,19 +326,20 @@ const SurveysPage = () => {
         return;
       }
       setListOfSurveyNames(surveyList.map((s) => s.surveyName));
-      setTableHeaders(["survey name", "updated at", "status", "manage"]);
+      setTableHeaders(["survey name", "updated at", "edit", "manage"]);
       setTableData(
         surveyList.map((s) => ({
           id: s.id,
           "survey name": s.surveyName,
-         "updated at": new Date(s.updatedAt).toLocaleDateString('default', {
-          day: 'numeric', 
-          month: 'long',   
-          year: 'numeric',  
-        }),
+          "updated at": new Date(s.updatedAt).toLocaleDateString('default', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+          }),
           status: s.start ? "In Progress" : "Completed",
           start: s.start ?? false,
-        })))
+        }))
+      );
     } catch (error) {
       console.error("Failed to fetch surveys", error);
     }
@@ -347,10 +349,10 @@ const SurveysPage = () => {
     if (companyId) fetchSurveys();
   }, [companyId]);
 
-  const handleEditClick = (surveyId: string, currentStatus: boolean) => {
-    setEditingSurveyId(surveyId);
-    setEditingSurveyStatus(currentStatus);
-    setIsEditModalOpen(true);
+  const handleManageClick = (surveyName: string) => {
+    router.push(
+      `surveys/survey-details?surveyName=${encodeURIComponent(surveyName)}&companyId=${encodeURIComponent(companyId || "")}`
+    );
   };
 
   return (
@@ -359,7 +361,7 @@ const SurveysPage = () => {
       <div className="flex flex-1">
         <Sidebar activePath="/superadmin" />
         <div className="w-4/5 p-8">
-        <Breadcrumb />
+          <Breadcrumb />
           <h1 className="text-2xl font-semibold mb-6">Surveys</h1>
           <div className="border p-4">
             <div className="flex justify-end">
@@ -386,41 +388,29 @@ const SurveysPage = () => {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {tableData.map((row: any, rowIndex) => (
+                    {tableData.map((row, rowIndex) => (
                       <tr key={rowIndex}>
                         {tableHeaders.map((header, colIndex) => (
                           <td
                             key={colIndex}
-                            className={`px-6 py-4 whitespace-nowrap text-sm ${
-                              header.toLowerCase() === "survey name"
-                                ? "text-blue-500 font-bold cursor-pointer"
-                                : ""
-                            }`}
-                            onClick={() => {
-                              if (header.toLowerCase() === "survey name") {
-                                handleSurveyClick(row["survey name"]);
-                              }
-                            }}
+                            className="px-6 py-4 whitespace-nowrap text-sm"
                           >
                             {header.toLowerCase() === "manage" ? (
                               <button
-                                onClick={() =>
-                                  handleEditClick(row.id, row.start)
-                                }
+                                onClick={() => handleManageClick(row["survey name"])}
                                 className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded"
                               >
                                 Manage
                               </button>
-                            ) : header.toLowerCase() === "status" ? (
-                              <span
-                                className={`${
-                                  row[header] === "In Progress"
-                                    ? "inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
-                                    : "inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-medium bg-red-100 text-red-800"
+                            ) : header.toLowerCase() === "edit" ? (
+                              <button
+                                onClick={() => toggleStatus(row.id)}
+                                className={`inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-medium ${
+                                  row.start ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"
                                 }`}
                               >
-                                {row[header]}
-                              </span>
+                                {row.start ? "Stop" : "Start"}
+                              </button>
                             ) : (
                               row[header as keyof typeof row]
                             )}
@@ -447,17 +437,10 @@ const SurveysPage = () => {
           listOfSurveyNames={listOfSurveyNames}
         />
       )}
-      {isEditModalOpen && (
-        <EditSurveyModal
-          onClose={() => setIsEditModalOpen(false)}
-          onUpdate={fetchSurveys}
-          surveyId={editingSurveyId}
-          currentStatus={editingSurveyStatus}
-        />
-      )}
     </div>
   );
 };
+
 
 export default function () {
   return (
