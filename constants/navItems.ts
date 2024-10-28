@@ -12,6 +12,7 @@ export interface NavItem {
 }
 
 export const navItems: NavItem[] = [
+  { label: 'Company', href: '/superadmin', icon: HiBriefcase },
   {
     label: 'Collections',
     icon: IoIosList, // Import icons here
@@ -28,6 +29,6 @@ export const navItems: NavItem[] = [
       { label: 'Snippet Set', href: '/superadmin/snippets/snippetset' }
     ]
   },
-  { label: 'Company', href: '/superadmin', icon: HiBriefcase },
+ 
   { label: 'Analytics', href: '/superadmin/analytics', icon: FaFileContract },
 ];

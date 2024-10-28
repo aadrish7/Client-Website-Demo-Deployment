@@ -11,6 +11,7 @@ import Table from '@/components/table';
 import { Schema } from '@/amplify/data/resource';
 import { Suspense } from 'react';
 import '@fortawesome/fontawesome-free/css/all.min.css';
+import { useDropzone } from 'react-dropzone';
 import Breadcrumb from '@/components/surveyBreadCrumb';
 import {
   createPaginatedFetchFunctionForUser,
@@ -64,30 +65,24 @@ const EmployeeUploadPopup: React.FC<EmployeeUploadPopupProps> = ({ surveyId, com
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
-  // Function to handle file upload and parse CSV
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    setErrorMessage('')
-    const expectedHeaders = [
-      'First Name', 'Last Name', 'Email', 'DOB', 'Hire Date', 
-      'Gender', 'Ethnicity', 'Manager/Supervisor', 'Location', 
-      'Veteran Status', 'Disability Status', 'Job Level', 'Department'
-    ];
-  
+  const expectedHeaders = [
+    'First Name', 'Last Name', 'Email', 'DOB', 'Hire Date', 
+    'Gender', 'Ethnicity', 'Manager/Supervisor', 'Location', 
+    'Veteran Status', 'Disability Status', 'Job Level', 'Department'
+  ];
+
+  // Handle file parsing
+  const parseCSV = (file: File) => {
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
       complete: (results) => {
         const headers = results.meta.fields || [];
-        
-        // Check if the headers match the expected headers
         const headerMismatch = expectedHeaders.some(header => !headers.includes(header));
         if (headerMismatch) {
           setErrorMessage('CSV headers do not match the expected format.');
           return;
         }
-  
         const parsedData: UserData[] = results.data.map((row: any) => ({
           firstName: row['First Name'],
           lastName: row['Last Name'],
@@ -105,36 +100,40 @@ const EmployeeUploadPopup: React.FC<EmployeeUploadPopupProps> = ({ surveyId, com
           companyName: companyId || '',
           companyId: companyId || '',
         }));
-        console.log('Parsed data:', parsedData);
         setUsers(parsedData);
-        setSelectedFile(()=>file);
+        setSelectedFile(file);
       },
-      error: (error) => {
-        setErrorMessage('Error parsing CSV file: ' + error.message);
-      },
+      error: (error) => setErrorMessage('Error parsing CSV file: ' + error.message),
     });
   };
-  
 
-  // Function to create users in the database
+  // Integrate drag-and-drop functionality
+  const onDrop = (acceptedFiles: File[]) => {
+    const file = acceptedFiles[0];
+    if (file) {
+      setErrorMessage('');
+      parseCSV(file);
+    }
+  };
+
+  const { getRootProps, getInputProps } = useDropzone({ onDrop, accept: { 'text/csv': ['.csv'] } });
+
+  // Create users in the database
   const createUserCollections = async () => {
     try {
       setLoading(true);
-      let employeeArray: string[] =[]
+      let employeeArray: string[] = [];
       for (const user of users) {
         const formattedDOB = user.dob ? new Date(user.dob).toISOString().split('T')[0] : null;
         const formattedHireDate = user.hireDate ? new Date(user.hireDate).toISOString().split('T')[0] : null;
-        employeeArray.push(`${user.firstName}:${user.lastName}:${user.email}:${formattedDOB}:${formattedHireDate}:${user.gender}:${user.ethnicity}:${user.manager}:${user.location}:${user.veteranStatus}:${user.disabilityStatus}:${user.jobLevel}:${user.department}:${user.companyId}:${surveyId}:employee`)        
+        employeeArray.push(`${user.firstName}:${user.lastName}:${user.email}:${formattedDOB}:${formattedHireDate}:${user.gender}:${user.ethnicity}:${user.manager}:${user.location}:${user.veteranStatus}:${user.disabilityStatus}:${user.jobLevel}:${user.department}:${user.companyId}:${surveyId}:employee`);
       }
 
-      await client.mutations.bulkCreateEmployees({
-        employeesArray: employeeArray
-        
-      });
+      await client.mutations.bulkCreateEmployees({ employeesArray: employeeArray });
       alert('Employees created successfully!');
       onEmployeesCreated();
       setLoading(false);
-      onClose(); 
+      onClose();
     } catch (error) {
       console.error('Error creating users:', error);
       setErrorMessage('Error creating employees');
@@ -147,34 +146,24 @@ const EmployeeUploadPopup: React.FC<EmployeeUploadPopupProps> = ({ surveyId, com
         <h2 className="text-xl font-semibold mb-4">Upload CSV to Create Employees</h2>
 
         <div
+          {...getRootProps()}
           className="border-2 border-dashed border-gray-300 p-6 rounded-md flex flex-col items-center justify-center mb-4 cursor-pointer"
-          onClick={() => document.getElementById('csvFileInput')?.click()}
         >
+          <input {...getInputProps()} />
           <i className="fas fa-file-csv text-5xl text-gray-500"></i>
           <label className="text-lg mt-4 text-gray-700 cursor-pointer">
-            Click to upload or drag and drop
+            Drag & drop a CSV here, or click to select one
           </label>
-          <input
-            id="csvFileInput"
-            type="file"
-            accept=".csv"
-            onChange={handleFileUpload}
-            style={{ display: 'none' }}
-          />
-          {selectedFile && (
-            <p className="text-green-600 mt-2">{selectedFile.name} selected.</p>
-          )}
+          {selectedFile && <p className="text-green-600 mt-2">{selectedFile.name} selected.</p>}
         </div>
 
         {errorMessage && <p className="text-red-500 mb-4">{errorMessage}</p>}
 
         <div className="flex justify-end space-x-2">
-        <button
-            className={`bg-blue-600 text-white px-4 py-2 rounded-md ${
-              !selectedFile || loading ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
+          <button
+            className={`bg-blue-600 text-white px-4 py-2 rounded-md ${!selectedFile || loading ? 'opacity-50 cursor-not-allowed' : ''}`}
             onClick={createUserCollections}
-            disabled={!selectedFile || loading} // Disable if no file or loading
+            disabled={!selectedFile || loading}
           >
             {loading ? 'Creating Employees...' : 'Create Employees'}
           </button>

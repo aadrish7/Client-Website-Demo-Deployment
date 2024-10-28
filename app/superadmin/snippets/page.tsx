@@ -17,6 +17,7 @@ import "@fortawesome/fontawesome-free/css/all.min.css";
 import { truncate } from "fs";
 import { createPaginatedFetchFunctionForSnippetSet, createPaginatedFetchFunctionForTextSnippet } from "@/constants/pagination";
 import { BsFillTrainFreightFrontFill } from "react-icons/bs";
+import { useDropzone } from 'react-dropzone';
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
@@ -713,7 +714,14 @@ const handleSort = (column: string) => {
       }
     }
   };
-
+  const onDrop = (acceptedFiles: File[]) => {
+    const file = acceptedFiles[0];
+    if (file) {
+      setCsvFile(file);
+      setError(null);
+    }
+  };
+  const { getRootProps, getInputProps } = useDropzone({ onDrop, accept: { 'text/csv': ['.csv'] } });
   const handleCsvSubmit = async () => {
     setIsUploading(true);
     setError(null);
@@ -926,23 +934,15 @@ const handleSort = (column: string) => {
 
             {/* File Input Area */}
             <div
+              {...getRootProps()}
               className="border-2 border-dashed border-gray-300 p-6 rounded-md flex flex-col items-center justify-center mb-4 cursor-pointer"
-              onClick={() => document.getElementById("csvFileInput")?.click()}
             >
+              <input {...getInputProps()} />
               <i className="fas fa-file-csv text-5xl text-gray-500"></i>
               <label className="text-lg mt-4 text-gray-700 cursor-pointer">
-                Click to upload or drag and drop
+                Drag & drop a CSV here, or click to select one
               </label>
-              <input
-                id="csvFileInput"
-                type="file"
-                accept=".csv"
-                onChange={handleFileChange}
-                style={{ display: "none" }}
-              />
-              {csvFile && (
-                <p className="text-green-600 mt-2">{csvFile.name} selected.</p>
-              )}
+              {csvFile && <p className="text-green-600 mt-2">{csvFile.name} selected.</p>}
             </div>
             {error && <p className="text-red-500 mb-2">{error}</p>}
             {/* Buttons */}

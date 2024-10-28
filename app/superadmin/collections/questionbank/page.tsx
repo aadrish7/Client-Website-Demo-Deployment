@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { generateClient } from "aws-amplify/data";
 import { Schema } from "@/amplify/data/resource";
 import { getCurrentUser } from "aws-amplify/auth";
@@ -26,6 +26,8 @@ import {
   createPaginatedFetchFunctionForCollection,
   createPaginatedFetchFunctionForSnippetSet
 } from "@/constants/pagination";
+import { useDropzone } from "react-dropzone";
+
 
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
@@ -142,37 +144,30 @@ const CSVUploadModal: React.FC<{
   onClose: () => void;
   onUpload: (data: Map<string, string[]>) => Promise<void>;
 }> = ({ onClose, onUpload }) => {
-  const [parsedData, setParsedData] = useState<Map<string, string[]> | null>(
-    null
-  );
+  const [parsedData, setParsedData] = useState<Map<string, string[]> | null>(null);
   const [isCreating, setIsCreating] = useState(false);
-  const [error, setError] = useState<string | null>(null); // Track errors
+  const [error, setError] = useState<string | null>(null);
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const onDrop = useCallback((acceptedFiles: File[]) => {
     setError(null); // Reset error on new file selection
-    const file = event.target.files?.[0];
+    const file = acceptedFiles[0];
     if (!file) return;
 
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
       complete: (result) => {
-        // Check for parsing errors
         if (result.errors.length > 0) {
           console.error(result.errors); // Log for debugging
           setError("Error parsing the CSV file. Please check the file format.");
           return;
         }
 
-        // Validate the parsed data
         try {
           const data = result.data as { Factor: string; Questions: string }[];
 
-          // Check if CSV has the required columns and non-empty rows
           if (data.length === 0 || !data[0].Factor || !data[0].Questions) {
-            setError(
-              "Invalid CSV format. Ensure the CSV contains 'Factor' and 'Questions' columns."
-            );
+            setError("Invalid CSV format. Ensure the CSV contains 'Factor' and 'Questions' columns.");
             return;
           }
 
@@ -182,12 +177,18 @@ const CSVUploadModal: React.FC<{
           setError("Error processing the CSV data.");
         }
       },
-      error: (error) => {
-        // Handle file reading errors
+      error: () => {
         setError("Error reading the CSV file. Please try again.");
       },
     });
-  };
+  }, []);
+
+  const { getRootProps, getInputProps } = useDropzone({
+    onDrop,
+    accept: { 'text/csv': ['.csv'] },
+    maxFiles: 1,
+    disabled: isCreating,
+  });
 
   const groupQuestionsByFactor = (
     data: { Factor: string; Questions: string }[]
@@ -205,10 +206,10 @@ const CSVUploadModal: React.FC<{
   const handleCreate = async () => {
     if (parsedData) {
       setIsCreating(true);
-      setError(null); // Reset error before starting upload
+      setError(null);
       try {
         await onUpload(parsedData);
-      } catch (err) {
+      } catch {
         setError("Error uploading the data. Please try again.");
       } finally {
         setIsCreating(false);
@@ -219,56 +220,48 @@ const CSVUploadModal: React.FC<{
   };
 
   return (
-<div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center z-50">
-  <div className="bg-white p-8 rounded-md w-full max-w-lg">
-    <h2 className="text-xl font-semibold mb-4">Upload Questions CSV</h2>
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center z-50">
+      <div className="bg-white p-8 rounded-md w-full max-w-lg">
+        <h2 className="text-xl font-semibold mb-4">Upload Questions CSV</h2>
 
-    <div
-      className="border-2 border-dashed border-gray-300 p-6 rounded-md flex flex-col items-center justify-center mb-4 cursor-pointer"
-      onClick={() => document.getElementById('csvFileInput')?.click()}
-    >
-      <i className="fas fa-file-csv text-5xl text-gray-500"></i>
-      <label className="text-lg mt-4 text-gray-700 cursor-pointer">
-        Click to upload or drag and drop
-      </label>
-      <input
-        id="csvFileInput"
-        type="file"
-        accept=".csv"
-        onChange={handleFileUpload}
-        style={{ display: 'none' }}
-        disabled={isCreating}
-      />
-      {parsedData && (
-        <p className="text-green-600 mt-2">File selected.</p>
-      )}
-    </div>
-
-    {error && <p className="text-red-500 mb-4">{error}</p>}
-
-    <div className="flex justify-end space-x-2">
-      <button
-        onClick={onClose}
-        className="bg-gray-600 text-white px-4 py-2 rounded-md"
-        disabled={isCreating}
-      >
-        Cancel
-      </button>
-      {parsedData && (
-        <button
-          onClick={handleCreate}
-          className={`bg-blue-600 text-white px-4 py-2 rounded-md ${isCreating ? 'opacity-50 cursor-not-allowed' : ''}`}
-          disabled={isCreating}
+        <div
+          {...getRootProps({
+            className: "border-2 border-dashed border-gray-300 p-6 rounded-md flex flex-col items-center justify-center mb-4 cursor-pointer",
+          })}
         >
-          {isCreating ? 'Creating...' : 'Create Questions'}
-        </button>
-      )}
-    </div>
-  </div>
-</div>
+          <input {...getInputProps()} />
+          <i className="fas fa-file-csv text-5xl text-gray-500"></i>
+          <label className="text-lg mt-4 text-gray-700 cursor-pointer">
+            Click to upload or drag and drop
+          </label>
+          {parsedData && <p className="text-green-600 mt-2">File selected.</p>}
+        </div>
 
+        {error && <p className="text-red-500 mb-4">{error}</p>}
+
+        <div className="flex justify-end space-x-2">
+          <button
+            onClick={onClose}
+            className="bg-gray-600 text-white px-4 py-2 rounded-md"
+            disabled={isCreating}
+          >
+            Cancel
+          </button>
+          {parsedData && (
+            <button
+              onClick={handleCreate}
+              className={`bg-blue-600 text-white px-4 py-2 rounded-md ${isCreating ? 'opacity-50 cursor-not-allowed' : ''}`}
+              disabled={isCreating}
+            >
+              {isCreating ? 'Creating...' : 'Create Questions'}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
   );
 };
+
 
 
 
