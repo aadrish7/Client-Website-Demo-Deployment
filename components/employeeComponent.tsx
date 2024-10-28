@@ -597,21 +597,22 @@ const QuestionsComponent: React.FC = () => {
   if (isFinished) {
     return (
       <div className="bg-gray-100 min-h-screen">
-        <Header userName="" userEmail="" />
-        <div className="m-4">
-          <QuestionStepper steps={steps} currentStep={currentStep} />
-        </div>
-        <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
-          <p className="text-md font-thin">
-            Congratulations! You finished the survey.
-          </p>
-          <p className="text-gray-800 mt-2 text-sm mb-[280px]">
-            Click “View Report” to see how you did on this survey.
-          </p>
-        </div>
-        <div className="flex justify-end mt-4 mr-[295px]">
+      <Header userName="" userEmail="" />
+      <div className="m-4">
+        <QuestionStepper steps={steps} currentStep={currentStep} />
+      </div>
+    
+      {/* Main content container */}
+      <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md relative">
+        <p className="text-md font-thin">Congratulations! You finished the survey.</p>
+        <p className="text-gray-800 mt-2 text-sm mb-[280px]">
+          Click “View Report” to see how you did on this survey.
+        </p>
+    
+        {/* Button container aligned to bottom-right of main content */}
+        <div className="flex justify-end absolute w-full left-0 bottom-[-4rem]">
           <button
-            className={`bg-blue-600 text-white rounded px-2 py-2 ${
+            className={`bg-blue-600 text-white rounded px-4 py-2 ${
               isViewingResults ? "opacity-50 cursor-not-allowed" : ""
             }`}
             onClick={() => setViewSurveyResults(() => true)}
@@ -621,6 +622,8 @@ const QuestionsComponent: React.FC = () => {
           </button>
         </div>
       </div>
+    </div>
+    
     );
   }
 
@@ -640,7 +643,7 @@ const QuestionsComponent: React.FC = () => {
             <h2 className="font-semibold mb-2">Introduction:</h2>
             <p className="text-gray-700">
               This assessment is not a measure of competence, it's a measure of{" "}
-              <strong>engagement</strong> -- the more honest you are, the more
+              <strong>fulfillment</strong> -- the more honest you are, the more
               the results can be applied to improve the culture around you.
             </p>
           </section>
@@ -694,81 +697,80 @@ const QuestionsComponent: React.FC = () => {
 
   return (
     <div className="bg-gray-100 min-h-screen">
-      <Header userName="" userEmail="" />
+  <Header userName="" userEmail="" />
 
-      <div className="m-4">
-        <QuestionStepper steps={steps} currentStep={currentStep} />
-      </div>
+  <div className="m-4">
+    <QuestionStepper steps={steps} currentStep={currentStep} />
+  </div>
 
-      <div className="mx-auto w-3/5 bg-white rounded-lg shadow-md p-8">
-        <ProgressBar
-          currentQuestion={currentQuestionNumber}
-          totalQuestions={totalQuestions}
-        />
-        <h2 className="text-xl font-semibold mb-2">
-          Question {currentQuestionNumber + 1} of {totalQuestions}:
-        </h2>
-        <p className="text-gray-700 mb-6">{currentQuestion.questionText}</p>
+  <div className="mx-auto w-3/5 bg-white rounded-lg shadow-md p-8 relative">
+    <ProgressBar
+      currentQuestion={currentQuestionNumber}
+      totalQuestions={totalQuestions}
+    />
+    <h2 className="text-xl font-semibold mb-2">
+      Question {currentQuestionNumber + 1} of {totalQuestions}:
+    </h2>
+    <p className="text-gray-700 mb-6">{currentQuestion.questionText}</p>
 
-        <div className="border border-gray-300 rounded-lg">
-          {Object.entries(optionMapping).reverse().map(([value, text], index, array) => (
+    <div className="border border-gray-300 rounded-lg">
+      {Object.entries(optionMapping)
+        .reverse()
+        .map(([value, text], index, array) => (
+          <div
+            key={value}
+            className={`flex items-center p-3 cursor-pointer hover:bg-gray-100 ${
+              index !== array.length - 1 ? "border-b border-gray-300" : ""
+            } ${selectedOption === Number(value) ? "bg-blue-100" : ""}`}
+            onClick={() => handleOptionSelect(Number(value))}
+          >
             <div
-              key={value}
-              className={`flex items-center p-3 cursor-pointer hover:bg-gray-100 ${
-                index !== array.length - 1 ? "border-b border-gray-300" : ""
-              } ${selectedOption === Number(value) ? "bg-blue-100" : ""}`}
-              onClick={() => handleOptionSelect(Number(value))}
-            >
-              <div
-                className={`mr-3 h-4 w-4 rounded-full border ${
-                  selectedOption === Number(value)
-                    ? "bg-blue-500 border-blue-500"
-                    : "border-gray-300"
-                }`}
-              />
-              <label className="text-gray-700 flex-grow cursor-pointer">
-                {text}
-              </label>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="flex justify-between">
-        <button
-          className="mt-3 px-2 py-2 mx-[260px] bg-gray-400 text-white rounded"
-          onClick={handlePreviousQuestion}
-          disabled={currentQuestionNumber === 0}
-        >
-          Back
-        </button>
-
-        <button
-          className={`mt-3 px-2 py-2 mx-[260px] ${
-            selectedOption === null
-              ? "bg-blue-200 cursor-not-allowed"
-              : "bg-blue-600"
-          } text-white rounded`}
-          onClick={
-            currentFactor &&
-            currentQuestionIndex === currentQuestions.length - 1 &&
-            Object.keys(questionsByFactor).indexOf(currentFactor) ===
-              Object.keys(questionsByFactor).length - 1
-              ? handleNextQuestion
-              : handleNextQuestion
-          }
-          disabled={selectedOption === null}
-        >
-          Next Question
-        </button>
-      </div>
-
-      {/* <div className="mt-8 flex justify-center">
-        <h3 className="text-lg font-semibold">User Selections</h3>
-        <pre>{JSON.stringify(userSelections, null, 2)}</pre>
-      </div> */}
+              className={`mr-3 h-4 w-4 rounded-full border ${
+                selectedOption === Number(value)
+                  ? "bg-blue-500 border-blue-500"
+                  : "border-gray-300"
+              }`}
+            />
+            <label className="text-gray-700 flex-grow cursor-pointer">
+              {text}
+            </label>
+          </div>
+        ))}
     </div>
-  );
+
+    {/* Button container */}
+    <div className="flex justify-between absolute w-full left-0 bottom-[-4rem]">
+      <button
+        className="px-4 py-2 bg-gray-400 text-white rounded"
+        onClick={handlePreviousQuestion}
+        disabled={currentQuestionNumber === 0}
+      >
+        Back
+      </button>
+
+      <button
+        className={`px-4 py-2 ${
+          selectedOption === null
+            ? "bg-blue-200 cursor-not-allowed"
+            : "bg-blue-600"
+        } text-white rounded`}
+        onClick={
+          currentFactor &&
+          currentQuestionIndex === currentQuestions.length - 1 &&
+          Object.keys(questionsByFactor).indexOf(currentFactor) ===
+            Object.keys(questionsByFactor).length - 1
+            ? handleNextQuestion
+            : handleNextQuestion
+        }
+        disabled={selectedOption === null}
+      >
+        Next Question
+      </button>
+    </div>
+  </div>
+</div>
+
+  )
 };
 
 export default QuestionsComponent;

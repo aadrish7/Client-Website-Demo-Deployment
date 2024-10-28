@@ -76,80 +76,83 @@ const SurveyComponent: React.FC<SurveyComponentProps> = ({
 
   return (
     <div className="bg-gray-100 min-h-screen">
-      {/* Header component */}
-      <Header userName="" userEmail="" />
+  {/* Header component */}
+  <Header userName="" userEmail="" />
 
-      {/* Stepper component */}
-      <div className="m-4">
-        <QuestionStepper steps={steps} currentStep={currentStep} />
+  {/* Stepper component */}
+  <div className="m-4">
+    <QuestionStepper steps={steps} currentStep={currentStep} />
+  </div>
+
+  {/* Survey form */}
+  <div className="mx-auto w-3/5 bg-white rounded-lg shadow-md p-8 relative">
+    <ProgressBar
+      currentQuestion={currentQuestionNumber}
+      totalQuestions={totalQuestions}
+    />
+    <h2 className="text-xl font-semibold mb-2">
+      Question {currentQuestionNumber + 1} of {totalQuestions}:
+    </h2>
+    <h2 className="text-gray-700 mb-6">
+      Rank the importance of each of these statements from 1-5 (5 = Very
+      Important, 1 = Not Very Important)
+    </h2>
+
+      {/* Error message for duplicate rankings */}
+      {error && (
+      <div className="text-[#e22c13] font-semibold text-center mt-4">
+        {error}
       </div>
+    )}
 
-      {/* Survey form */}
-      <div className="mx-auto w-3/5 bg-white rounded-lg shadow-md p-8">
-        <ProgressBar
-          currentQuestion={currentQuestionNumber}
-          totalQuestions={totalQuestions}
-        />
-        <h2 className="text-xl font-semibold mb-2">
-          Question {currentQuestionNumber + 1} of {totalQuestions}:
-        </h2>
-        <h2 className="text-gray-700 mb-6">
-          Rank the importance of each of these statements from 1-5 (5 = Very
-          Important, 1 = Not Very Important)
-        </h2>
-
-        {/* Loop over categories and display their corresponding questions */}
-        {Object.entries(categoriesQuestions).map(([category, question]) => (
-          <div key={category} className="mb-6 text-gray-700">
-            <div className="grid grid-cols-2 gap-2 border-b pb-2 min-h-[64px] items-center">
-              {/* Left side: the question */}
-              <p className="break-words">{question}</p>
-              {/* Right side: the dropdown for ranking */}
-              <div className="flex justify-end items-center gap-4">
-                <select
-                  value={selectedValues[category] ?? ""}
-                  onChange={(e) =>
-                    handleSelectionChange(category, Number(e.target.value))
-                  }
-                  className="block w-32 p-2 border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-indigo-200 focus:border-indigo-300"
-                >
-                  <option value="" disabled>
-                    Rank
-                  </option>
-                  {[1, 2, 3, 4, 5].map((val) => (
-                    <option key={val} value={val}>
-                      {val}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
+    {/* Loop over categories and display their corresponding questions */}
+    {Object.entries(categoriesQuestions).map(([category, question]) => (
+      <div key={category} className="mb-6 text-gray-700">
+        <div className="grid grid-cols-2 gap-2 border-b pb-2 min-h-[64px] items-center">
+          {/* Left side: the question */}
+          <p className="break-words">{question}</p>
+          {/* Right side: the dropdown for ranking */}
+          <div className="flex justify-end items-center gap-4">
+            <select
+              value={selectedValues[category] ?? ""}
+              onChange={(e) =>
+                handleSelectionChange(category, Number(e.target.value))
+              }
+              className="block w-32 p-2 border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-indigo-200 focus:border-indigo-300"
+            >
+              <option value="" disabled>
+                Rank
+              </option>
+              {[1, 2, 3, 4, 5].map((val) => (
+                <option key={val} value={val}>
+                  {val}
+                </option>
+              ))}
+            </select>
           </div>
-        ))}
-
-        {/* Error message for duplicate rankings */}
-        {error && (
-          <div className="text-[#e22c13] font-semibold text-center mt-4">
-            {error}
-          </div>
-        )}
+        </div>
       </div>
+    ))}
 
-      {/* Submit button */}
-      <div className="flex justify-end">
-        <button
-          onClick={onButtonClick}
-          className={`mx-[260px] mb-6 text-white mt-3 px-4 py-2 rounded transition duration-300 ${
-            allValuesSelected
-              ? "bg-blue-600 hover:bg-blue-700 cursor-pointer"
-              : "bg-blue-200 cursor-not-allowed"
-          }`}
-          disabled={!allValuesSelected} // Disable the button if not all values are selected or if there are duplicates
-        >
-          Finish
-        </button>
-      </div>
+  
+
+    {/* Submit button aligned to bottom-right of the form */}
+    <div className="flex justify-end absolute w-full left-0 bottom-[-4rem]">
+      <button
+        onClick={onButtonClick}
+        className={`text-white px-4 py-2 rounded transition duration-300 ${
+          allValuesSelected
+            ? "bg-blue-600 hover:bg-blue-700 cursor-pointer"
+            : "bg-blue-200 cursor-not-allowed"
+        }`}
+        disabled={!allValuesSelected}
+      >
+        Finish
+      </button>
     </div>
+  </div>
+</div>
+
   );
 };
 

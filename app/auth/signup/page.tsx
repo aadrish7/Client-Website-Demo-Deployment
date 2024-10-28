@@ -26,7 +26,7 @@ const fetchAllUsers = async (client: any, email: string): Promise<any[]> => {
     });
     allUsers = [...allUsers, ...users];
     nextToken = newNextToken;
-    if (!nextToken || users.length < 1000) {
+    if (!nextToken) {
       hasMorePages = false;
     }
   }
