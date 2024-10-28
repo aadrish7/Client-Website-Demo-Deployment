@@ -58,7 +58,7 @@ const SurveyComponent: React.FC<SurveyComponentProps> = ({
 
     // If duplicates exist, show error message
     if (hasDuplicates) {
-      setError("Each ranking position can only be selected once.");
+      setError("Each ranking position can only be selected once. Be sure to assign a unique number to each option.");
     } else if (!allSelected) {
       setError("Please rank all categories.");
     } else {
@@ -97,6 +97,7 @@ const SurveyComponent: React.FC<SurveyComponentProps> = ({
       Rank the importance of each of these statements from 1-5 (5 = Very
       Important, 1 = Not Very Important)
     </h2>
+    <h2 className="text-gray-700">Each ranking position can only be selected once. Be sure to assign a unique number to each option</h2>
 
       {/* Error message for duplicate rankings */}
       {error && (
