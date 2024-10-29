@@ -75,7 +75,7 @@ const QuestionsComponent: React.FC = () => {
     "Growth Satisfaction": null,
     Purpose: null,
     Advocacy: null,
-    "Flexibility": null,
+    Flexibility: null,
   });
   const [isViewingResults, setIsViewingResults] = useState<boolean>(false);
   const [snippetId, setSnippetId] = useState<string>("");
@@ -178,7 +178,10 @@ const QuestionsComponent: React.FC = () => {
           eq: email,
         },
       };
-      const userList = await createPaginatedFetchFunctionForUser(client, filterForUser)();
+      const userList = await createPaginatedFetchFunctionForUser(
+        client,
+        filterForUser
+      )();
       if (!userList || userList.length === 0) {
         throw new Error(`No user found with email: ${email}`);
       }
@@ -197,11 +200,14 @@ const QuestionsComponent: React.FC = () => {
       }
 
       const filterForSurvey = {
-       id : {
-        eq : finalUser.surveyId
-      }
-    };
-      const SurveyList = await createPaginatedFetchFunctionForSurvey(client, filterForSurvey)();
+        id: {
+          eq: finalUser.surveyId,
+        },
+      };
+      const SurveyList = await createPaginatedFetchFunctionForSurvey(
+        client,
+        filterForSurvey
+      )();
 
       if (!SurveyList || SurveyList.length === 0) {
         setNoQuestions(() => true);
@@ -234,7 +240,11 @@ const QuestionsComponent: React.FC = () => {
           eq: finalUser.id,
         },
       };
-      const averageSurveyResponses = await createPaginatedFetchFunctionForAverageSurveyResults(client, filterForAverageSurveyResults)();
+      const averageSurveyResponses =
+        await createPaginatedFetchFunctionForAverageSurveyResults(
+          client,
+          filterForAverageSurveyResults
+        )();
 
       if (averageSurveyResponses && averageSurveyResponses.length > 0) {
         const allanswersjson = averageSurveyResponses[0].averageScorejson;
@@ -275,7 +285,10 @@ const QuestionsComponent: React.FC = () => {
           eq: collectionId,
         },
       };
-      const questions = await createPaginatedFetchFunctionForQuestion(client, filterForQuestions)();
+      const questions = await createPaginatedFetchFunctionForQuestion(
+        client,
+        filterForQuestions
+      )();
 
       if (!questions || questions.length === 0) {
         throw new Error(
@@ -283,7 +296,7 @@ const QuestionsComponent: React.FC = () => {
         );
       }
 
-      setTotalQuestions(() => questions.length+1);
+      setTotalQuestions(() => questions.length + 1);
 
       // Group the questions by their factor
       const questionsByFactor: QuestionsByFactor = {};
@@ -475,12 +488,21 @@ const QuestionsComponent: React.FC = () => {
               ne: "adminoverview",
             },
           };
-          const beforeFilterSnippets = await createPaginatedFetchFunctionForTextSnippet(client, filterForSnippets)();
+          const beforeFilterSnippets =
+            await createPaginatedFetchFunctionForTextSnippet(
+              client,
+              filterForSnippets
+            )();
           console.log("beforeFilterSnippets", beforeFilterSnippets);
-          const filteredSnippets = beforeFilterSnippets.filter((snippet:any) => snippet.snippetSetId === snippetId && snippet.disabled === true && snippet.type !== "adminoverview");
+          const filteredSnippets = beforeFilterSnippets.filter(
+            (snippet: any) =>
+              snippet.snippetSetId === snippetId &&
+              snippet.disabled === true &&
+              snippet.type !== "adminoverview"
+          );
           console.log("filteredSnippets", filteredSnippets);
           const snippets = filteredSnippets;
-          
+
           if (snippets.length > 0) {
             // Filter the snippets based on factorScore and score range
             setSnippets(() => snippets);
@@ -489,7 +511,6 @@ const QuestionsComponent: React.FC = () => {
                 snippet.type !== "employeeindividual" &&
                 snippet.type !== "adminoverview"
               ) {
-              
                 const factorScore = averageSurveyResults[snippet.factor];
                 return (
                   factorScore && isScoreInRange(factorScore, snippet.score)
@@ -527,16 +548,16 @@ const QuestionsComponent: React.FC = () => {
         <div className="m-4">
           <QuestionStepper steps={steps} currentStep={currentStep} />
         </div>
-        <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
+        <div className="mx-auto w-11/12 sm:w-4/5 md:max-w-2xl p-4 sm:p-6 md:p-8 bg-white rounded-lg shadow-md">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">
             Hi <span className="text-blue-600">{userName}!</span> Here are your
-            survey result.
+            survey results.
           </h2>
-
-          <div className="my-4" style={{ height: '450px' }}>
+    
+          <div className="my-4" style={{ height: "450px" }}>
             <BarChart data={calculateAverages(userSelections)} />
           </div>
-          
+    
           <div className="mt-6">
             <h3 className="text-lg font-semibold text-gray-800">Overview</h3>
             {matchingSnippets.length > 0 &&
@@ -550,7 +571,7 @@ const QuestionsComponent: React.FC = () => {
                 }
                 return null;
               })}
-
+    
             <MetricsBreakdown
               averages={calculateAverages(userSelections)}
               arrOfTextSnippetsId={arrOfSnippetIds}
@@ -560,6 +581,7 @@ const QuestionsComponent: React.FC = () => {
         </div>
       </div>
     );
+    
   }
 
   if (noQuestions) {
@@ -597,34 +619,36 @@ const QuestionsComponent: React.FC = () => {
   if (isFinished) {
     return (
       <div className="bg-gray-100 min-h-screen">
-      <Header userName="" userEmail="" />
-      <div className="m-4">
-        <QuestionStepper steps={steps} currentStep={currentStep} />
-      </div>
+        <Header userName="" userEmail="" />
+        <div className="m-4">
+          <QuestionStepper steps={steps} currentStep={currentStep} />
+        </div>
     
-      {/* Main content container */}
-      <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md relative">
-        <p className="text-md font-thin">Congratulations! You finished the survey.</p>
-        <p className="text-gray-800 mt-2 text-sm mb-[280px]">
-          Click “View Report” to see how you did on this survey.
-        </p>
+        {/* Main content container */}
+        <div className="mx-auto w-11/12 sm:w-4/5 md:max-w-2xl p-4 sm:p-6 md:p-8 bg-white rounded-lg shadow-md relative">
+          <p className="text-md font-thin">
+            Congratulations! You finished the survey.
+          </p>
+          <p className="text-gray-800 mt-2 text-sm mb-[280px]">
+            Click “View Report” to see how you did on this survey.
+          </p>
     
-        {/* Button container aligned to bottom-right of main content */}
-        <div className="flex justify-end absolute w-full left-0 bottom-[-4rem]">
-          <button
-            className={`bg-blue-600 text-white rounded px-4 py-2 ${
-              isViewingResults ? "opacity-50 cursor-not-allowed" : ""
-            }`}
-            onClick={() => setViewSurveyResults(() => true)}
-            disabled={isViewingResults}
-          >
-            {isViewingResults ? "Viewing Reports..." : "View Report"}
-          </button>
+          {/* Button container aligned to bottom-right of main content */}
+          <div className="flex justify-end absolute w-full left-0 bottom-[-4rem] px-4 sm:px-6 md:px-8">
+            <button
+              className={`bg-blue-600 text-white rounded px-4 py-2 ${
+                isViewingResults ? "opacity-50 cursor-not-allowed" : ""
+              }`}
+              onClick={() => setViewSurveyResults(() => true)}
+              disabled={isViewingResults}
+            >
+              {isViewingResults ? "Viewing Reports..." : "View Report"}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
-    
     );
+    
   }
 
   if (firstAttempt) {
@@ -634,11 +658,11 @@ const QuestionsComponent: React.FC = () => {
         <div className="m-4">
           <QuestionStepper steps={steps} currentStep={currentStep} />
         </div>
-        <main className="mx-auto w-3/5 bg-white rounded-lg shadow-md p-8">
+        <main className="mx-auto w-11/12 sm:w-4/5 md:w-3/5 bg-white rounded-lg shadow-md p-4 sm:p-6 md:p-8">
           <h1 className="text-2xl font-bold mb-4">
             Welcome to the CulTRUE assessment!
           </h1>
-
+    
           <section className="mb-6">
             <h2 className="font-semibold mb-2">Introduction:</h2>
             <p className="text-gray-700">
@@ -647,7 +671,7 @@ const QuestionsComponent: React.FC = () => {
               the results can be applied to improve the culture around you.
             </p>
           </section>
-
+    
           <section className="mb-6">
             <h2 className="font-semibold mb-2">Guidelines:</h2>
             <ul className="list-disc list-inside text-gray-700">
@@ -662,7 +686,7 @@ const QuestionsComponent: React.FC = () => {
               </li>
             </ul>
           </section>
-
+    
           <section className="mb-6">
             <p>Total Number of Prompts: {totalQuestions}</p>
             <p>Estimated Time Required: 10-15 minutes</p>
@@ -678,6 +702,7 @@ const QuestionsComponent: React.FC = () => {
         </div>
       </div>
     );
+    
   }
 
   if (factorImportanceBool) {
@@ -697,80 +722,80 @@ const QuestionsComponent: React.FC = () => {
 
   return (
     <div className="bg-gray-100 min-h-screen">
-  <Header userName="" userEmail="" />
-
-  <div className="m-4">
-    <QuestionStepper steps={steps} currentStep={currentStep} />
-  </div>
-
-  <div className="mx-auto w-3/5 bg-white rounded-lg shadow-md p-8 relative">
-    <ProgressBar
-      currentQuestion={currentQuestionNumber}
-      totalQuestions={totalQuestions}
-    />
-    <h2 className="text-xl font-semibold mb-2">
-      Question {currentQuestionNumber + 1} of {totalQuestions}:
-    </h2>
-    <p className="text-gray-700 mb-6">{currentQuestion.questionText}</p>
-
-    <div className="border border-gray-300 rounded-lg">
-      {Object.entries(optionMapping)
-        .reverse()
-        .map(([value, text], index, array) => (
-          <div
-            key={value}
-            className={`flex items-center p-3 cursor-pointer hover:bg-gray-100 ${
-              index !== array.length - 1 ? "border-b border-gray-300" : ""
-            } ${selectedOption === Number(value) ? "bg-blue-100" : ""}`}
-            onClick={() => handleOptionSelect(Number(value))}
+      <Header userName="" userEmail="" />
+  
+      <div className="m-4">
+        <QuestionStepper steps={steps} currentStep={currentStep} />
+      </div>
+  
+      <div className="mx-auto w-11/12 sm:w-4/5 md:w-3/5 bg-white rounded-lg shadow-md p-4 sm:p-6 md:p-8 relative">
+        <ProgressBar
+          currentQuestion={currentQuestionNumber}
+          totalQuestions={totalQuestions}
+        />
+        <h2 className="text-xl font-semibold mb-2">
+          Question {currentQuestionNumber + 1} of {totalQuestions}:
+        </h2>
+        <p className="text-gray-700 mb-6">{currentQuestion.questionText}</p>
+  
+        <div className="border border-gray-300 rounded-lg">
+          {Object.entries(optionMapping)
+            .reverse()
+            .map(([value, text], index, array) => (
+              <div
+                key={value}
+                className={`flex items-center p-3 cursor-pointer hover:bg-gray-100 ${
+                  index !== array.length - 1 ? "border-b border-gray-300" : ""
+                } ${selectedOption === Number(value) ? "bg-blue-100" : ""}`}
+                onClick={() => handleOptionSelect(Number(value))}
+              >
+                <div
+                  className={`mr-3 h-4 w-4 rounded-full border ${
+                    selectedOption === Number(value)
+                      ? "bg-blue-500 border-blue-500"
+                      : "border-gray-300"
+                  }`}
+                />
+                <label className="text-gray-700 flex-grow cursor-pointer">
+                  {text}
+                </label>
+              </div>
+            ))}
+        </div>
+  
+        {/* Button container */}
+        <div className="flex justify-between absolute w-full left-0 bottom-[-4rem] px-4 sm:px-6 md:px-8">
+          <button
+            className="px-4 py-2 bg-gray-400 text-white rounded"
+            onClick={handlePreviousQuestion}
+            disabled={currentQuestionNumber === 0}
           >
-            <div
-              className={`mr-3 h-4 w-4 rounded-full border ${
-                selectedOption === Number(value)
-                  ? "bg-blue-500 border-blue-500"
-                  : "border-gray-300"
-              }`}
-            />
-            <label className="text-gray-700 flex-grow cursor-pointer">
-              {text}
-            </label>
-          </div>
-        ))}
+            Back
+          </button>
+  
+          <button
+            className={`px-4 py-2 ${
+              selectedOption === null
+                ? "bg-blue-200 cursor-not-allowed"
+                : "bg-blue-600"
+            } text-white rounded`}
+            onClick={
+              currentFactor &&
+              currentQuestionIndex === currentQuestions.length - 1 &&
+              Object.keys(questionsByFactor).indexOf(currentFactor) ===
+                Object.keys(questionsByFactor).length - 1
+                ? handleNextQuestion
+                : handleNextQuestion
+            }
+            disabled={selectedOption === null}
+          >
+            Next Question
+          </button>
+        </div>
+      </div>
     </div>
-
-    {/* Button container */}
-    <div className="flex justify-between absolute w-full left-0 bottom-[-4rem]">
-      <button
-        className="px-4 py-2 bg-gray-400 text-white rounded"
-        onClick={handlePreviousQuestion}
-        disabled={currentQuestionNumber === 0}
-      >
-        Back
-      </button>
-
-      <button
-        className={`px-4 py-2 ${
-          selectedOption === null
-            ? "bg-blue-200 cursor-not-allowed"
-            : "bg-blue-600"
-        } text-white rounded`}
-        onClick={
-          currentFactor &&
-          currentQuestionIndex === currentQuestions.length - 1 &&
-          Object.keys(questionsByFactor).indexOf(currentFactor) ===
-            Object.keys(questionsByFactor).length - 1
-            ? handleNextQuestion
-            : handleNextQuestion
-        }
-        disabled={selectedOption === null}
-      >
-        Next Question
-      </button>
-    </div>
-  </div>
-</div>
-
-  )
+  );
+  
 };
 
 export default QuestionsComponent;

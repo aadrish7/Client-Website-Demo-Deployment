@@ -87,24 +87,25 @@ const MetricsBreakdown: React.FC<MetricsBreakdownProps> = ({
       <h2 className="text-lg mt-6 font-semibold text-gray-800 mb-4">
         Metrics Breakdown
       </h2>
-      <div className="flex mb-6 border">
-        {metricNames.map((metric) => (
-          <button
-            key={metric}
-            className={`flex-grow py-2 font-sm text-[12px] text-center ${
-              selectedMetric === metric
-                ? "text-gray-900 font-semibold bg-gray-100"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
-            onClick={() => setSelectedMetric(metric)}
-          >
-            <div className="flex items-center ml-2">
-              <Circle color={categoryColors[metric]} text="" size={12} />
-              <span className="ml-[4px]">{metric}</span>
-            </div>
-          </button>
-        ))}
+      <div className="flex flex-wrap mb-6 border">
+  {metricNames.map((metric) => (
+    <button
+      key={metric}
+      className={`flex-grow py-2 font-sm text-[12px] text-center ${
+        selectedMetric === metric
+          ? "text-gray-900 font-semibold bg-gray-100"
+          : "text-gray-500 hover:text-gray-700"
+      }`}
+      onClick={() => setSelectedMetric(metric)}
+    >
+      <div className="flex items-center ml-2">
+        <Circle color={categoryColors[metric]} text="" size={12} />
+        <span className="ml-[4px]">{metric}</span>
       </div>
+    </button>
+  ))}
+</div>
+
 
       {/* Metric Display */}
       <div className="mb-6">

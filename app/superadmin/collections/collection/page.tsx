@@ -81,7 +81,7 @@ const CollectionsPage: React.FC = () => {
         <div className="w-4/5 p-8">
           {/* Page Header */}
           <Breadcrumb />
-          <h1 className="text-2xl font-semibold mb-6">Collections</h1>
+          <h1 className="text-2xl font-semibold mb-6">Question Sets</h1>
 
           <div className="border p-4">
             {tableData && tableHeaders ? (

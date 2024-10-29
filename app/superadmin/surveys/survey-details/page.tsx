@@ -302,7 +302,7 @@ const SurveyDetailsPage = () => {
 
           <div className="flex space-x-4">
             <div className="border p-4 w-1/2">
-              <h1 className='mb-4'>Collections</h1>
+              <h1 className='mb-4'>Questions</h1>
               <Table headers={collectionTableHeaders} data={collectionData} handleClick={handleCollectionClick} underlineColumn='name' />
             </div>
             <div className="border p-4 w-1/2">

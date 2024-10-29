@@ -92,7 +92,7 @@ const CreateCollectionModal: React.FC<{
             className="border border-gray-300 rounded p-2 w-full bg-gray-100 text-sm"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Enter collection name"
+            placeholder="Enter question set name"
             disabled={isCreating}
           />
         </div>
@@ -105,7 +105,7 @@ const CreateCollectionModal: React.FC<{
             className="border border-gray-300 rounded p-2 w-full bg-gray-100 text-sm"
             value={tags}
             onChange={(e) => setTags(e.target.value)}
-            placeholder="Enter collection tags"
+            placeholder="Enter question set tags"
             disabled={isCreating}
           />
         </div>
@@ -685,7 +685,7 @@ const QuestionsPage: React.FC = () => {
                 className="bg-blue-600 text-white px-4 py-2 rounded-md"
                 onClick={() => setIsCollectionModalOpen(true)}
               >
-                Create Collection
+                Create Question Set
               </button>
               <button
                 className="bg-blue-600 text-white px-4 py-2 rounded-md"

@@ -14,11 +14,11 @@ export interface NavItem {
 export const navItems: NavItem[] = [
   { label: 'Company', href: '/superadmin', icon: HiBriefcase },
   {
-    label: 'Collections',
+    label: 'Questions',
     icon: IoIosList, // Import icons here
     subItems: [
       { label: 'Question Bank', href: '/superadmin/collections/questionbank' },
-      { label: 'Collection', href: '/superadmin/collections/collection' },
+      { label: 'Question Sets', href: '/superadmin/collections/collection' },
     ]
   },
   {
@@ -26,7 +26,7 @@ export const navItems: NavItem[] = [
     icon: RiMessage2Fill,
     subItems: [
       { label: 'Snippet Bank', href: '/superadmin/snippets' },
-      { label: 'Snippet Set', href: '/superadmin/snippets/snippetset' }
+      { label: 'Snippet Sets', href: '/superadmin/snippets/snippetset' }
     ]
   },
  

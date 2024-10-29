@@ -103,7 +103,7 @@ const CreateSurveyModal: React.FC<CreateSurveyModalProps> = ({
         {/* Collection Selector */}
         <div className="mb-6 mt-4">
           <label className="text-sm block font-medium mb-2 ">
-            Select Collection
+            Select Question Set
           </label>
           <select
             className="border border-gray-300 rounded p-2 w-full bg-gray-100 text-sm"
