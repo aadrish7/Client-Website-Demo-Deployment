@@ -10,7 +10,7 @@ const Breadcrumb = () => {
     return null;
   }
   else if (pathname.includes("/superadmin/collections/collection/collection-details")){
-    breadcrumbs.push({ label: 'Collections', path: '/superadmin/collections/collection' });
+    breadcrumbs.push({ label: 'Question Sets', path: '/superadmin/collections/collection' });
     breadcrumbs.push({label : "Details", pathname})
   }
   else if (pathname.includes("/superadmin/snippets/snippetset/details")){
