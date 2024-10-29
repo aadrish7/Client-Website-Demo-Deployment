@@ -196,6 +196,16 @@ const SurveyDetailsPage = () => {
   const handleOpenPopup = () => setIsPopupOpen(true);
   const handleClosePopup = () => setIsPopupOpen(false);
 
+  const handleCollectionClick = (collectionName: string) => {
+    const newPath = `/superadmin/collections/collection/collection-details?name=${encodeURIComponent(collectionName)}`;
+    router.push(newPath);
+    
+  };
+
+  const handleIdClick = (id: string) => {
+    router.push(`/superadmin/snippets/snippetset/details?name=${id}`);
+  };
+
   const fetchData = async () => {
     try {
       if (surveyName && companyId) { 
@@ -293,11 +303,11 @@ const SurveyDetailsPage = () => {
           <div className="flex space-x-4">
             <div className="border p-4 w-1/2">
               <h1 className='mb-4'>Collections</h1>
-              <Table headers={collectionTableHeaders} data={collectionData} handleClick={() => {}} underlineColumn='name' />
+              <Table headers={collectionTableHeaders} data={collectionData} handleClick={handleCollectionClick} underlineColumn='name' />
             </div>
             <div className="border p-4 w-1/2">
               <h1 className='mb-4'>Snippets</h1>
-              <Table headers={snippetTableHeaders} data={snippetData} handleClick={() => {}} underlineColumn='name' />
+              <Table headers={snippetTableHeaders} data={snippetData} handleClick={handleIdClick} underlineColumn='name' />
             </div>
           </div>
 

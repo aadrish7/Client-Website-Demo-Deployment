@@ -83,7 +83,7 @@ const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({
     const isMultipleOptionsSelected = selectedOptions.length > 1;
   
     const buttonClasses = isSingleOptionSelected
-      ? "text-blue-500 border-blue-500"
+      ? "bg-blue-500 text-white border-blue-500"
       : isMultipleOptionsSelected
       ? "bg-blue-500 text-white border-blue-500"
       : "text-gray-700 border-gray-300";
@@ -732,7 +732,7 @@ const AdminPage: React.FC = () => {
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div className="flex flex-col items-center w-full h-[400px] border-2 border-white rounded-sm p-4 bg-white">
                 <h2 className="text-sm font-semibold mb-2">
-                Factor Importance Amongst Employees
+                % of employees rated each factor as the most important
                 </h2>
                 <div className="w-full h-full">
                   <PieChart data={percentageFactorImportance} />

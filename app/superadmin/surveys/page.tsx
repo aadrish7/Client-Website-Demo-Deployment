@@ -326,7 +326,7 @@ const SurveysPage = () => {
         return;
       }
       setListOfSurveyNames(surveyList.map((s) => s.surveyName));
-      setTableHeaders(["survey name", "updated at", "edit", "manage"]);
+      setTableHeaders(["survey name", "updated at", "status", "manage"]);
       setTableData(
         surveyList.map((s) => ({
           id: s.id,
@@ -402,7 +402,7 @@ const SurveysPage = () => {
                               >
                                 Manage
                               </button>
-                            ) : header.toLowerCase() === "edit" ? (
+                            ) : header.toLowerCase() === "status" ? (
                               <button
                                 onClick={() => toggleStatus(row.id)}
                                 className={`inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-medium ${
