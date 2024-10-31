@@ -92,12 +92,10 @@ const SurveyComponent: React.FC<SurveyComponentProps> = ({
           Question {currentQuestionNumber + 1} of {totalQuestions}:
         </p>
         <p className="text-gray-700">
-          Rank the importance of each of these statements from 1-5 (5 = Very
-          Important, 1 = Not Very Important)
+        How important are the following characteristics to you in your role at the company? Please rank each five statements below on a scale of 1-5, where 1 is “Least Important” and 5 is “Most Important.”
         </p>
         <h2 className="text-gray-700 italic mb-5">
-          Each ranking position can only be selected once. Be sure to assign a
-          unique number to each option
+        Each number can only be used once.
         </h2>
   
         {/* Error message for duplicate rankings */}

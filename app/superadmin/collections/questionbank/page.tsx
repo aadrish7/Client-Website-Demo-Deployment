@@ -82,7 +82,7 @@ const CreateCollectionModal: React.FC<{
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-10">
       <div className="bg-white p-6 rounded-md shadow-lg w-full max-w-md">
-        <h2 className="text-lg font-semibold mb-7">Create New Collection</h2>
+        <h2 className="text-lg font-semibold mb-7">Create New Question Set</h2>
 
         {/* Name Input */}
         <div className="mb-6 mt-4">

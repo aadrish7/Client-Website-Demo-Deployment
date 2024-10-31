@@ -110,7 +110,7 @@ const CreateSurveyModal: React.FC<CreateSurveyModalProps> = ({
             value={collectionId}
             onChange={(e) => setCollectionId(e.target.value)}
           >
-            <option value="">Select a collection</option>
+            <option value="">Select a Question Set</option>
             {collections.map((collection) => (
               <option key={collection.id} value={collection.id}>
                 {collection.name}

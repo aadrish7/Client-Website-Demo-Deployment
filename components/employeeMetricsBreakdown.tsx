@@ -85,7 +85,7 @@ const MetricsBreakdown: React.FC<MetricsBreakdownProps> = ({
   return (
     <>
       <h2 className="text-lg mt-6 font-semibold text-gray-800 mb-4">
-        Metrics Breakdown
+        Metrics Breakdown - <span className="italic text-sm font-normal" >Click each tab to see your results</span>
       </h2>
       <div className="flex flex-wrap mb-6 border">
   {metricNames.map((metric) => (

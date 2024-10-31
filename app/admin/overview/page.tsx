@@ -312,7 +312,9 @@ const OverviewPage: React.FC = () => {
             <div className="text-gray-600 text-sm">
               <p>
                 {matchingSnippets.map((snippet: any, index: any) => (
-                  <span key={index}>{snippet.snippetText} </span>
+                  <span key={index}>{snippet.snippetText}
+                  <br/>
+                  </span>
                 ))}
               </p>
             </div>

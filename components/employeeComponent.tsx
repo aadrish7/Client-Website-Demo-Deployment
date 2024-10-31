@@ -169,10 +169,12 @@ const QuestionsComponent: React.FC = () => {
   const getQuestions = async () => {
     try {
       const { email } = await fetchUserAttributes();
-
+  
       if (!email) {
         throw new Error("User email is missing");
       }
+  
+      // Fetch all user records based on the email
       const filterForUser = {
         email: {
           eq: email,
@@ -182,77 +184,106 @@ const QuestionsComponent: React.FC = () => {
         client,
         filterForUser
       )();
+  
       if (!userList || userList.length === 0) {
         throw new Error(`No user found with email: ${email}`);
       }
-
-      const finalUser = userList[0];
-      if (!finalUser.id) {
-        throw new Error("User ID is missing");
-      }
-      setUserName(() => finalUser.firstName);
-
-      setUserId(() => finalUser.id);
-
-      const companyId = finalUser.companyId;
-      if (!companyId) {
-        throw new Error("User's company ID is missing");
-      }
-
-      const filterForSurvey = {
-        id: {
-          eq: finalUser.surveyId,
-        },
-      };
-      const SurveyList = await createPaginatedFetchFunctionForSurvey(
-        client,
-        filterForSurvey
-      )();
-
-      if (!SurveyList || SurveyList.length === 0) {
-        setNoQuestions(() => true);
-        throw new Error(`No active survey found for company ID: ${companyId}`);
-      }
-
-      const survey = SurveyList[0];
-      if (!survey.id) {
-        throw new Error("Survey ID is missing");
-      }
-
-      const collectionId = survey.collectionId;
-      if (!collectionId) {
-        throw new Error("Survey's collection ID is missing");
-      }
-
-      const snippetId = survey.snippetSetId;
-      if (!snippetId) {
-        throw new Error("Snippet ID is missing");
-      }
-      setSnippetId(() => snippetId);
-
-      setSurveyId(() => survey.id);
-
-      const filterForAverageSurveyResults = {
-        surveyId: {
-          eq: survey.id,
-        },
-        userId: {
-          eq: finalUser.id,
-        },
-      };
-      const averageSurveyResponses =
-        await createPaginatedFetchFunctionForAverageSurveyResults(
+  
+      let lastAttemptedSurveyResults = null;
+  
+      for (const userRecord of userList) {
+        const { id: userId, companyId, surveyId, firstName } = userRecord;
+  
+        if (!userId || !companyId || !surveyId) {
+          console.warn("Incomplete user record found");
+          continue;
+        }
+  
+        setUserName(() => firstName);
+        setUserId(() => userId);
+  
+        const filterForSurvey = {
+          id: {
+            eq: surveyId,
+          },
+        };
+        const surveyList = await createPaginatedFetchFunctionForSurvey(
+          client,
+          filterForSurvey
+        )();
+  
+        if (!surveyList || surveyList.length === 0) {
+          console.warn(`No survey found for survey ID: ${surveyId}`);
+          continue;
+        }
+  
+        const survey = surveyList[0];
+        const { collectionId, snippetSetId } = survey;
+  
+        if (!collectionId || !snippetSetId) {
+          console.warn("Survey data is incomplete");
+          continue;
+        }
+  
+        setSnippetId(() => snippetSetId);
+        setSurveyId(() => survey.id);
+  
+        // Check if the user has already attempted this survey
+        const filterForAverageSurveyResults = {
+          surveyId: { eq: survey.id },
+          userId: { eq: userId },
+        };
+  
+        const averageSurveyResponses = await createPaginatedFetchFunctionForAverageSurveyResults(
           client,
           filterForAverageSurveyResults
         )();
-
-      if (averageSurveyResponses && averageSurveyResponses.length > 0) {
-        const allanswersjson = averageSurveyResponses[0].averageScorejson;
-        if (!allanswersjson) {
-          throw new Error("No answers found in average survey results");
+  
+        if (averageSurveyResponses && averageSurveyResponses.length > 0) {
+          // User has already attempted this survey, store it as last attempt
+          lastAttemptedSurveyResults = averageSurveyResponses;
+          continue;
         }
+  
+        // Fetch questions if the survey hasn't been attempted
+        const filterForQuestions = {
+          collectionId: {
+            eq: collectionId,
+          },
+        };
+        const questions = await createPaginatedFetchFunctionForQuestion(
+          client,
+          filterForQuestions
+        )();
+  
+        if (!questions || questions.length === 0) {
+          console.warn(`No questions found for collection ID: ${collectionId}`);
+          continue;
+        }
+  
+        setTotalQuestions(() => questions.length + 1);
+  
+        // Group the questions by their factor
+        const questionsByFactor: QuestionsByFactor = {};
+        questions.forEach((question) => {
+          const factor = question.factor;
+          if (!factor) {
+            console.warn("Question factor is missing");
+            return;
+          }
+          if (!questionsByFactor[factor]) {
+            questionsByFactor[factor] = [];
+          }
+          questionsByFactor[factor].push(question);
+        });
+  
+        return questionsByFactor;
+      }
+  
+      // If all surveys have been attempted, show analytics for the last attempted survey
+      if (lastAttemptedSurveyResults) {
         const allResponses: any[] = [];
-        averageSurveyResponses.forEach((response) => {
+        lastAttemptedSurveyResults.forEach((response) => {
           if (typeof response.averageScorejson === "string") {
             const surveyResponse = JSON.parse(response.averageScorejson);
             allResponses.push(surveyResponse);
@@ -263,7 +294,7 @@ const QuestionsComponent: React.FC = () => {
             );
           }
         });
-        //convert into userSelections type
+  
         const userSelections: UserSelections = {};
         allResponses.forEach((response) => {
           for (const key in response) {
@@ -273,53 +304,22 @@ const QuestionsComponent: React.FC = () => {
             userSelections[key].push(response[key]);
           }
         });
+  
         setCurrentStep((currentStep) => currentStep + 1);
         setUserSelections(() => userSelections);
         setViewSurveyResults(() => true);
-        return null;
+      } else {
+        // If no surveys left to attempt and no analytics available, mark no questions
+        setNoQuestions(() => true);
       }
-
-      // Fetch all questions that belong to the collection using collectionId
-      const filterForQuestions = {
-        collectionId: {
-          eq: collectionId,
-        },
-      };
-      const questions = await createPaginatedFetchFunctionForQuestion(
-        client,
-        filterForQuestions
-      )();
-
-      if (!questions || questions.length === 0) {
-        throw new Error(
-          `No questions found for collection ID: ${collectionId}`
-        );
-      }
-
-      setTotalQuestions(() => questions.length + 1);
-
-      // Group the questions by their factor
-      const questionsByFactor: QuestionsByFactor = {};
-      questions.forEach((question) => {
-        const factor = question.factor;
-        if (!factor) {
-          console.warn("Question factor is missing");
-          return;
-        }
-
-        if (!questionsByFactor[factor]) {
-          questionsByFactor[factor] = [];
-        }
-
-        questionsByFactor[factor].push(question);
-      });
-
-      return questionsByFactor;
+  
+      return null;
     } catch (error: any) {
       console.error("Error fetching questions:", error.message || error);
       return {};
     }
   };
+  
 
   const loadQuestions = async () => {
     try {
@@ -550,7 +550,7 @@ const QuestionsComponent: React.FC = () => {
         </div>
         <div className="mx-auto w-11/12 sm:w-4/5 md:max-w-2xl p-4 sm:p-6 md:p-8 bg-white rounded-lg shadow-md">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">
-            Hi <span className="text-blue-600">{userName}!</span> Here are your
+            Hi <span className="text-blue-600">{userName},</span> Here are your
             survey results.
           </h2>
     
@@ -566,6 +566,7 @@ const QuestionsComponent: React.FC = () => {
                   return (
                     <span className="text-gray-600 mt-2" key={index}>
                       {snippet.snippetText}{" "}
+                      <br />
                     </span>
                   );
                 }
@@ -666,9 +667,7 @@ const QuestionsComponent: React.FC = () => {
           <section className="mb-6">
             <h2 className="font-semibold mb-2">Introduction:</h2>
             <p className="text-gray-700">
-              This assessment is not a measure of competence, it's a measure of{" "}
-              <strong>fulfillment</strong> -- the more honest you are, the more
-              the results can be applied to improve the culture around you.
+            Your input matters. This confidential survey is an opportunity to share your thoughts and feelings about your role and experience at the company. Your responses will enable us to identify areas where we can improve.
             </p>
           </section>
     

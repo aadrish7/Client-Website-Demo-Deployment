@@ -4,6 +4,7 @@ import React, {
   useEffect,
   useLayoutEffect,
   ChangeEvent,
+  useRef,
 } from "react";
 import { generateClient } from "aws-amplify/data";
 import { Schema } from "@/amplify/data/resource";
@@ -42,6 +43,7 @@ const StackedBarChart = dynamic(
     loading: () => <div className="text-center py-4">Loading Graph...</div>,
   }
 );
+
 type MultiSelectDropdownProps = {
   label: string;
   options: string[];
@@ -56,12 +58,33 @@ const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({
   onChange,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Check if "Select All" should be checked
+  // Close dropdown if clicked outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
+
   const isAllSelected = selectedOptions.length === options.length;
 
-  // Handle individual checkbox change
-  const handleCheckboxChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { value, checked } = event.target;
     if (checked) {
       onChange([...selectedOptions, value]);
@@ -70,21 +93,17 @@ const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({
     }
   };
 
-  // Handle "Select All" change
-  const handleSelectAllChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleSelectAllChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const { checked } = event.target;
-    if (checked) {
-      onChange(options); // Select all options
-    } else {
-      onChange([]); // Deselect all options
-    }
+    onChange(checked ? options : []);
   };
 
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
   };
 
-  // Dynamically determine styles based on selected options
   const isSingleOptionSelected = selectedOptions.length === 1;
   const isMultipleOptionsSelected = selectedOptions.length > 1;
 
@@ -95,9 +114,8 @@ const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({
     : "text-gray-700 border-gray-300";
 
   return (
-    <div className="relative inline-block text-left w-3/5">
+    <div className="relative inline-block text-left w-3/5" ref={dropdownRef}>
       <div>
-        {/* Dropdown Button */}
         <button
           type="button"
           className={`inline-flex justify-between w-3/4 mx-1 rounded-md border shadow-sm px-4 py-2 text-sm font-medium ${buttonClasses}`}
@@ -122,11 +140,9 @@ const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({
         </button>
       </div>
 
-      {/* Dropdown Menu */}
       {isOpen && (
         <div className="origin-top-right absolute z-10 mt-2 w-full rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
           <div className="py-1">
-            {/* Select All Option */}
             <label className="flex items-center px-4 py-2">
               <input
                 type="checkbox"
@@ -136,7 +152,6 @@ const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({
               <span className="ml-2">Select All</span>
             </label>
 
-            {/* Individual Options */}
             {options.map((option) => (
               <label key={option} className="flex items-center px-4 py-2">
                 <input
@@ -201,6 +216,10 @@ const AdminPage: React.FC = () => {
   const [averageScores, setAverageScores] = useState<{ [key: string]: number }>(
     {}
   );
+  const [numOfEmployeesAttendedSurvey, setNumOfEmployeesAttendedSurvey] =
+    useState(0);
+
+  const [totalNumOfEmployees, setTotalNumOfEmployees] = useState(0);
   const [avgQuesstionScoresArray, setAvgQuestionScoresArray] = useState<{
     [key: string]: number;
   }>({});
@@ -344,7 +363,7 @@ const AdminPage: React.FC = () => {
       "Growth Satisfaction": 1,
       Purpose: 2,
       Advocacy: 3,
-      Alignment: 4,
+      Flexibility: 4,
     };
 
     if (Object.keys(EachfactorImportanceIndividualPercentage).length === 0) {
@@ -483,6 +502,8 @@ const AdminPage: React.FC = () => {
         filterForSurveyResponses
       )();
 
+    setNumOfEmployeesAttendedSurvey(() => beforeFiltersurveyResponses.length);
+
     const filterForFactorImportanceResponses = {
       surveyId: {
         eq: survey.id,
@@ -504,6 +525,17 @@ const AdminPage: React.FC = () => {
         client,
         filterForIndividualSurveyResponses
       )();
+
+    const filterForAllUsers = {
+      surveyId: {
+        eq: survey.id,
+      },
+    };
+    const allUsers = await createPaginatedFetchFunctionForUser(
+      client,
+      filterForAllUsers
+    )();
+    setTotalNumOfEmployees(() => allUsers.length);
 
     // Store raw data in state
     setRawSurveyResponses(beforeFiltersurveyResponses);
@@ -546,84 +578,84 @@ const AdminPage: React.FC = () => {
     } = filter || {};
     // make an if condition to check if the length of rawSurveyResponses is greater than 0
     if (rawSurveyResponses.length > 0) {
-    // Update filtered list of employees based on filters
-    let updatedListOfEmployees = [...listOfEmployees];
+      // Update filtered list of employees based on filters
+      let updatedListOfEmployees = [...listOfEmployees];
 
-    if (
-      department.length === 0 &&
-      gender.length === 0 &&
-      age.length === 0 &&
-      yearsOfService.length === 0
-    ) {
-      updatedListOfEmployees = []; // No data if any filter is empty
-    } else {
-      if (department.length > 0) {
-        updatedListOfEmployees = updatedListOfEmployees.filter((emp) =>
-          department.includes(emp.department)
-        );
-      }
+      if (
+        department.length === 0 &&
+        gender.length === 0 &&
+        age.length === 0 &&
+        yearsOfService.length === 0
+      ) {
+        updatedListOfEmployees = []; // No data if any filter is empty
+      } else {
+        if (department.length > 0) {
+          updatedListOfEmployees = updatedListOfEmployees.filter((emp) =>
+            department.includes(emp.department)
+          );
+        }
 
-      if (gender.length > 0) {
-        updatedListOfEmployees = updatedListOfEmployees.filter((emp) =>
-          gender.includes(emp.gender)
-        );
-      }
+        if (gender.length > 0) {
+          updatedListOfEmployees = updatedListOfEmployees.filter((emp) =>
+            gender.includes(emp.gender)
+          );
+        }
 
-      if (age.length > 0) {
-        updatedListOfEmployees = updatedListOfEmployees.filter((emp) => {
-          const ageValue = calculateAge(emp.dob);
-          return age.some((ageRange) => {
-            if (ageRange === "Age 18-24")
-              return ageValue >= 18 && ageValue <= 24;
-            if (ageRange === "Age 25-39")
-              return ageValue >= 25 && ageValue <= 39;
-            if (ageRange === "Age 40-55")
-              return ageValue >= 40 && ageValue <= 55;
-            if (ageRange === "Age 56+") return ageValue >= 56;
-            return false;
+        if (age.length > 0) {
+          updatedListOfEmployees = updatedListOfEmployees.filter((emp) => {
+            const ageValue = calculateAge(emp.dob);
+            return age.some((ageRange) => {
+              if (ageRange === "Age 18-24")
+                return ageValue >= 18 && ageValue <= 24;
+              if (ageRange === "Age 25-39")
+                return ageValue >= 25 && ageValue <= 39;
+              if (ageRange === "Age 40-55")
+                return ageValue >= 40 && ageValue <= 55;
+              if (ageRange === "Age 56+") return ageValue >= 56;
+              return false;
+            });
           });
-        });
-      }
+        }
 
-      if (yearsOfService.length > 0) {
-        updatedListOfEmployees = updatedListOfEmployees.filter((emp) => {
-          const years = calculateYearsOfService(emp.hireDate);
-          return yearsOfService.some((serviceRange) => {
-            if (serviceRange === "1-3 years") return years >= 1 && years <= 3;
-            if (serviceRange === "3-5 years") return years >= 3 && years <= 5;
-            if (serviceRange === "5+ years") return years >= 5;
-            return false;
+        if (yearsOfService.length > 0) {
+          updatedListOfEmployees = updatedListOfEmployees.filter((emp) => {
+            const years = calculateYearsOfService(emp.hireDate);
+            return yearsOfService.some((serviceRange) => {
+              if (serviceRange === "1-3 years") return years >= 1 && years <= 3;
+              if (serviceRange === "3-5 years") return years >= 3 && years <= 5;
+              if (serviceRange === "5+ years") return years >= 5;
+              return false;
+            });
           });
-        });
+        }
+
+        setCopyListOfEmployees(updatedListOfEmployees);
+
+        // Filter the responses based on the updated list of employees
+        setFilteredSurveyResponses(
+          rawSurveyResponses.filter((response) =>
+            updatedListOfEmployees.some((emp) => emp.id === response.userId)
+          )
+        );
+
+        setFilteredFactorImportanceResponses(
+          rawFactorImportanceResponses.filter((response) =>
+            updatedListOfEmployees.some((emp) => emp.id === response.userId)
+          )
+        );
+
+        setFilteredIndividualSurveyResponses(
+          rawIndividualSurveyResponses.filter((response) =>
+            updatedListOfEmployees.some((emp) => emp.id === response.userId)
+          )
+        );
+
+        setLoadingPieChart(() => false);
+        setLoadingStackedBarChart(() => false);
+        setLoadingBarChart(() => false);
+        setLoadingAdminBarChart(() => false);
       }
-
-      setCopyListOfEmployees(updatedListOfEmployees);
-
-      // Filter the responses based on the updated list of employees
-      setFilteredSurveyResponses(
-        rawSurveyResponses.filter((response) =>
-          updatedListOfEmployees.some((emp) => emp.id === response.userId)
-        )
-      );
-
-      setFilteredFactorImportanceResponses(
-        rawFactorImportanceResponses.filter((response) =>
-          updatedListOfEmployees.some((emp) => emp.id === response.userId)
-        )
-      );
-
-      setFilteredIndividualSurveyResponses(
-        rawIndividualSurveyResponses.filter((response) =>
-          updatedListOfEmployees.some((emp) => emp.id === response.userId)
-        )
-      );
-
-      setLoadingPieChart(() => false);
-      setLoadingStackedBarChart(() => false);
-      setLoadingBarChart(() => false);
-      setLoadingAdminBarChart(() => false);
     }
-  }
   }, [
     filter,
     listOfEmployees,
@@ -739,7 +771,7 @@ const AdminPage: React.FC = () => {
     "Growth Satisfaction",
     "Purpose",
     "Advocacy",
-    "Alignment",
+    "Flexibility",
   ];
 
   return (
@@ -749,6 +781,13 @@ const AdminPage: React.FC = () => {
         <Sidebar activePath="/admin/analytics" />
         <div className="w-4/5 p-3 bg-gray-50">
           <Breadcrumb />
+          {numOfEmployeesAttendedSurvey > 0 && totalNumOfEmployees > 0 && (
+            <p className="font-light mb-2">
+              {numOfEmployeesAttendedSurvey} out of {totalNumOfEmployees}{" "}
+              participants have completed the survey
+            </p>
+          )}
+
           <div className="flex mb-4 gap-0.5">
             {/* Year of Service Dropdown */}
             <MultiSelectDropdown
@@ -798,7 +837,7 @@ const AdminPage: React.FC = () => {
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div className="flex flex-col items-center w-full h-[400px] border-2 border-white rounded-sm p-4 bg-white">
                 <h2 className="text-sm font-semibold mb-2">
-                % of employees rated each factor as the most important
+                  % of employees rated each factor as the most important
                 </h2>
                 <div className="w-full h-full">
                   {loadingPieChart ? (
