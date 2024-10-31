@@ -314,6 +314,7 @@ const OverviewPage: React.FC = () => {
                 {matchingSnippets.map((snippet: any, index: any) => (
                   <span key={index}>{snippet.snippetText}
                   <br/>
+                  <br/>
                   </span>
                 ))}
               </p>

@@ -550,7 +550,7 @@ const QuestionsComponent: React.FC = () => {
         </div>
         <div className="mx-auto w-11/12 sm:w-4/5 md:max-w-2xl p-4 sm:p-6 md:p-8 bg-white rounded-lg shadow-md">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">
-            Hi <span className="text-blue-600">{userName},</span> Here are your
+            Hi <span className="text-blue-600">{userName},</span> here are your
             survey results.
           </h2>
     
@@ -567,6 +567,7 @@ const QuestionsComponent: React.FC = () => {
                     <span className="text-gray-600 mt-2" key={index}>
                       {snippet.snippetText}{" "}
                       <br />
+                      <br/>
                     </span>
                   );
                 }
