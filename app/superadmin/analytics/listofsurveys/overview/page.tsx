@@ -256,23 +256,26 @@ const AdminPage: React.FC = () => {
 
   const fetchEmployees = async () => {
     const idOfSurvey = searchParams.get("surveyId") || "";
-    const { data: employees } = await client.models.User.list({
-      filter: {
-        and: [
-          {
-            surveyId: {
-              eq: idOfSurvey,
-            },
+
+    const filterForEmployees = {
+      and: [
+        {
+          surveyId: {
+            eq: idOfSurvey,
           },
-          {
-            role: {
-              eq: "employee",
-            },
+        },
+        {
+          role: {
+            eq: "employee",
           },
-        ],
-      },
-      limit: 10000,
-    });
+        },
+      ],
+    };
+
+    const employees = await createPaginatedFetchFunctionForUser(
+      client,
+      filterForEmployees
+    )();
 
     if (employees && employees.length > 0) {
       setListOfEmployees(employees);
@@ -455,15 +458,15 @@ const AdminPage: React.FC = () => {
 
   const fetchData = async () => {
     const idOfSurvey = searchParams.get("surveyId") || "";
-
-    const { data: surveys } = await client.models.Survey.list({
-      filter: {
-        id: {
-          eq: idOfSurvey,
-        },
+    const filterForSurvey = {
+      id: {
+        eq: idOfSurvey,
       },
-      limit: 10000,
-    });
+    };
+    const surveys = await createPaginatedFetchFunctionForSurvey(
+      client,
+      filterForSurvey
+    )();
 
     if (surveys.length === 0) {
       console.error("No surveys found for company:");
@@ -474,25 +477,43 @@ const AdminPage: React.FC = () => {
     setSurveyId(survey.id);
 
     // Fetch data once and store it
-    const { data: beforeFiltersurveyResponses } =
-      await client.models.AverageSurveyResults.list({
-        filter: { surveyId: { eq: survey.id } },
-        limit: 10000,
-      });
+    const filterForSurveyResponses = {
+      surveyId: {
+        eq: survey.id,
+      },
+    };
+
+    const beforeFiltersurveyResponses =
+      await createPaginatedFetchFunctionForAverageSurveyResults(
+        client,
+        filterForSurveyResponses
+      )();
 
     setNumOfEmployeesAttendedSurvey(() => beforeFiltersurveyResponses.length);
 
-    const { data: beforeFilterfactorImportanceResponses } =
-      await client.models.FactorImportance.list({
-        filter: { surveyId: { eq: survey.id } },
-        limit: 10000,
-      });
+    const filterForFactorImportanceResponses = {
+      surveyId: {
+        eq: survey.id,
+      },
+    };
+    const beforeFilterfactorImportanceResponses =
+      await createPaginatedFetchFunctionForFactorImportance(
+        client,
+        filterForFactorImportanceResponses
+      )();
 
-    const { data: beforeFilteringIndividualSurveyResponses } =
-      await client.models.SurveyResults.list({
-        filter: { surveyId: { eq: survey.id } },
-        limit: 10000,
-      });
+    
+      const filterForIndividualSurveyResponses = {
+        surveyId: {
+          eq: survey.id,
+        },
+      };
+      const beforeFilteringIndividualSurveyResponses =
+        await createPaginatedFetchFunctionForSurveyResults(
+          client,
+          filterForIndividualSurveyResponses
+        )();
+        
     const filterForAllUsers = {
       surveyId: {
         eq: survey.id,

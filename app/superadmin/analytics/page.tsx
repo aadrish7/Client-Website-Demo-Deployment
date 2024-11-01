@@ -66,60 +66,6 @@ const Analytics = () => {
       fetchCompanies();
     }, []);
   
-    const navItems = [
-      {
-        label: "📦 Collections",
-        active: false,
-        subItems: [
-          {
-            label: "📋 Question Bank",
-            active: false,
-            href: "/superadmin/collections/questionbank",
-          },
-          {
-            label: "📦 Collection",
-            active: false,
-            href: "/superadmin/collections/collection",
-          },
-        ],
-      },
-      {
-        label: "📦 Snippets",
-        active: false,
-        subItems: [
-          {
-            label: "📋 Snippet Bank",
-            active: false,
-            href: "/superadmin/snippets",
-          },
-          {
-            label: "📦 Snippet Set",
-            active: false,
-            href: "/superadmin/snippets/snippetset",
-          },
-        ],
-      },
-      {
-        label: "📦 Overview Snippets",
-        active: false,
-        subItems: [
-          {
-            label: "📋 Snippet Bank",
-            active: false,
-            href: "/superadmin/overviewsnippets",
-          },
-          {
-            label: "📦 Snippet Set",
-            active: false,
-            href: "/superadmin/overviewsnippets/overviewsnippetset",
-          },
-        ],
-      },
-  
-      { label: "🏢 Company", active: false, href: "/superadmin" },
-      { label: "📊 Analytics", active: true, href: "/superadmin/analytics" },
-    ].filter((item) => item !== undefined);
-  
     const handleClosePopUp = () => {
       setPopUp(false);
       fetchCompanies();

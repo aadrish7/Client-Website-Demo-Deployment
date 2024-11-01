@@ -35,69 +35,70 @@ function ConfirmSignUpContent() {
   }
 
   return (
-    <div className="bg-black min-h-screen flex justify-center items-center">
-    <div className="relative z-10 w-[850px] h-[500px] flex">
-      <div className="w-1/2 h-full">
-        <img
-          src="/landingPageLogo.png"
-          alt="Background Logo"
-          className="object-cover w-full h-full opacity-70"
-        />
-      </div>
-  
-      <div className="w-1/2 flex items-center justify-end">
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white shadow-md rounded-lg px-6 pt-6 pb-8 w-full max-w-md h-auto"
-        >
-          <h2 className="text-2xl font-bold mb-4">Confirm Your Sign Up</h2>
-  
-          <div className="mb-3">
-            <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="email">
-              Your email
-            </label>
-            <input
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 text-sm leading-tight focus:outline-none focus:shadow-outline bg-gray-100"
-              id="email"
-              name="email"
-              type="email"
-              value={email}
-              readOnly
-              aria-readonly="true"
-            />
-          </div>
-  
-          <div className="mb-3">
-            <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="code">
-              Confirmation Code
-            </label>
-            <input
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 text-sm leading-tight focus:outline-none focus:shadow-outline"
-              id="code"
-              name="code"
-              type="text"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              required
-            />
-          </div>
-  
-          {error && (
-            <p className="text-red-500 text-sm mb-3">{error}</p>
-          )}
-  
-          <div className="mb-3">
-            <button
-              type="submit"
-              className="w-full bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-sm focus:outline-none focus:shadow-outline transition duration-300"
-            >
-              Confirm
-            </button>
-          </div>
-        </form>
-      </div>
+<div className="bg-black min-h-screen flex justify-center items-center overflow-hidden">
+  <div className="relative z-10 w-full max-w-[850px] h-full max-h-[90vh] flex flex-col md:flex-row">
+    <div className="w-full md:w-1/2 h-full">
+      <img
+        src="/landingPageLogo.png"
+        alt="Background Logo"
+        className="object-cover w-full h-full opacity-70"
+      />
+    </div>
+
+    <div className="w-full md:w-1/2 flex items-center justify-center md:justify-end px-4 md:px-0">
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white shadow-md rounded-lg px-6 pt-6 pb-8 w-full max-w-md h-auto overflow-auto"
+      >
+        <h2 className="text-2xl font-bold mb-4">Confirm Your Sign Up</h2>
+
+        <div className="mb-3">
+          <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="email">
+            Your email
+          </label>
+          <input
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 text-sm leading-tight focus:outline-none focus:shadow-outline bg-gray-100"
+            id="email"
+            name="email"
+            type="email"
+            value={email}
+            readOnly
+            aria-readonly="true"
+          />
+        </div>
+
+        <div className="mb-3">
+          <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="code">
+            Confirmation Code
+          </label>
+          <input
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 text-sm leading-tight focus:outline-none focus:shadow-outline"
+            id="code"
+            name="code"
+            type="text"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            required
+          />
+        </div>
+
+        {error && (
+          <p className="text-red-500 text-sm mb-3">{error}</p>
+        )}
+
+        <div className="mb-3">
+          <button
+            type="submit"
+            className="w-full bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-sm focus:outline-none focus:shadow-outline transition duration-300"
+          >
+            Confirm
+          </button>
+        </div>
+      </form>
     </div>
   </div>
+</div>
+
   
   );
 }

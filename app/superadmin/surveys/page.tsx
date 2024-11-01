@@ -176,70 +176,6 @@ interface EditSurveyModalProps {
   currentStatus: boolean;
 }
 
-const EditSurveyModal: React.FC<EditSurveyModalProps> = ({
-  onClose,
-  onUpdate,
-  surveyId,
-  currentStatus,
-}) => {
-  const [status, setStatus] = useState(currentStatus);
-
-  const handleSubmit = async () => {
-    try {
-      await client.models.Survey.update({
-        id: surveyId,
-        start: status,
-      });
-      onUpdate();
-      onClose();
-    } catch (error) {
-      console.error("Failed to update survey", error);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-        <h2 className="text-lg font-semibold mb-4">Edit Survey Status</h2>
-        <div className="mb-4">
-          <label className="block mb-2">
-            <input
-              type="radio"
-              checked={status}
-              onChange={() => setStatus(true)}
-              className="mr-2"
-            />
-            Start Survey
-          </label>
-          <label className="block">
-            <input
-              type="radio"
-              checked={!status}
-              onChange={() => setStatus(false)}
-              className="mr-2"
-            />
-            End Survey
-          </label>
-        </div>
-        <div className="flex justify-end">
-          <button
-            onClick={onClose}
-            className="bg-gray-500 text-white px-4 py-2 rounded-md mr-2"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md"
-          >
-            Update
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 const SurveysPage = () => {
   const [tableHeaders, setTableHeaders] = useState<string[]>([]);
   const [listOfSurveyNames, setListOfSurveyNames] = useState<string[]>([]);
@@ -406,10 +342,10 @@ const SurveysPage = () => {
                               <button
                                 onClick={() => toggleStatus(row.id)}
                                 className={`inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-medium ${
-                                  row.start ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"
+                                  !row.start ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"
                                 }`}
                               >
-                                {row.start ? "Stop" : "Start"}
+                                {row.start ? "Start" : "Stop"}
                               </button>
                             ) : (
                               row[header as keyof typeof row]
