@@ -46,13 +46,9 @@ const SurveyComponent: React.FC<SurveyComponentProps> = ({
     );
 
     const hasDuplicates = selectedRanks.length !== new Set(selectedRanks).size;
-
-    // Check if all values are selected
-    console.log("selectedValues", selectedValues);
     const allSelected = Object.values(selectedValues).every(
       (value) => value !== null
     );
-    console.log("allSelected", allSelected);
 
     // If duplicates exist, show error message
     if (hasDuplicates) {

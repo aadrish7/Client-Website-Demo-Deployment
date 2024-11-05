@@ -70,7 +70,6 @@ const MetricsBreakdown: React.FC<MetricsBreakdownProps> = ({
   arrOfTextSnippetsId,
   snippets,
 }) => {
-  console.log("snippets in metrics 1", snippets);
   const metricNames = Object.keys(averages);
   const [selectedMetric, setSelectedMetric] = useState(metricNames[0]); // Default to the first metric
 

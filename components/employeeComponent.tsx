@@ -85,7 +85,6 @@ const QuestionsComponent: React.FC = () => {
   const email = useUserStore((state) => state.userEmail);
 
   async function handleFinish() {
-    console.log("in handle finish");
     const updatedSelections: Record<
       string,
       { questionId: string | undefined; selection: string }[]
@@ -493,14 +492,12 @@ const QuestionsComponent: React.FC = () => {
               client,
               filterForSnippets
             )();
-          console.log("beforeFilterSnippets", beforeFilterSnippets);
           const filteredSnippets = beforeFilterSnippets.filter(
             (snippet: any) =>
               snippet.snippetSetId === snippetId &&
               snippet.disabled === true &&
               snippet.type !== "adminoverview"
           );
-          console.log("filteredSnippets", filteredSnippets);
           const snippets = filteredSnippets;
 
           if (snippets.length > 0) {
@@ -527,9 +524,6 @@ const QuestionsComponent: React.FC = () => {
                 Object.keys(averageSurveyResults).indexOf(factorB)
               );
             });
-
-            // Reverse the sorted snippets if needed
-            console.log("matchedSnippets", matchedSnippets);
             setMatchingSnippets(matchedSnippets);
           }
         } catch (error) {

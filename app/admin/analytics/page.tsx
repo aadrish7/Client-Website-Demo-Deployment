@@ -329,8 +329,6 @@ const AdminPage: React.FC = () => {
         return acc;
       }, {} as { [factor: string]: { [score: number]: number } });
 
-    console.log("after step 1", EachfactorImportanceIndividualCount);
-
     // Step 2: Calculate percentages
     const EachfactorImportanceIndividualPercentage = Object.keys(
       EachfactorImportanceIndividualCount
@@ -355,7 +353,6 @@ const AdminPage: React.FC = () => {
       return acc;
     }, {} as { [factor: string]: { [score: string]: number } });
 
-    console.log("after step 2", EachfactorImportanceIndividualPercentage);
 
     // Step 3: Map factor scores to ratings data
     const factorWithIndexes: { [key: string]: number } = {
@@ -388,8 +385,6 @@ const AdminPage: React.FC = () => {
         }
       }
     }
-
-    console.log("after step 3", ratingsData);
     setRatingsData(ratingsData);
   };
 
@@ -399,10 +394,6 @@ const AdminPage: React.FC = () => {
     // Step 1: Filter responses to include only those with a score of 5
     const factorImportanceResponsesFiltered = factorImportanceResponses.filter(
       (response) => response.score === 5
-    );
-    console.log(
-      "5factorImportanceResponsesFiltered",
-      factorImportanceResponsesFiltered
     );
 
     // Step 2: Count occurrences of each factor
@@ -469,7 +460,6 @@ const AdminPage: React.FC = () => {
 
   const fetchData = async () => {
     const idOfSurvey = searchParams.get("surveyId") || "";
-    console.log("fetching data for surveyId:", idOfSurvey);
 
     const filterForSurvey = {
       id: {

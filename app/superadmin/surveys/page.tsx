@@ -75,7 +75,6 @@ const CreateSurveyModal: React.FC<CreateSurveyModalProps> = ({
         return;
       }
       const {data:surveyCreated} = await client.models.Survey.create(survey);
-      console.log("Survey created", surveyCreated);
       onCreate();
       onClose();
     } catch (error) {
@@ -243,7 +242,6 @@ const SurveysPage = () => {
       id: surveyId,
       start: !survey.start,
     });
-    console.log("Survey updated", updatedSurvey);
     setTableData((prevData) =>
       prevData.map((survey) =>
         survey.id === surveyId

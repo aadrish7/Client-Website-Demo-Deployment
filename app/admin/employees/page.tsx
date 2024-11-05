@@ -211,7 +211,6 @@ const EmployeesPage: React.FC = () => {
       ],
     };
     const listOfEmployees = await createPaginatedFetchFunctionForUser(client, filterForEmployees)();
-    console.log("listOfEmployees", listOfEmployees);
     const filterForSurveyResults = {
       surveyId: {
         eq: survey.id,
@@ -245,7 +244,6 @@ const EmployeesPage: React.FC = () => {
   };
 
   useEffect(() => {
-    console.log("search params value", searchParams.get("surveyId"));
     if (searchParams.has("surveyId")) {
       fetchData();
     }

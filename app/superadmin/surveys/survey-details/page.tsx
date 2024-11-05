@@ -247,7 +247,6 @@ const SurveyDetailsPage = () => {
             surveyId: { eq: surveyID }
           };
           const users = await createPaginatedFetchFunctionForUser(client, filterForUser)();
-          console.log('Employee List:', users);
 
           const formattedEmployees = users.map(emp => ({
             id: emp.id, // Store the employee ID for deletion
@@ -282,7 +281,6 @@ const SurveyDetailsPage = () => {
       if (errors) {
         console.error("Error deleting employee:", errors);
       } else {
-        console.log("Employee deleted successfully:", deletedEmployee);
         // Refresh the employee data after deletion
         fetchData();
       }

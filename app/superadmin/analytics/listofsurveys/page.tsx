@@ -37,7 +37,6 @@ const AdminPage: React.FC = () => {
   const fetchData = async () => {
     const CompanyId = searchParams.get("companyId");
     const companyId = searchParams.get("companyId");
-    console.log("CompanyId", CompanyId);
     if (!CompanyId) {
       console.error("No company id found in query params");
       return;
@@ -52,7 +51,6 @@ const AdminPage: React.FC = () => {
       console.error("No company found with id:", CompanyId);
       return;
     }
-    console.log("companyData", companyData);
 
     const userAttributes = companyData[0].adminEmail;
     const filterForUser = {

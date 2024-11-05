@@ -567,10 +567,6 @@ const AdminPage: React.FC = () => {
 
     // Update filtered list of employees based on filters
     let updatedListOfEmployees = [...listOfEmployees];
-    console.log(
-      "--------------updatedListOfEmployees------------------",
-      updatedListOfEmployees
-    );
     if (
       department.length === 0 &&
       gender.length === 0 &&
@@ -626,10 +622,6 @@ const AdminPage: React.FC = () => {
         rawSurveyResponses.filter((response) =>
           updatedListOfEmployees.some((emp) => emp.id === response.userId)
         )
-      );
-      console.log(
-        "--------------filteredSurveyResponses------------------",
-        filteredSurveyResponses
       );
 
       setFilteredFactorImportanceResponses(

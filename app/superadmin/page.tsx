@@ -108,7 +108,6 @@ const CreateCompanyPage: React.FC<CreateCompanyPageProps> = ({ onClose }) => {
         adminLastName,
         adminJobTitle,
       });
-      console.log("Company created:");
       const {data : usercreated } = await client.models.User.create({
         firstName : adminFirstName || "",
         lastName : adminLastName || "",
@@ -117,7 +116,6 @@ const CreateCompanyPage: React.FC<CreateCompanyPageProps> = ({ onClose }) => {
         surveyId : "",
         role : "admin",
       })
-      console.log("User created");
 
       setSuccessMessage("Company created successfully!");
       setErrorMessage("");

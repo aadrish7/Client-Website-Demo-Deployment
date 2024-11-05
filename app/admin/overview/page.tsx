@@ -190,7 +190,6 @@ const OverviewPage: React.FC = () => {
       acc[factor] = totalScores[factor].total / totalScores[factor].count;
       return acc;
     }, {} as { [key: string]: number });
-    console.log("average", avgScores);
 
     setAverageScores(avgScores);
   };
@@ -222,7 +221,6 @@ const OverviewPage: React.FC = () => {
         snippet.type === "adminoverview"
     );
 
-    console.log("Overview Snippets", overviewSnippets);
 
     if (overviewSnippets.length === 0) {
       console.error("No snippets found for company:");
@@ -238,7 +236,6 @@ const OverviewPage: React.FC = () => {
           ([, scoreA], [, scoreB]) => scoreB - scoreA
         );
 
-        console.log("sortedScores", sortedScores);
 
         // Fetch the snippets
         const snippets = await getSnippets();

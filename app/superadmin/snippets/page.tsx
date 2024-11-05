@@ -275,7 +275,6 @@ const CreateSnippetSetModal: React.FC<{
       const snippetsets= await createPaginatedFetchFunctionForSnippetSet(client, {})();
       //store all the snippet sets name
       const snippetSetNames = snippetsets.map((snippetset) => snippetset.name);
-      console.log("snippet set names", snippetSetNames)
       if (snippetSetNames.includes(name)) {
         alert("Snippet set name already exists. Choose a different name.");
         return;
@@ -691,18 +690,15 @@ const handleSort = (column: string) => {
     const confirmed = window.confirm("Are you sure you want to disable all snippets?");
     if (confirmed) {
       try {
-        console.log("clearing all snippets");
         setIsClearing(()=>true);
         const filterForAllSnippets = {
           disabled: { eq: false },
         };
         const snippetsToClear = await createPaginatedFetchFunctionForTextSnippet(client, filterForAllSnippets)();
-        console.log("snippets to clear", snippetsToClear)
         let snippetArray: string[] = []
         for (const snippet of snippetsToClear) {
           snippetArray.push(`${snippet.id}:dummy-data:true`);
         }
-        console.log("snippet array", snippetArray[0])
         await client.mutations.bulkUpdateSnippets({
           snippetsArray: snippetArray
         });
@@ -787,7 +783,6 @@ const handleSort = (column: string) => {
             const emptySnippetSetId = " ";
             snippetArray.push(`${factor}@${score}@${snippetText}@${sanitizedType}@${emptySnippetSetId}`);
           }
-          console.log("snippet array", snippetArray)
           await client.mutations.bulkCreateSnippets({
             snippetsArray: snippetArray
           });

@@ -66,7 +66,6 @@ const CreateCollectionModal: React.FC<{
       for (const question of questions) {
         questionArray.push(`${question.factor}:${question.questionText}:${collection.id}`);
       }
-      console.log("Question Array:", questionArray);
       const { data, errors } = await client.mutations.bulkCreateQuestions({
         questionArray: questionArray,
       });
@@ -505,7 +504,6 @@ const QuestionsPage: React.FC = () => {
         for (const question of questions) {
           questionArray.push(`${question.id}:"dummy-data":true`);
         }
-        console.log("Question Array:", questionArray);
         const { data, errors } = await client.mutations.bulkUpdateQuestions({
           questionsArray: questionArray,
         });
@@ -566,11 +564,6 @@ const QuestionsPage: React.FC = () => {
 
       const questionList = await createPaginatedFetchFunctionForQuestion(client, filterForQuestions)();
       const allQuestions = await createPaginatedFetchFunctionForQuestion(client, {})();
-      console.log("All Question :::", allQuestions)
-      
-      
-      
-      console.log("Questions:", questionList);
 
       if (!questionList) return;
       if (questionList.length === 0) {
@@ -765,7 +758,7 @@ const QuestionsPage: React.FC = () => {
                             }`}
                             onClick={() => {
                               if (header.toLowerCase() === "question text") {
-                                console.log("Clicked:", row[header]);
+                                
                               }
                             }}
                           >

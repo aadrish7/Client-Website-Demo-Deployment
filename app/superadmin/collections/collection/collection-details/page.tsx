@@ -83,8 +83,6 @@ const CollectionDetailPage: React.FC = () => {
               },
             };
             const fetchedQuestions = await createPaginatedFetchFunctionForQuestion(client, filterForQuestions)();
-            console.log("fetchedQuestions", fetchedQuestions)
-
             // Ensure that 'disabled' and other nullable fields have default values
             const validQuestions = fetchedQuestions
               .filter((q) => q !== null)
