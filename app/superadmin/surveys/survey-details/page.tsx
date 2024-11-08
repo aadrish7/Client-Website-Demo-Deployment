@@ -129,7 +129,7 @@ const EmployeeUploadPopup: React.FC<EmployeeUploadPopupProps> = ({ surveyId, com
         employeeArray.push(`${user.firstName}:${user.lastName}:${user.email}:${formattedDOB}:${formattedHireDate}:${user.gender}:${user.ethnicity}:${user.manager}:${user.location}:${user.veteranStatus}:${user.disabilityStatus}:${user.jobLevel}:${user.department}:${user.companyId}:${surveyId}:employee`);
       }
 
-      // await client.mutations.bulkCreateEmployees({ employeesArray: employeeArray });
+      await client.mutations.bulkCreateEmployees({ employeesArray: employeeArray });
       alert('Employees created successfully!');
       onEmployeesCreated();
       setLoading(false);

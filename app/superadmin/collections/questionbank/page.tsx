@@ -66,9 +66,9 @@ const CreateCollectionModal: React.FC<{
       for (const question of questions) {
         questionArray.push(`${question.factor}:${question.questionText}:${collection.id}`);
       }
-      // const { data, errors } = await client.mutations.bulkCreateQuestions({
-      //   questionArray: questionArray,
-      // });
+      const { data, errors } = await client.mutations.bulkCreateQuestions({
+        questionArray: questionArray,
+      });
       onCreate();
 
     } catch (error) {
@@ -504,9 +504,9 @@ const QuestionsPage: React.FC = () => {
         for (const question of questions) {
           questionArray.push(`${question.id}:"dummy-data":true`);
         }
-        // const { data, errors } = await client.mutations.bulkUpdateQuestions({
-        //   questionsArray: questionArray,
-        // });
+        const { data, errors } = await client.mutations.bulkUpdateQuestions({
+          questionsArray: questionArray,
+        });
         // for (const question of questions) {
         //   await client.models.Question.update({
         //     id: question.id,
@@ -623,10 +623,10 @@ const QuestionsPage: React.FC = () => {
           }
         }
   
-        // const { data, errors } = await client.mutations.bulkCreateQuestions({
-        //   questionArray: questionArray
+        const { data, errors } = await client.mutations.bulkCreateQuestions({
+          questionArray: questionArray
           
-        // });
+        });
       fetchQuestions();
       setIsCSVModalOpen(false);
     } catch (error) {
