@@ -295,10 +295,10 @@ const CreateSnippetSetModal: React.FC<{
       for (const snippet of textSnippets) {
         snippetArray.push(`${snippet.factor}@${snippet.score}@${snippet.snippetText}@${snippet.type}@${snippetSet.id}`);
       }
-      await client.mutations.bulkCreateSnippets({
-        snippetsArray: snippetArray
+      // await client.mutations.bulkCreateSnippets({
+      //   snippetsArray: snippetArray
         
-      });
+      // });
       // for (const snippet of textSnippets) {
       //   const { data: mysavedsnippet } = await client.models.TextSnippet.create(
       //     {
@@ -699,9 +699,9 @@ const handleSort = (column: string) => {
         for (const snippet of snippetsToClear) {
           snippetArray.push(`${snippet.id}:dummy-data:true`);
         }
-        await client.mutations.bulkUpdateSnippets({
-          snippetsArray: snippetArray
-        });
+        // await client.mutations.bulkUpdateSnippets({
+        //   snippetsArray: snippetArray
+        // });
         fetchTextSnippets(); // Refresh the list after clearing
       } catch (error) {
         console.error("Failed to clear all snippets", error);
@@ -783,9 +783,9 @@ const handleSort = (column: string) => {
             const emptySnippetSetId = " ";
             snippetArray.push(`${factor}@${score}@${snippetText}@${sanitizedType}@${emptySnippetSetId}`);
           }
-          await client.mutations.bulkCreateSnippets({
-            snippetsArray: snippetArray
-          });
+          // await client.mutations.bulkCreateSnippets({
+          //   snippetsArray: snippetArray
+          // });
           await fetchTextSnippets();
           setShowCsvPopup(false);
         } catch (error: any) {
