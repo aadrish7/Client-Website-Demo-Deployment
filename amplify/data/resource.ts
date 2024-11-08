@@ -6,30 +6,30 @@ adding a new "isDone" field as a boolean. The authorization rule below
 specifies that any user authenticated via an API key can "create", "read",
 "update", and "delete" any "Todo" records.
 =========================================================================*/
-const questionHandler = defineFunction({
-  entry: './question-handler/questionHandler.ts',
-  timeoutSeconds: 900 // 15 minute timeout
-})
+// const questionHandler = defineFunction({
+//   entry: './question-handler/questionHandler.ts',
+//   timeoutSeconds: 900 // 15 minute timeout
+// })
 
-const snippetsHandler = defineFunction({
-  entry: './snippets-handler/snippetsHandler.ts',
-  timeoutSeconds: 900 // 15 minute timeout
-})
+// const snippetsHandler = defineFunction({
+//   entry: './snippets-handler/snippetsHandler.ts',
+//   timeoutSeconds: 900 // 15 minute timeout
+// })
 
-const employeeHandler = defineFunction({
-  entry: './employee-handler/employeeHandler.ts',
-  timeoutSeconds: 900 // 15 minute timeout
-})
+// const employeeHandler = defineFunction({
+//   entry: './employee-handler/employeeHandler.ts',
+//   timeoutSeconds: 900 // 15 minute timeout
+// })
 
-const updateSnippetsHandler = defineFunction({
-  entry: './update-snippets/updateSnippetsHandler.ts',
-  timeoutSeconds: 900 // 15 minute timeout
-})
+// const updateSnippetsHandler = defineFunction({
+//   entry: './update-snippets/updateSnippetsHandler.ts',
+//   timeoutSeconds: 900 // 15 minute timeout
+// })
 
-const updateQuestionsHandler = defineFunction({
-  entry: './update-questions/updateQuestionsHandler.ts',
-  timeoutSeconds: 900 // 15 minute timeout
-})
+// const updateQuestionsHandler = defineFunction({
+//   entry: './update-questions/updateQuestionsHandler.ts',
+//   timeoutSeconds: 900 // 15 minute timeout
+// })
 
 const schema = a.schema({
   User: a
@@ -95,50 +95,50 @@ const schema = a.schema({
     })
     .authorization((allow) => [allow.publicApiKey()]),
   
-  bulkCreateQuestions: a
-    .mutation()
-    .arguments({questionArray: a.string().array()})
-    // Return type (an array of Question objects)
-    .returns(a.string())
-    // Only allow signed-in users to call this API
-    .authorization((allow) => [allow.publicApiKey()])
-    .handler(a.handler.function(questionHandler)),  
+  // bulkCreateQuestions: a
+  //   .mutation()
+  //   .arguments({questionArray: a.string().array()})
+  //   // Return type (an array of Question objects)
+  //   .returns(a.string())
+  //   // Only allow signed-in users to call this API
+  //   .authorization((allow) => [allow.publicApiKey()])
+  //   .handler(a.handler.function(questionHandler)),  
   
-  bulkCreateEmployees: a
-    .mutation()
-    .arguments({employeesArray: a.string().array()})
-    // Return type (an array of Question objects)
-    .returns(a.string())
-    // Only allow signed-in users to call this API
-    .authorization((allow) => [allow.publicApiKey()])
-    .handler(a.handler.function(employeeHandler)), 
+  // bulkCreateEmployees: a
+  //   .mutation()
+  //   .arguments({employeesArray: a.string().array()})
+  //   // Return type (an array of Question objects)
+  //   .returns(a.string())
+  //   // Only allow signed-in users to call this API
+  //   .authorization((allow) => [allow.publicApiKey()])
+  //   .handler(a.handler.function(employeeHandler)), 
 
-  bulkCreateSnippets: a
-    .mutation()
-    .arguments({snippetsArray: a.string().array()})
-    // Return type (an array of Question objects)
-    .returns(a.string())
-    // Only allow signed-in users to call this API
-    .authorization((allow) => [allow.publicApiKey()])
-    .handler(a.handler.function(snippetsHandler)), 
+  // bulkCreateSnippets: a
+  //   .mutation()
+  //   .arguments({snippetsArray: a.string().array()})
+  //   // Return type (an array of Question objects)
+  //   .returns(a.string())
+  //   // Only allow signed-in users to call this API
+  //   .authorization((allow) => [allow.publicApiKey()])
+  //   .handler(a.handler.function(snippetsHandler)), 
   
-  bulkUpdateSnippets: a
-    .mutation()
-    .arguments({snippetsArray: a.string().array()})
-    // Return type (an array of Question objects)
-    .returns(a.string())
-    // Only allow signed-in users to call this API
-    .authorization((allow) => [allow.publicApiKey()])
-    .handler(a.handler.function(updateSnippetsHandler)),
+  // bulkUpdateSnippets: a
+  //   .mutation()
+  //   .arguments({snippetsArray: a.string().array()})
+  //   // Return type (an array of Question objects)
+  //   .returns(a.string())
+  //   // Only allow signed-in users to call this API
+  //   .authorization((allow) => [allow.publicApiKey()])
+  //   .handler(a.handler.function(updateSnippetsHandler)),
   
-  bulkUpdateQuestions: a
-    .mutation()
-    .arguments({questionsArray: a.string().array()})
-    // Return type (an array of Question objects)
-    .returns(a.string())
-    // Only allow signed-in users to call this API
-    .authorization((allow) => [allow.publicApiKey()])
-    .handler(a.handler.function(updateQuestionsHandler)),
+  // bulkUpdateQuestions: a
+  //   .mutation()
+  //   .arguments({questionsArray: a.string().array()})
+  //   // Return type (an array of Question objects)
+  //   .returns(a.string())
+  //   // Only allow signed-in users to call this API
+  //   .authorization((allow) => [allow.publicApiKey()])
+  //   .handler(a.handler.function(updateQuestionsHandler)),
   
   Collection: a
     .model({
