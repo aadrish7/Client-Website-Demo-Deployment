@@ -74,7 +74,7 @@ export default function SignInPage() {
     <div className="relative z-10 w-full max-w-[850px] h-full max-h-[90vh] flex flex-col md:flex-row">
       <div className="w-full md:w-1/2 h-full">
         <img
-          src="/landingPageLogo.png"
+          src="/updated_main_logo.svg"
           alt="Background Logo"
           className="object-cover w-full h-full opacity-70"
         />
